@@ -1,1 +1,605 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ลาล่ามูฟ - บัญชีส่วนตัว</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Noto+Sans+Thai:wght@400;500;600&amp;display=swap');
+        body { font-family: 'Inter', 'Noto Sans Thai', system-ui, sans-serif; }
+        .mobile-container { max-width: 480px; margin: 0 auto; }
+        .card { transition: transform 0.2s; }
+        .transaction-item { transition: all 0.2s; }
+        .summary-card {
+            background: linear-gradient(135deg, #1e2937 0%, #0f172a 100%);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200">
+    <div class="mobile-container min-h-screen bg-slate-950">
+        <!-- Header -->
+        <div class="bg-slate-900 border-b border-slate-700 px-4 py-4 sticky top-0 z-50">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-emerald-400">Lalamove</h1>
+                    <p class="text-sm text-slate-400">บัญชีส่วนตัว ของคุณ</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div class="bg-emerald-900 text-emerald-400 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                        <i class="fas fa-circle text-xs"></i>
+                        <span>ออนไลน์</span>
+                    </div>
+                </div>
+            </div>
+        </div>
 
+        <!-- Dashboard -->
+        <div class="px-4 pt-4">
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-2">
+                    <h2 class="text-xl font-semibold">สรุปวันนี้</h2>
+                    <button onclick="resetDay()" 
+                            class="text-xs px-3 py-1 bg-red-900 text-red-400 rounded-lg hover:bg-red-800 flex items-center gap-1">
+                        <i class="fas fa-redo text-xs"></i>
+                        <span>รีเซ็ตวัน</span>
+                    </button>
+                </div>
+                
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Income -->
+                    <div class="summary-card p-4 rounded-2xl border border-emerald-700">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-wallet text-emerald-400 text-xl"></i>
+                            <span class="text-sm text-emerald-400 font-medium">รายได้</span>
+                        </div>
+                        <div class="text-3xl font-bold text-emerald-400" id="total-income">0</div>
+                        <div class="text-xs text-emerald-300">บาท</div>
+                    </div>
+                    
+                    <!-- Expense -->
+                    <div class="summary-card p-4 rounded-2xl border border-red-700">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-receipt text-red-400 text-xl"></i>
+                            <span class="text-sm text-red-400 font-medium">ค่าใช้จ่าย</span>
+                        </div>
+                        <div class="text-3xl font-bold text-red-400" id="total-expense">0</div>
+                        <div class="text-xs text-red-300">บาท</div>
+                    </div>
+                </div>
+
+                <div class="mt-3 grid grid-cols-3 gap-3">
+                    <!-- Net -->
+                    <div class="bg-slate-800 p-3 rounded-2xl border border-slate-600">
+                        <div class="text-xs text-slate-400 mb-1">กำไรสุทธิ</div>
+                        <div class="text-2xl font-bold" id="net-profit">0</div>
+                        <div class="text-xs text-emerald-400" id="net-status">บาท</div>
+                    </div>
+                    
+                    <!-- Trips -->
+                    <div class="bg-slate-800 p-3 rounded-2xl border border-slate-600">
+                        <div class="text-xs text-slate-400 mb-1">จำนวนงาน</div>
+                        <div class="text-2xl font-bold" id="total-trips">0</div>
+                        <div class="text-xs text-emerald-400">รอบ</div>
+                    </div>
+                    
+                    <!-- Distance -->
+                    <div class="bg-slate-800 p-3 rounded-2xl border border-slate-600">
+                        <div class="text-xs text-slate-400 mb-1">ระยะทาง</div>
+                        <div class="text-2xl font-bold" id="total-km">0</div>
+                        <div class="text-xs text-emerald-400">km</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="mb-4">
+                <h3 class="text-sm font-medium text-slate-400 mb-2 px-1">กระทำรวด</h3>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="showAddIncomeModal()" 
+                            class="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.985] transition-all text-white py-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
+                        <i class="fas fa-plus-circle text-2xl mb-1"></i>
+                        <span class="font-semibold text-sm">บันทึกงานใหม่</span>
+                        <span class="text-xs opacity-80">รายได้จากลาล่ามูฟ</span>
+                    </button>
+                    
+                    <button onclick="showAddExpenseModal()" 
+                            class="bg-red-600 hover:bg-red-700 active:scale-[0.985] transition-all text-white py-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
+                        <i class="fas fa-minus-circle text-2xl mb-1"></i>
+                        <span class="font-semibold text-sm">บันทึกค่าใช้จ่าย</span>
+                        <span class="text-xs opacity-80">น้ำมัน / อาหาร / อื่นๆ</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Today's Transactions -->
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-2 px-1">
+                    <h3 class="text-sm font-medium text-slate-400">รายการวันนี้</h3>
+                    <span class="text-xs text-slate-500" id="transaction-count">0 รายการ</span>
+                </div>
+                
+                <div id="transactions-list" class="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+                    <!-- Populated by JS -->
+                </div>
+                
+                <div id="empty-state" class="hidden text-center py-6 text-slate-500">
+                    <i class="fas fa-receipt text-3xl mb-2 opacity-40"></i>
+                    <p class="text-sm">ยังไม่มีรายการวันนี้</p>
+                </div>
+            </div>
+
+            <!-- Auto Calculations -->
+            <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h3 class="text-sm font-medium text-slate-400">คำนวนอัตโนมัติ</h3>
+                    <span class="text-xs text-emerald-400 cursor-pointer" onclick="showSettings()">การตั้งค่า</span>
+                </div>
+                
+                <div class="space-y-3 text-sm">
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">น้ำมัน (อัตโนมัติ)</span>
+                        <span class="font-medium" id="fuel-cost">0 บาท</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">ค่าสึกหรอ (ั 1 บาท/กม.)</span>
+                        <span class="font-medium" id="depreciation-cost">0 บาท</span>
+                    </div>
+                    <div class="flex justify-between pt-2 border-t border-slate-700">
+                        <span class="font-medium text-emerald-400">กำไรสุทธิจริง</span>
+                        <span class="font-bold text-emerald-400 text-lg" id="real-net">0 บาท</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Navigation -->
+        <div class="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-slate-900 border-t border-slate-700 px-4 py-2 z-50">
+            <div class="flex justify-around">
+                <button onclick="switchTab('today')" class="tab-button active flex flex-col items-center text-emerald-400 px-3 py-1">
+                    <i class="fas fa-home text-xl"></i>
+                    <span class="text-xs mt-0.5">วันนี้</span>
+                </button>
+                <button onclick="switchTab('history')" class="tab-button flex flex-col items-center text-slate-400 px-3 py-1">
+                    <i class="fas fa-history text-xl"></i>
+                    <span class="text-xs mt-0.5">ประวัติ</span>
+                </button>
+                <button onclick="showSettings()" class="flex flex-col items-center text-slate-400 px-3 py-1">
+                    <i class="fas fa-cog text-xl"></i>
+                    <span class="text-xs mt-0.5">ตั้งค่า</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Add Income Modal -->
+        <div id="income-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
+            <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">บันทึกงานใหม่</h3>
+                    <button onclick="hideIncomeModal()" class="text-2xl text-slate-400">&times;</button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">ระยะทาง (กม.)</label>
+                        <input type="number" id="income-km" value="15" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-emerald-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">รายได้ (บาท)</label>
+                        <input type="number" id="income-amount" value="250" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-emerald-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">หมายเหตุ</label>
+                        <input type="text" id="income-note" value="งานปกติ" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500">
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 mt-8">
+                    <button onclick="hideIncomeModal()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
+                    <button onclick="addIncome()" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">บันทึกงาน</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Expense Modal -->
+        <div id="expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
+            <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">บันทึกค่าใช้จ่าย</h3>
+                    <button onclick="hideExpenseModal()" class="text-2xl text-slate-400">&times;</button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">หมวดหมู่</label>
+                        <select id="expense-category" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
+                            <option value="น้ำมัน">น้ำมัน</option>
+                            <option value="อาหาร">อาหาร</option>
+                            <option value="ค่าสึกหรอ">ค่าสึกหรอ / บริการ</option>
+                            <option value="บัตรเครดิต">บัตรเครดิต</option>
+                            <option value="ส่วนตัว">ส่วนตัว / อื่นๆ</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">จำนวนเงิน (บาท)</label>
+                        <input type="number" id="expense-amount" value="80" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">หมายเหตุ</label>
+                        <input type="text" id="expense-note" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:border-red-500">
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 mt-8">
+                    <button onclick="hideExpenseModal()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
+                    <button onclick="addExpense()" class="flex-1 py-3.5 bg-red-600 hover:bg-red-700 rounded-2xl font-semibold">บันทึกค่าใช้จ่าย</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
+            <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold">การตั้งค่า</h3>
+                    <button onclick="hideSettings()" class="text-2xl text-slate-400">&times;</button>
+                </div>
+                
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">อัตราน้ำมัน (บาท/กม.)</label>
+                        <input type="number" id="fuel-rate" value="3.5" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">ค่าสึกหรอ (บาท/กม.)</label>
+                        <input type="number" id="depreciation-rate" value="1" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg">
+                    </div>
+                    
+                    <div class="pt-2 border-t border-slate-700">
+                        <div class="text-xs text-slate-400 mb-1">แนะนำ: ค่าแรงประจำวัน 800 บาท</div>
+                    </div>
+                </div>
+                
+                <div class="mt-8 flex gap-3">
+                    <button onclick="hideSettings()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
+                    <button onclick="saveSettings()" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">บันทึกการตั้งค่า</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tailwind script
+        function initializeTailwind() {
+            document.documentElement.style.setProperty('--accent', '#10b981');
+        }
+
+        // Data storage
+        let records = [];
+        let settings = {
+            fuelRate: 3.5,
+            depreciationRate: 1
+        };
+
+        function loadData() {
+            const savedRecords = localStorage.getItem('lalamove_records');
+            if (savedRecords) {
+                records = JSON.parse(savedRecords);
+            }
+            
+            const savedSettings = localStorage.getItem('lalamove_settings');
+            if (savedSettings) {
+                settings = JSON.parse(savedSettings);
+            }
+            
+            // Filter only today's records
+            const today = new Date().toISOString().split('T')[0];
+            records = records.filter(r => r.date === today);
+        }
+
+        function saveData() {
+            localStorage.setItem('lalamove_records', JSON.stringify(records));
+            localStorage.setItem('lalamove_settings', JSON.stringify(settings));
+        }
+
+        function updateSummary() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayRecords = records.filter(r => r.date === today);
+            
+            let totalIncome = 0;
+            let totalExpense = 0;
+            let totalKm = 0;
+            let totalTrips = 0;
+            
+            todayRecords.forEach(record => {
+                if (record.type === 'income') {
+                    totalIncome += record.amount;
+                    totalKm += record.km || 0;
+                    totalTrips++;
+                } else {
+                    totalExpense += record.amount;
+                }
+            });
+            
+            const net = totalIncome - totalExpense;
+            
+            // Auto calculations
+            const fuelCost = totalKm * settings.fuelRate;
+            const depreciationCost = totalKm * settings.depreciationRate;
+            const realNet = totalIncome - totalExpense - fuelCost - depreciationCost;
+            
+            // Update DOM
+            document.getElementById('total-income').textContent = totalIncome.toLocaleString();
+            document.getElementById('total-expense').textContent = totalExpense.toLocaleString();
+            document.getElementById('net-profit').textContent = net.toLocaleString();
+            document.getElementById('net-status').textContent = net >= 0 ? 'กำไร' : 'ขาดทุน';
+            document.getElementById('total-trips').textContent = totalTrips;
+            document.getElementById('total-km').textContent = totalKm;
+            
+            document.getElementById('fuel-cost').textContent = Math.round(fuelCost) + ' บาท';
+            document.getElementById('depreciation-cost').textContent = Math.round(depreciationCost) + ' บาท';
+            document.getElementById('real-net').textContent = Math.round(realNet).toLocaleString() + ' บาท';
+            
+            // Update transaction count
+            document.getElementById('transaction-count').textContent = todayRecords.length + ' รายการ';
+            
+            // Update real net color
+            const realNetEl = document.getElementById('real-net');
+            realNetEl.style.color = realNet >= 0 ? '#10b981' : '#f87171';
+        }
+
+        function renderTransactions() {
+            const container = document.getElementById('transactions-list');
+            const emptyState = document.getElementById('empty-state');
+            
+            const today = new Date().toISOString().split('T')[0];
+            const todayRecords = records.filter(r => r.date === today).sort((a, b) => b.id - a.id);
+            
+            container.innerHTML = '';
+            
+            if (todayRecords.length === 0) {
+                emptyState.classList.remove('hidden');
+                return;
+            }
+            
+            emptyState.classList.add('hidden');
+            
+            todayRecords.forEach(record => {
+                const div = document.createElement('div');
+                div.className = `transaction-item flex items-center justify-between p-3.5 bg-slate-800 rounded-2xl border border-slate-700`;
+                
+                let icon = '';
+                let color = '';
+                
+                if (record.type === 'income') {
+                    icon = '<i class="fas fa-arrow-up text-emerald-400"></i>';
+                    color = 'text-emerald-400';
+                } else {
+                    icon = '<i class="fas fa-arrow-down text-red-400"></i>';
+                    color = 'text-red-400';
+                }
+                
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-700">
+                            ${icon}
+                        </div>
+                        <div>
+                            <div class="font-medium">${record.category || (record.type === 'income' ? 'งานลาล่ามูฟ' : 'ค่าใช้จ่าย')}</div>
+                            <div class="text-xs text-slate-400">${record.note || ''}</div>
+                            ${record.km ? `<div class="text-xs text-emerald-400 mt-0.5">${record.km} km</div>` : ''}
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-semibold ${color}">
+                            ${record.type === 'income' ? '+' : '-'}${record.amount.toLocaleString()}
+                        </div>
+                        <div class="text-xs text-slate-500">${record.time}</div>
+                    </div>
+                `;
+                
+                // Long press to delete
+                let pressTimer;
+                div.addEventListener('touchstart', () => {
+                    pressTimer = setTimeout(() => {
+                        if (confirm('ลบรายการนี้?')) {
+                            deleteRecord(record.id);
+                        }
+                    }, 600);
+                });
+                div.addEventListener('touchend', () => clearTimeout(pressTimer));
+                
+                container.appendChild(div);
+            });
+        }
+
+        function addIncome() {
+            const km = parseFloat(document.getElementById('income-km').value) || 0;
+            const amount = parseFloat(document.getElementById('income-amount').value) || 0;
+            const note = document.getElementById('income-note').value.trim();
+            
+            if (amount <= 0) {
+                alert('กรุณาระบุรายได้');
+                return;
+            }
+            
+            const record = {
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+                type: 'income',
+                category: 'งานลาล่ามูฟ',
+                amount: amount,
+                km: km,
+                note: note
+            };
+            
+            records.push(record);
+            saveData();
+            updateSummary();
+            renderTransactions();
+            
+            hideIncomeModal();
+            
+            // Success toast
+            showToast('บันทึกงานเรียบร้อยแล้ว!');
+        }
+
+        function addExpense() {
+            const category = document.getElementById('expense-category').value;
+            const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
+            const note = document.getElementById('expense-note').value.trim();
+            
+            if (amount <= 0) {
+                alert('กรุณาระบุจำนวนเงิน');
+                return;
+            }
+            
+            const record = {
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+                type: 'expense',
+                category: category,
+                amount: amount,
+                note: note
+            };
+            
+            records.push(record);
+            saveData();
+            updateSummary();
+            renderTransactions();
+            
+            hideExpenseModal();
+            showToast('บันทึกค่าใช้จ่ายเรียบร้อย!');
+        }
+
+        function deleteRecord(id) {
+            records = records.filter(r => r.id !== id);
+            saveData();
+            updateSummary();
+            renderTransactions();
+        }
+
+        function showAddIncomeModal() {
+            document.getElementById('income-modal').classList.remove('hidden');
+            document.getElementById('income-modal').classList.add('flex');
+        }
+
+        function hideIncomeModal() {
+            document.getElementById('income-modal').classList.remove('flex');
+            document.getElementById('income-modal').classList.add('hidden');
+        }
+
+        function showAddExpenseModal() {
+            document.getElementById('expense-modal').classList.remove('hidden');
+            document.getElementById('expense-modal').classList.add('flex');
+        }
+
+        function hideExpenseModal() {
+            document.getElementById('expense-modal').classList.remove('flex');
+            document.getElementById('expense-modal').classList.add('hidden');
+        }
+
+        function showSettings() {
+            document.getElementById('fuel-rate').value = settings.fuelRate;
+            document.getElementById('depreciation-rate').value = settings.depreciationRate;
+            document.getElementById('settings-modal').classList.remove('hidden');
+            document.getElementById('settings-modal').classList.add('flex');
+        }
+
+        function hideSettings() {
+            document.getElementById('settings-modal').classList.remove('flex');
+            document.getElementById('settings-modal').classList.add('hidden');
+        }
+
+        function saveSettings() {
+            settings.fuelRate = parseFloat(document.getElementById('fuel-rate').value) || 3.5;
+            settings.depreciationRate = parseFloat(document.getElementById('depreciation-rate').value) || 1;
+            saveData();
+            hideSettings();
+            updateSummary();
+            showToast('บันทึกการตั้งค่าเรียบร้อย!');
+        }
+
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-emerald-600 text-white px-5 py-2 rounded-2xl shadow-lg text-sm flex items-center gap-2 z-[200]';
+            toast.innerHTML = `<i class="fas fa-check-circle"></i> <span>${message}</span>`;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.transition = 'all 0.3s';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 2200);
+        }
+
+        function resetDay() {
+            if (!confirm('ต้องการรีเซ็ตข้อมูลวันนี้ทั้งหมด?')) return;
+            
+            const today = new Date().toISOString().split('T')[0];
+            records = records.filter(r => r.date !== today);
+            saveData();
+            updateSummary();
+            renderTransactions();
+            showToast('รีเซ็ตวันใหม่เรียบร้อย');
+        }
+
+        function switchTab(tab) {
+            // For now only today tab is active, can expand later
+            if (tab === 'history') {
+                alert('ประวัติยังไม่ได้เปิดใช้ จะเพิ่มในอนาคตหน้า');
+            }
+        }
+
+        function initializeApp() {
+            initializeTailwind();
+            loadData();
+            
+            // Initial render
+            updateSummary();
+            renderTransactions();
+            
+            // Show welcome if no records
+            const today = new Date().toISOString().split('T')[0];
+            const hasToday = records.some(r => r.date === today);
+            
+            if (!hasToday) {
+                // Optional: show hint
+            }
+            
+            // Keyboard support
+            document.addEventListener('keydown', function(e) {
+                if (e.key === '/' && document.activeElement.tagName === 'BODY') {
+                    e.preventDefault();
+                    showAddIncomeModal();
+                }
+            });
+            
+            // Make sure modals close on outside click
+            document.getElementById('income-modal').addEventListener('click', function(e) {
+                if (e.target.id === 'income-modal') hideIncomeModal();
+            });
+            document.getElementById('expense-modal').addEventListener('click', function(e) {
+                if (e.target.id === 'expense-modal') hideExpenseModal();
+            });
+            document.getElementById('settings-modal').addEventListener('click', function(e) {
+                if (e.target.id === 'settings-modal') hideSettings();
+            });
+            
+            console.log('%c[Lalamove Account] App initialized successfully', 'color:#10b981');
+        }
+
+        // Boot app
+        window.onload = initializeApp;
+    </script>
+</body>
+</html>
