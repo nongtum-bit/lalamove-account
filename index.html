@@ -232,7 +232,7 @@
             </div>
         </div>
 
-        <!-- Add Income Modal (with Toll buttons) -->
+        <!-- Add Income Modal -->
         <div id="income-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -249,24 +249,24 @@
                     <div class="grid grid-cols-2 gap-3">
                         <div>
                             <label class="block text-sm text-slate-400 mb-1">รายได้จากแอพ</label>
-                            <input type="number" id="income-fare" value="1000" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-emerald-500">
+                            <input type="number" id="income-fare" value="" placeholder="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-emerald-500">
                         </div>
                         <div>
                             <label class="block text-sm text-slate-400 mb-1">ทิปจากลูกค้า</label>
-                            <input type="number" id="income-tip" value="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-amber-500">
+                            <input type="number" id="income-tip" value="" placeholder="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-amber-500">
                         </div>
                     </div>
                     
                     <div>
                         <label class="block text-sm text-slate-400 mb-1">ค่าบริการ GP (แอพหัก)</label>
-                        <input type="number" id="income-gp" value="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
+                        <input type="number" id="income-gp" value="" placeholder="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
                     </div>
                     
-                    <!-- Toll with buttons -->
+                    <!-- Toll -->
                     <div class="border border-slate-600 rounded-2xl p-4 bg-slate-800/50">
                         <div class="text-sm text-slate-400 mb-2">ค่าทางด่วน (ถ้ามี)</div>
                         <div class="mb-2">
-                            <input type="number" id="income-toll" value="0" placeholder="0" class="w-full bg-slate-700 border border-slate-500 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                            <input type="number" id="income-toll" value="" placeholder="0" class="w-full bg-slate-700 border border-slate-500 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
                         </div>
                         <div class="text-xs text-slate-400 mb-1">ใครจ่าย</div>
                         <div class="flex gap-2">
@@ -299,7 +299,7 @@
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm text-slate-400 mb-1">จำนวนเงิน (บาท)</label>
-                        <input type="number" id="quick-expense-amount" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
+                        <input type="number" id="quick-expense-amount" placeholder="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
                     </div>
                     
                     <div>
@@ -337,7 +337,7 @@
                     
                     <div>
                         <label class="block text-sm text-slate-400 mb-1">จำนวนเงิน (บาท)</label>
-                        <input type="number" id="expense-amount" value="80" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
+                        <input type="number" id="expense-amount" placeholder="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
                     </div>
                     
                     <div>
@@ -394,8 +394,8 @@
                     <p class="text-sm text-slate-400 mt-2">คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</p>
                 </div>
                 <div class="flex gap-3">
-                    <button onclick="cancelDelete()" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold">ยกเลิก</button>
-                    <button id="confirm-delete-btn" class="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold">ลบ</button>
+                    <button id="btn-cancel-delete" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold">ยกเลิก</button>
+                    <button id="btn-confirm-delete" class="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold">ลบ</button>
                 </div>
             </div>
         </div>
@@ -507,14 +507,6 @@
             updateCheckin();
             if (checkinInterval) clearInterval(checkinInterval);
             showToast('เช็คเอาท์เรียบร้อย!');
-        }
-
-        function resetCheckin() {
-            if (!confirm('รีเซ็ตเช็คอินวันนี้?')) return;
-            checkin = { start: null, end: null };
-            if (checkinInterval) clearInterval(checkinInterval);
-            saveData();
-            updateCheckin();
         }
 
         function updateSummary() {
@@ -681,7 +673,7 @@
                     if (deltaX < -80) {
                         currentDeleteId = record.id;
                         currentSwipedElement = div;
-                        showDeleteConfirm();
+                        showDeleteConfirmFromSwipe();
                     } else {
                         div.style.transform = 'translateX(0)';
                         div.style.backgroundColor = '';
@@ -776,7 +768,7 @@
                         <button onclick="editRecord(${record.id}, this)" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 rounded-xl font-semibold flex items-center justify-center gap-2">
                             <i class="fas fa-edit"></i> <span>แก้ไข</span>
                         </button>
-                        <button onclick="currentDeleteId = ${record.id}; this.closest('.fixed').remove(); showDeleteConfirm();" class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold flex items-center justify-center gap-2">
+                        <button onclick="currentDeleteId = ${record.id}; this.closest('.fixed').remove(); showDeleteConfirm()" class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold flex items-center justify-center gap-2">
                             <i class="fas fa-trash"></i> <span>ลบ</span>
                         </button>
                         <button onclick="this.closest('.fixed').remove()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold">ยกเลิก</button>
@@ -981,23 +973,25 @@
             showToast(`บันทึก${currentQuickCategory} เรียบร้อย!`);
         }
 
-        function showDeleteConfirm() {
+        // === SWIPE DELETE FIX ===
+        function showDeleteConfirmFromSwipe() {
+            // Immediately reset the swiped card to prevent click blocking
             if (currentSwipedElement) {
-                currentSwipedElement.style.transition = 'transform 0.2s, background-color 0.2s';
+                currentSwipedElement.style.transition = 'transform 0.15s ease';
                 currentSwipedElement.style.transform = 'translateX(0)';
                 currentSwipedElement.style.backgroundColor = '';
             }
             
+            // Small delay to let DOM settle before showing modal
+            setTimeout(() => {
+                document.getElementById('delete-confirm-modal').classList.remove('hidden');
+                document.getElementById('delete-confirm-modal').classList.add('flex');
+            }, 80);
+        }
+
+        function showDeleteConfirm() {
             document.getElementById('delete-confirm-modal').classList.remove('hidden');
             document.getElementById('delete-confirm-modal').classList.add('flex');
-            
-            document.getElementById('confirm-delete-btn').onclick = () => {
-                if (currentDeleteId) {
-                    deleteRecord(currentDeleteId);
-                    currentDeleteId = null;
-                }
-                cancelDelete();
-            };
         }
 
         function cancelDelete() {
@@ -1026,10 +1020,10 @@
         }
 
         function showAddIncomeModal() {
-            document.getElementById('income-fare').value = '1000';
-            document.getElementById('income-tip').value = '0';
-            document.getElementById('income-gp').value = '0';
-            document.getElementById('income-toll').value = '0';
+            document.getElementById('income-fare').value = '';
+            document.getElementById('income-tip').value = '';
+            document.getElementById('income-gp').value = '';
+            document.getElementById('income-toll').value = '';
             currentTollPayer = 'customer';
             updateTollPayerButtons();
             document.getElementById('income-modal').classList.remove('hidden');
@@ -1123,6 +1117,23 @@
             }
         }
 
+        function setupNumberInputs() {
+            // Clear leading 0 when focusing number inputs
+            document.querySelectorAll('input[type="number"]').forEach(input => {
+                input.addEventListener('focus', function() {
+                    if (this.value === '0' || this.value === '') {
+                        this.value = '';
+                    }
+                });
+                
+                input.addEventListener('blur', function() {
+                    if (this.value === '') {
+                        this.value = '0';
+                    }
+                });
+            });
+        }
+
         function initializeApp() {
             initializeTailwind();
             loadData();
@@ -1130,6 +1141,20 @@
             renderTransactions();
             updateCheckin();
             startCheckinTimer();
+            setupNumberInputs();
+            
+            // Attach delete confirmation buttons
+            const btnCancel = document.getElementById('btn-cancel-delete');
+            const btnConfirm = document.getElementById('btn-confirm-delete');
+            
+            if (btnCancel) btnCancel.onclick = cancelDelete;
+            if (btnConfirm) btnConfirm.onclick = () => {
+                if (currentDeleteId) {
+                    deleteRecord(currentDeleteId);
+                    currentDeleteId = null;
+                }
+                cancelDelete();
+            };
             
             document.addEventListener('keydown', function(e) {
                 if (e.key === '/' && document.activeElement.tagName === 'BODY') { e.preventDefault(); showAddIncomeModal(); }
@@ -1140,7 +1165,7 @@
                 if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); if (id==='summary-detail-modal') hideSummaryDetail(); } });
             });
             
-            console.log('%c[Lalamove Account] Syntax error fixed - app should work now', 'color:#10b981');
+            console.log('%c[Lalamove Account] Fixed: Swipe delete first-click + number input UX', 'color:#10b981');
         }
 
         window.onload = initializeApp;
