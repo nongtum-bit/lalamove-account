@@ -36,112 +36,104 @@
         </div>
 
         <!-- Dashboard -->
-        <div class="px-4 pt-4">
-            <!-- Check-in Section -->
-            <div class="mb-4 bg-slate-900 border border-slate-700 rounded-2xl p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <h3 class="text-sm font-medium text-slate-400">เช็คอินวันนี้</h3>
-                    <button onclick="resetCheckin()" class="text-xs px-2 py-0.5 bg-red-900 text-red-400 rounded hover:bg-red-800">รีเซ็ต</button>
+        <div class="px-4 pt-4 pb-20">
+            <!-- Check-in Section (compact) -->
+            <div class="mb-3 bg-slate-900 border border-slate-700 rounded-2xl p-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <div class="text-sm text-slate-400">เช็คอินวันนี้</div>
+                        <div id="checkin-status" class="text-sm font-medium">ยังไม่ได้เช็คอิน</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="checkIn()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-xs font-semibold flex items-center gap-1">
+                            <i class="fas fa-play text-xs"></i> <span>เช็คอิน</span>
+                        </button>
+                        <button onclick="checkOut()" class="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-semibold flex items-center gap-1">
+                            <i class="fas fa-stop text-xs"></i> <span>เช็คเอาท์</span>
+                        </button>
+                    </div>
                 </div>
-                <div id="checkin-status" class="text-sm mb-3">
-                    ยังไม่ได้เช็คอิน
-                </div>
-                <div class="flex gap-2">
-                    <button onclick="checkIn()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-                        <i class="fas fa-play"></i> <span>เช็คอินเริ่มงาน</span>
-                    </button>
-                    <button onclick="checkOut()" class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
-                        <i class="fas fa-stop"></i> <span>เช็คเอาท์</span>
-                    </button>
-                </div>
-                <div id="checkin-duration" class="text-xs text-emerald-400 mt-2 hidden"></div>
+                <div id="checkin-duration" class="text-xs text-emerald-400 mt-1 hidden"></div>
             </div>
 
-            <!-- Summary Section (Improved) -->
+            <!-- Summary Section (Cleaner) -->
             <div class="mb-4">
-                <div class="flex items-center justify-between mb-2">
-                    <h2 class="text-xl font-semibold">สรุปวันนี้</h2>
-                    <button onclick="resetDay()" class="text-xs px-3 py-1 bg-red-900 text-red-400 rounded-lg hover:bg-red-800 flex items-center gap-1">
+                <div class="flex items-center justify-between mb-2 px-1">
+                    <h2 class="text-lg font-semibold">สรุปวันนี้</h2>
+                    <button onclick="resetDay()" class="text-xs px-2.5 py-1 bg-red-900 text-red-400 rounded-lg flex items-center gap-1">
                         <i class="fas fa-redo text-xs"></i>
-                        <span>รีเซ็ตวัน</span>
+                        <span>รีเซ็ต</span>
                     </button>
                 </div>
 
-                <!-- Main Summary Cards -->
+                <!-- Income & Expense Cards -->
                 <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div class="summary-card p-4 rounded-2xl border border-emerald-700">
+                    <div class="summary-card p-3.5 rounded-2xl border border-emerald-700">
                         <div class="flex items-center gap-2 mb-1">
-                            <i class="fas fa-wallet text-emerald-400"></i>
+                            <i class="fas fa-wallet text-emerald-400 text-lg"></i>
                             <span class="text-sm text-emerald-400">รายได้รวม</span>
                         </div>
                         <div class="text-3xl font-bold text-emerald-400" id="total-income">0</div>
-                        <div class="text-xs text-emerald-300">บาท (Fare + GP)</div>
+                        <div class="text-xs text-emerald-300">บาท</div>
                     </div>
                     
-                    <div class="summary-card p-4 rounded-2xl border border-red-700">
+                    <div class="summary-card p-3.5 rounded-2xl border border-red-700">
                         <div class="flex items-center gap-2 mb-1">
-                            <i class="fas fa-receipt text-red-400"></i>
-                            <span class="text-sm text-red-400">ค่าใช้จ่ายที่หัก</span>
+                            <i class="fas fa-receipt text-red-400 text-lg"></i>
+                            <span class="text-sm text-red-400">ค่าใช้จ่ายหัก</span>
                         </div>
                         <div class="text-3xl font-bold text-red-400" id="total-expense">0</div>
-                        <div class="text-xs text-red-300">บาท (หักจริง)</div>
+                        <div class="text-xs text-red-300">บาท</div>
                     </div>
                 </div>
 
-                <!-- Net Profit Card -->
-                <div class="bg-slate-800 border border-emerald-600 p-4 rounded-2xl mb-3">
-                    <div class="text-sm text-emerald-400 mb-1">กำไรสุทธิจริง (หลังหักทุกอย่าง)</div>
-                    <div class="text-4xl font-bold" id="real-net">0</div>
-                    <div class="text-xs text-emerald-300 mt-1" id="net-status">บาท</div>
+                <!-- Real Net Profit -->
+                <div class="bg-emerald-900/30 border border-emerald-600 p-4 rounded-2xl mb-3">
+                    <div class="text-sm text-emerald-400 mb-1">กำไรสุทธิจริง</div>
+                    <div class="text-4xl font-bold text-emerald-400" id="real-net">0</div>
+                    <div class="text-xs text-emerald-300 mt-1" id="net-status">หลังหักน้ำมัน + สึกหรอ + ค่าใช้จ่าย</div>
                 </div>
 
-                <!-- Breakdown -->
-                <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 text-sm">
-                    <div class="font-medium text-slate-400 mb-2">รายละเอียดการหัก</div>
-                    <div class="space-y-1.5">
-                        <div class="flex justify-between"><span class="text-slate-400">ค่าน้ำมัน (จากระยะทาง)</span> <span id="fuel-cost" class="font-medium">0 บาท</span></div>
-                        <div class="flex justify-between"><span class="text-slate-400">ค่าสึกหรอ (1 บาท/กม.)</span> <span id="depreciation-cost" class="font-medium">0 บาท</span></div>
-                        <div class="flex justify-between pt-1 border-t border-slate-700"><span class="font-medium text-emerald-400">ยอดสุทธิหลังหัก</span> <span id="final-net" class="font-bold text-emerald-400">0 บาท</span></div>
-                    </div>
+                <!-- Breakdown (compact) -->
+                <div class="bg-slate-900 border border-slate-700 rounded-2xl p-3 text-sm">
+                    <div class="flex justify-between mb-1"><span class="text-slate-400">ค่าน้ำมัน</span> <span id="fuel-cost" class="font-medium">0 บาท</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">ค่าสึกหรอ</span> <span id="depreciation-cost" class="font-medium">0 บาท</span></div>
                 </div>
             </div>
 
             <!-- Quick Actions -->
             <div class="mb-4">
-                <h3 class="text-sm font-medium text-slate-400 mb-2 px-1">กระทำรวดเร็ว</h3>
                 <div class="grid grid-cols-2 gap-3 mb-3">
-                    <button onclick="showAddIncomeModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.985] transition-all text-white py-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
-                        <i class="fas fa-plus-circle text-2xl mb-1"></i>
+                    <button onclick="showAddIncomeModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.985] transition-all text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
+                        <i class="fas fa-plus-circle text-xl mb-0.5"></i>
                         <span class="font-semibold text-sm">บันทึกงานใหม่</span>
-                        <span class="text-xs opacity-80">รายได้ + GP</span>
                     </button>
                     
-                    <button onclick="showAddExpenseModal()" class="bg-red-600 hover:bg-red-700 active:scale-[0.985] transition-all text-white py-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
-                        <i class="fas fa-minus-circle text-2xl mb-1"></i>
-                        <span class="font-semibold text-sm">ค่าใช้จ่ายอื่นๆ</span>
-                        <span class="text-xs opacity-80">หมวดหมู่เต็ม</span>
+                    <button onclick="showAddExpenseModal()" class="bg-red-600 hover:bg-red-700 active:scale-[0.985] transition-all text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
+                        <i class="fas fa-minus-circle text-xl mb-0.5"></i>
+                        <span class="font-semibold text-sm">ค่าใช้จ่าย</span>
                     </button>
                 </div>
 
+                <!-- Quick Expense Buttons -->
                 <div>
-                    <h4 class="text-xs text-slate-500 mb-2 px-1">ค่าใช้จ่ายด่วน</h4>
                     <div class="grid grid-cols-3 gap-2">
-                        <button onclick="quickExpense('ค่าอาหาร')" class="quick-btn bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
-                            <i class="fas fa-utensils"></i> <span>ค่าอาหาร</span>
+                        <button onclick="quickExpense('ค่าอาหาร')" class="quick-btn bg-orange-600 hover:bg-orange-700 text-white py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1">
+                            <i class="fas fa-utensils"></i> <span>อาหาร</span>
                         </button>
-                        <button onclick="quickExpense('น้ำมัน')" class="quick-btn bg-yellow-600 hover:bg-yellow-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
+                        <button onclick="quickExpense('น้ำมัน')" class="quick-btn bg-yellow-600 hover:bg-yellow-700 text-white py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1">
                             <i class="fas fa-gas-pump"></i> <span>น้ำมัน</span>
                         </button>
-                        <button onclick="quickExpense('ค่าสึกหรอ')" class="quick-btn bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
-                            <i class="fas fa-tools"></i> <span>ค่าสึกหรอ</span>
+                        <button onclick="quickExpense('ค่าสึกหรอ')" class="quick-btn bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1">
+                            <i class="fas fa-tools"></i> <span>สึกหรอ</span>
                         </button>
-                        <button onclick="quickExpense('ทางด่วนลูกค้า')" class="quick-btn bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
-                            <i class="fas fa-road"></i> <span>ทางด่วน (ลูกค้า)</span>
+                        <button onclick="quickExpense('ทางด่วนลูกค้า')" class="quick-btn bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1">
+                            <i class="fas fa-road"></i> <span>ทางด่วนลูกค้า</span>
                         </button>
-                        <button onclick="quickExpense('ทางด่วนเราเอง')" class="quick-btn bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
-                            <i class="fas fa-car"></i> <span>ทางด่วน (เราเอง)</span>
+                        <button onclick="quickExpense('ทางด่วนเราเอง')" class="quick-btn bg-purple-600 hover:bg-purple-700 text-white py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1">
+                            <i class="fas fa-car"></i> <span>ทางด่วนเราเอง</span>
                         </button>
-                        <button onclick="quickExpense('อื่นๆ')" class="quick-btn bg-slate-600 hover:bg-slate-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
+                        <button onclick="quickExpense('อื่นๆ')" class="quick-btn bg-slate-600 hover:bg-slate-700 text-white py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1">
                             <i class="fas fa-ellipsis-h"></i> <span>อื่นๆ</span>
                         </button>
                     </div>
@@ -155,11 +147,11 @@
                     <span class="text-xs text-slate-500" id="transaction-count">0 รายการ</span>
                 </div>
                 
-                <div id="transactions-list" class="space-y-2 max-h-[280px] overflow-y-auto pr-1">
+                <div id="transactions-list" class="space-y-2">
                     <!-- Populated by JS -->
                 </div>
                 
-                <div id="empty-state" class="hidden text-center py-6 text-slate-500">
+                <div id="empty-state" class="hidden text-center py-8 text-slate-500">
                     <i class="fas fa-receipt text-3xl mb-2 opacity-40"></i>
                     <p class="text-sm">ยังไม่มีรายการวันนี้</p>
                 </div>
@@ -483,7 +475,6 @@
                     totalTrips++;
                     totalGp += record.gp || 0;
                 } else if (record.type === 'expense') {
-                    // Only count real expenses (exclude customer-paid toll)
                     if (record.category !== 'ทางด่วนลูกค้า') {
                         totalExpense += record.amount;
                     }
@@ -491,24 +482,17 @@
             });
             
             const net = totalIncome - totalExpense;
-            
             const fuelCost = (totalKm / settings.fuelConsumption) * settings.fuelPrice;
             const depreciationCost = totalKm * settings.depreciationRate;
             const realNet = totalIncome - totalExpense - fuelCost - depreciationCost;
             
-            // Update DOM
             document.getElementById('total-income').textContent = totalIncome.toLocaleString();
             document.getElementById('total-expense').textContent = totalExpense.toLocaleString();
             document.getElementById('real-net').textContent = Math.round(realNet).toLocaleString();
-            document.getElementById('net-status').textContent = realNet >= 0 ? 'กำไรสุทธิ' : 'ขาดทุน';
+            document.getElementById('net-status').textContent = realNet >= 0 ? 'หลังหักน้ำมัน + สึกหรอ + ค่าใช้จ่าย' : 'ขาดทุน';
             
-            document.getElementById('fuel-cost').innerHTML = `${Math.round(fuelCost)} บาท <span class="text-xs">(${(totalKm / settings.fuelConsumption).toFixed(1)} ลิตร × ${settings.fuelPrice} บาท)</span>`;
+            document.getElementById('fuel-cost').innerHTML = `${Math.round(fuelCost)} บาท`;
             document.getElementById('depreciation-cost').textContent = Math.round(depreciationCost) + ' บาท';
-            document.getElementById('final-net').textContent = Math.round(realNet).toLocaleString() + ' บาท';
-            
-            document.getElementById('total-trips').textContent = totalTrips; // if needed elsewhere
-            document.getElementById('total-km').textContent = totalKm;
-            document.getElementById('total-gp').textContent = totalGp.toLocaleString();
             
             document.getElementById('transaction-count').textContent = todayRecords.length + ' รายการ';
             
@@ -979,7 +963,7 @@
                 if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); } });
             });
             
-            console.log('%c[Lalamove Account] Improved summary + proper toll handling (customer toll excluded from expense)', 'color:#10b981');
+            console.log('%c[Lalamove Account] UI cleaned up + transactions list fixed', 'color:#10b981');
         }
 
         window.onload = initializeApp;
