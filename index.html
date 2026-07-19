@@ -56,13 +56,13 @@
                 <div id="checkin-duration" class="text-xs text-emerald-400 mt-1 hidden"></div>
             </div>
 
-            <!-- Summary Section (Cleaner) -->
+            <!-- Summary Section (with breakdown button) -->
             <div class="mb-4">
                 <div class="flex items-center justify-between mb-2 px-1">
                     <h2 class="text-lg font-semibold">สรุปวันนี้</h2>
-                    <button onclick="resetDay()" class="text-xs px-2.5 py-1 bg-red-900 text-red-400 rounded-lg flex items-center gap-1">
-                        <i class="fas fa-redo text-xs"></i>
-                        <span>รีเซ็ต</span>
+                    <button onclick="showSummaryDetail()" class="text-xs px-2.5 py-1 bg-emerald-900 text-emerald-400 rounded-lg flex items-center gap-1">
+                        <i class="fas fa-chart-pie text-xs"></i>
+                        <span>ดูรายละเอียด</span>
                     </button>
                 </div>
 
@@ -169,6 +169,48 @@
                     <i class="fas fa-cog text-xl"></i>
                     <span class="text-xs mt-0.5">ตั้งค่า</span>
                 </button>
+            </div>
+        </div>
+
+        <!-- Summary Detail Modal -->
+        <div id="summary-detail-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
+            <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">รายละเอียดสรุปวันนี้</h3>
+                    <button onclick="hideSummaryDetail()" class="text-2xl text-slate-400">&times;</button>
+                </div>
+                
+                <div class="space-y-4">
+                    <!-- Income Breakdown -->
+                    <div>
+                        <div class="text-sm font-medium text-emerald-400 mb-2">รายได้</div>
+                        <div class="bg-slate-800 rounded-2xl p-4 space-y-2 text-sm">
+                            <div class="flex justify-between"><span class="text-slate-400">รายได้จากแอพ</span> <span id="sum-fare" class="font-medium">0 บาท</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">ทิปจากลูกค้า</span> <span id="sum-tip" class="font-medium text-amber-400">0 บาท</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">ค่าจีพี (GP)</span> <span id="sum-gp" class="font-medium text-amber-400">0 บาท</span></div>
+                            <div class="flex justify-between pt-2 border-t border-slate-700"><span class="font-semibold">รวมรายได้</span> <span id="sum-total-income" class="font-bold text-emerald-400">0 บาท</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Expense Breakdown -->
+                    <div>
+                        <div class="text-sm font-medium text-red-400 mb-2">หักออก</div>
+                        <div class="bg-slate-800 rounded-2xl p-4 space-y-2 text-sm">
+                            <div class="flex justify-between"><span class="text-slate-400">ค่าน้ำมัน</span> <span id="sum-fuel" class="font-medium">0 บาท</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">ค่าสึกหรอ</span> <span id="sum-depreciation" class="font-medium">0 บาท</span></div>
+                            <div class="flex justify-between"><span class="text-slate-400">ค่าใช้จ่ายอื่นๆ</span> <span id="sum-other-expense" class="font-medium">0 บาท</span></div>
+                            <div class="flex justify-between pt-2 border-t border-slate-700"><span class="font-semibold">รวมที่หัก</span> <span id="sum-total-expense" class="font-bold text-red-400">0 บาท</span></div>
+                        </div>
+                    </div>
+
+                    <!-- Final Net -->
+                    <div class="bg-emerald-900/30 border border-emerald-600 rounded-2xl p-4">
+                        <div class="flex justify-between items-center">
+                            <span class="font-semibold text-emerald-400">กำไรสุทธิจริง</span>
+                            <span id="sum-real-net" class="text-2xl font-bold text-emerald-400">0 บาท</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -469,10 +511,14 @@
             let totalKm = 0;
             let totalTrips = 0;
             let totalGp = 0;
+            let totalFare = 0;
+            let totalTip = 0;
             
             todayRecords.forEach(record => {
                 if (record.type === 'income') {
                     totalIncome += (record.fare || 0) + (record.tip || 0) + (record.gp || 0);
+                    totalFare += record.fare || 0;
+                    totalTip += record.tip || 0;
                     totalKm += record.km || 0;
                     totalTrips++;
                     totalGp += record.gp || 0;
@@ -500,6 +546,35 @@
             
             const realNetEl = document.getElementById('real-net');
             realNetEl.style.color = realNet >= 0 ? '#10b981' : '#f87171';
+            
+            // Store for summary detail modal
+            window.currentSummary = { totalFare, totalTip, totalGp, totalIncome, fuelCost, depreciationCost, totalExpense, realNet };
+        }
+
+        function showSummaryDetail() {
+            if (!window.currentSummary) return;
+            
+            const s = window.currentSummary;
+            
+            document.getElementById('sum-fare').textContent = s.totalFare.toLocaleString() + ' บาท';
+            document.getElementById('sum-tip').textContent = s.totalTip.toLocaleString() + ' บาท';
+            document.getElementById('sum-gp').textContent = s.totalGp.toLocaleString() + ' บาท';
+            document.getElementById('sum-total-income').textContent = s.totalIncome.toLocaleString() + ' บาท';
+            
+            document.getElementById('sum-fuel').textContent = Math.round(s.fuelCost) + ' บาท';
+            document.getElementById('sum-depreciation').textContent = Math.round(s.depreciationCost) + ' บาท';
+            document.getElementById('sum-other-expense').textContent = s.totalExpense.toLocaleString() + ' บาท';
+            document.getElementById('sum-total-expense').textContent = (Math.round(s.fuelCost) + Math.round(s.depreciationCost) + s.totalExpense).toLocaleString() + ' บาท';
+            
+            document.getElementById('sum-real-net').textContent = Math.round(s.realNet).toLocaleString() + ' บาท';
+            
+            document.getElementById('summary-detail-modal').classList.remove('hidden');
+            document.getElementById('summary-detail-modal').classList.add('flex');
+        }
+
+        function hideSummaryDetail() {
+            document.getElementById('summary-detail-modal').classList.remove('flex');
+            document.getElementById('summary-detail-modal').classList.add('hidden');
         }
 
         function renderTransactions() {
@@ -974,12 +1049,12 @@
                 if (e.key === '/' && document.activeElement.tagName === 'BODY') { e.preventDefault(); showAddIncomeModal(); }
             });
             
-            ['income-modal','expense-modal','settings-modal','quick-expense-modal','detail-modal','delete-confirm-modal'].forEach(id => {
+            ['income-modal','expense-modal','settings-modal','quick-expense-modal','detail-modal','delete-confirm-modal','summary-detail-modal'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); } });
+                if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); if (id==='summary-detail-modal') hideSummaryDetail(); } });
             });
             
-            console.log('%c[Lalamove Account] Added separate Tip field in trip recording', 'color:#10b981');
+            console.log('%c[Lalamove Account] Added Summary Detail breakdown modal', 'color:#10b981');
         }
 
         window.onload = initializeApp;
