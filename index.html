@@ -10,13 +10,15 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Noto+Sans+Thai:wght@400;500;600&amp;display=swap');
         body { font-family: 'Inter', 'Noto Sans Thai', system-ui, sans-serif; }
         .mobile-container { max-width: 480px; margin: 0 auto; }
-        .transaction-item { transition: transform 0.2s, background-color 0.2s; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+        .transaction-item { transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1); -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; position: relative; overflow: hidden; }
         .summary-card { background: linear-gradient(135deg, #1e2937 0%, #0f172a 100%); }
         .quick-btn { transition: all 0.1s; }
         .quick-btn:active { transform: scale(0.95); }
         .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #334155; }
         .payer-btn { transition: all 0.1s; }
         .payer-btn.active { background-color: #10b981; color: white; border-color: #10b981; }
+        .swipe-action { position: absolute; right: 0; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; width: 70px; background: #ef4444; color: white; transform: translateX(100%); transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1); }
+        .swipe-action.show { transform: translateX(0); }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
@@ -420,6 +422,7 @@
         let currentDetailRecord = null;
         let currentTollPayer = 'customer';
         let currentSwipedElement = null;
+        let currentActionRow = null;
 
         function loadData() {
             const savedRecords = localStorage.getItem('lalamove_records');
@@ -610,6 +613,20 @@
                 const div = document.createElement('div');
                 div.className = `transaction-item flex items-center justify-between p-3.5 bg-slate-800 rounded-2xl border border-slate-700 cursor-pointer`;
                 
+                // Create swipe action button
+                const actionDiv = document.createElement('div');
+                actionDiv.className = 'swipe-action';
+                actionDiv.innerHTML = `<i class="fas fa-trash text-xl"></i>`;
+                actionDiv.onclick = (e) => {
+                    e.stopImmediatePropagation();
+                    currentDeleteId = record.id;
+                    currentSwipedElement = div;
+                    hideSwipeAction(div);
+                    showDeleteConfirm();
+                };
+                
+                div.appendChild(actionDiv);
+                
                 let icon = '';
                 let color = '';
                 let extra = '';
@@ -626,7 +643,7 @@
                 }
                 
                 div.innerHTML = `
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 flex-1">
                         <div class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-700">
                             ${icon}
                         </div>
@@ -637,7 +654,7 @@
                             ${extra}
                         </div>
                     </div>
-                    <div class="text-right">
+                    <div class="text-right pr-2">
                         <div class="font-semibold ${color}">
                             ${record.type === 'income' ? '+' : '-'}${record.amount.toLocaleString()}
                         </div>
@@ -645,9 +662,13 @@
                     </div>
                 `;
                 
+                // Re-append action button after innerHTML
+                div.appendChild(actionDiv);
+                
                 div.addEventListener('click', () => showDetailModal(record));
                 div.addEventListener('contextmenu', (e) => e.preventDefault());
                 
+                // Long press
                 let pressTimer;
                 div.addEventListener('touchstart', (e) => {
                     pressTimer = setTimeout(() => showEditDeleteOptions(record, div), 550);
@@ -655,34 +676,68 @@
                 div.addEventListener('touchend', () => clearTimeout(pressTimer));
                 div.addEventListener('touchcancel', () => clearTimeout(pressTimer));
                 
+                // Swipe logic
                 let startX = 0;
-                div.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; div.style.transition = 'none'; });
+                let isSwiping = false;
+                
+                div.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                    isSwiping = true;
+                    div.style.transition = 'none';
+                });
+                
                 div.addEventListener('touchmove', (e) => {
+                    if (!isSwiping) return;
                     const currentX = e.touches[0].clientX;
                     const deltaX = currentX - startX;
+                    
                     if (deltaX < 0) {
-                        div.style.transform = `translateX(${Math.max(deltaX, -130)}px)`;
-                        if (deltaX < -50) div.style.backgroundColor = '#7f1d1d';
+                        const limitedDelta = Math.max(deltaX, -85);
+                        div.style.transform = `translateX(${limitedDelta}px)`;
+                        
+                        // Show action button when swiped far enough
+                        if (limitedDelta < -40) {
+                            actionDiv.classList.add('show');
+                        } else {
+                            actionDiv.classList.remove('show');
+                        }
                     }
                 });
+                
                 div.addEventListener('touchend', (e) => {
+                    if (!isSwiping) return;
+                    isSwiping = false;
+                    
                     const endX = e.changedTouches[0].clientX;
                     const deltaX = endX - startX;
-                    div.style.transition = 'transform 0.3s, background-color 0.3s';
                     
-                    if (deltaX < -80) {
-                        currentDeleteId = record.id;
+                    div.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)';
+                    
+                    if (deltaX < -55) {
+                        // Keep it open with action visible
+                        div.style.transform = 'translateX(-70px)';
+                        actionDiv.classList.add('show');
                         currentSwipedElement = div;
-                        showDeleteConfirmFromSwipe();
+                        currentActionRow = actionDiv;
                     } else {
+                        // Reset
                         div.style.transform = 'translateX(0)';
-                        div.style.backgroundColor = '';
+                        actionDiv.classList.remove('show');
                         currentSwipedElement = null;
+                        currentActionRow = null;
                     }
                 });
                 
                 container.appendChild(div);
             });
+        }
+
+        function hideSwipeAction(element) {
+            if (!element) return;
+            const action = element.querySelector('.swipe-action');
+            if (action) action.classList.remove('show');
+            element.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)';
+            element.style.transform = 'translateX(0)';
         }
 
         function showDetailModal(record) {
@@ -756,6 +811,12 @@
         }
 
         function showEditDeleteOptions(record, element) {
+            // Close any open swipe action first
+            if (currentSwipedElement) {
+                hideSwipeAction(currentSwipedElement);
+                currentSwipedElement = null;
+            }
+            
             const options = document.createElement('div');
             options.className = 'fixed inset-0 bg-black/50 z-[200] flex items-center justify-center';
             options.innerHTML = `
@@ -768,7 +829,7 @@
                         <button onclick="editRecord(${record.id}, this)" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 rounded-xl font-semibold flex items-center justify-center gap-2">
                             <i class="fas fa-edit"></i> <span>แก้ไข</span>
                         </button>
-                        <button onclick="currentDeleteId = ${record.id}; this.closest('.fixed').remove(); showDeleteConfirm()" class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold flex items-center justify-center gap-2">
+                        <button onclick="currentDeleteId = ${record.id}; this.closest('.fixed').remove(); showDeleteConfirm();" class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold flex items-center justify-center gap-2">
                             <i class="fas fa-trash"></i> <span>ลบ</span>
                         </button>
                         <button onclick="this.closest('.fixed').remove()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold">ยกเลิก</button>
@@ -973,22 +1034,6 @@
             showToast(`บันทึก${currentQuickCategory} เรียบร้อย!`);
         }
 
-        // === SWIPE DELETE FIX ===
-        function showDeleteConfirmFromSwipe() {
-            // Immediately reset the swiped card to prevent click blocking
-            if (currentSwipedElement) {
-                currentSwipedElement.style.transition = 'transform 0.15s ease';
-                currentSwipedElement.style.transform = 'translateX(0)';
-                currentSwipedElement.style.backgroundColor = '';
-            }
-            
-            // Small delay to let DOM settle before showing modal
-            setTimeout(() => {
-                document.getElementById('delete-confirm-modal').classList.remove('hidden');
-                document.getElementById('delete-confirm-modal').classList.add('flex');
-            }, 80);
-        }
-
         function showDeleteConfirm() {
             document.getElementById('delete-confirm-modal').classList.remove('hidden');
             document.getElementById('delete-confirm-modal').classList.add('flex');
@@ -999,17 +1044,11 @@
             document.getElementById('delete-confirm-modal').classList.add('hidden');
             
             if (currentSwipedElement) {
-                currentSwipedElement.style.transform = 'translateX(0)';
-                currentSwipedElement.style.backgroundColor = '';
+                hideSwipeAction(currentSwipedElement);
                 currentSwipedElement = null;
             }
             
             currentDeleteId = null;
-            
-            document.querySelectorAll('.transaction-item').forEach(el => {
-                el.style.transform = 'translateX(0)';
-                el.style.backgroundColor = '';
-            });
         }
 
         function deleteRecord(id) {
@@ -1118,14 +1157,12 @@
         }
 
         function setupNumberInputs() {
-            // Clear leading 0 when focusing number inputs
             document.querySelectorAll('input[type="number"]').forEach(input => {
                 input.addEventListener('focus', function() {
                     if (this.value === '0' || this.value === '') {
                         this.value = '';
                     }
                 });
-                
                 input.addEventListener('blur', function() {
                     if (this.value === '') {
                         this.value = '0';
@@ -1143,7 +1180,7 @@
             startCheckinTimer();
             setupNumberInputs();
             
-            // Attach delete confirmation buttons
+            // Delete confirmation buttons
             const btnCancel = document.getElementById('btn-cancel-delete');
             const btnConfirm = document.getElementById('btn-confirm-delete');
             
@@ -1165,7 +1202,7 @@
                 if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); if (id==='summary-detail-modal') hideSummaryDetail(); } });
             });
             
-            console.log('%c[Lalamove Account] Fixed: Swipe delete first-click + number input UX', 'color:#10b981');
+            console.log('%c[Lalamove Account] NEW: Swipe to reveal trash button (native feel) - Best UX', 'color:#10b981');
         }
 
         window.onload = initializeApp;
