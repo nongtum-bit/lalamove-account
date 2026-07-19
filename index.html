@@ -664,45 +664,42 @@
                 
                 div.appendChild(actionDiv);
                 
-                // === CLEAN TOUCH HANDLING ===
+                // === ROBUST TOUCH HANDLING ===
                 let startX = 0;
                 let startY = 0;
                 let longPressTimer = null;
                 let isSwiping = false;
-                let wasSwiped = false;
+                let longPressFired = false;
                 
-                // Long press detection
                 div.addEventListener('touchstart', function(e) {
                     startX = e.touches[0].clientX;
                     startY = e.touches[0].clientY;
-                    wasSwiped = false;
+                    longPressFired = false;
                     isSwiping = false;
                     
                     longPressTimer = setTimeout(() => {
-                        if (!isSwiping && !wasSwiped) {
-                            showEditDeleteOptions(record, div);
-                        }
-                    }, 550);
+                        longPressFired = true;
+                        showEditDeleteOptions(record, div);
+                    }, 520);
                 });
                 
                 div.addEventListener('touchmove', function(e) {
-                    if (!longPressTimer) return;
-                    
                     const currentX = e.touches[0].clientX;
                     const currentY = e.touches[0].clientY;
                     const deltaX = currentX - startX;
                     const deltaY = currentY - startY;
                     
-                    // If moving horizontally significantly, cancel long press and start swipe
-                    if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY)) {
-                        clearTimeout(longPressTimer);
-                        longPressTimer = null;
+                    if (Math.abs(deltaX) > 12 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                        if (longPressTimer) {
+                            clearTimeout(longPressTimer);
+                            longPressTimer = null;
+                        }
                         isSwiping = true;
-                        wasSwiped = true;
-                        div.style.transition = 'none';
-                    }
-                    
-                    if (isSwiping && deltaX < 0) {
+                        
+                        if (!div.style.transition.includes('none')) {
+                            div.style.transition = 'none';
+                        }
+                        
                         const limited = Math.max(deltaX, -85);
                         div.style.transform = `translateX(${limited}px)`;
                         
@@ -715,8 +712,10 @@
                 });
                 
                 div.addEventListener('touchend', function(e) {
-                    clearTimeout(longPressTimer);
-                    longPressTimer = null;
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
                     
                     if (isSwiping) {
                         const endX = e.changedTouches[0].clientX;
@@ -734,23 +733,26 @@
                             currentSwipedElement = null;
                         }
                         
-                        // Prevent click from firing after swipe
-                        setTimeout(() => { wasSwiped = false; }, 300);
                         isSwiping = false;
-                        return;
+                        return; // Important: do not fall through to detail
                     }
                     
-                    // Normal tap (not swiped)
-                    if (!wasSwiped) {
+                    // Normal tap - only if long press did NOT fire
+                    if (!longPressFired) {
                         showDetailModal(record);
                     }
+                    
+                    // Reset flag after a short delay
+                    setTimeout(() => { longPressFired = false; }, 400);
                 });
                 
                 div.addEventListener('touchcancel', function() {
-                    clearTimeout(longPressTimer);
-                    longPressTimer = null;
+                    if (longPressTimer) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                    }
                     isSwiping = false;
-                    wasSwiped = false;
+                    longPressFired = false;
                     div.style.transform = 'translateX(0)';
                     actionDiv.classList.remove('show');
                 });
@@ -1226,7 +1228,7 @@
                 if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); if (id==='summary-detail-modal') hideSummaryDetail(); } });
             });
             
-            console.log('%c[Lalamove Account] Fixed event conflicts: Swipe + Click + LongPress now work cleanly', 'color:#10b981');
+            console.log('%c[Lalamove Account] CRITICAL FIX: Long press no longer triggers detail view', 'color:#10b981');
         }
 
         window.onload = initializeApp;
