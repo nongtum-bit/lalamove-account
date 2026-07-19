@@ -251,7 +251,34 @@
             </div>
         </div>
 
-        <!-- Add Expense Modal -->
+        <!-- Quick Expense Modal (simplified - no dropdown) -->
+        <div id="quick-expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
+            <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold" id="quick-expense-title">บันทึกค่าใช้จ่าย</h3>
+                    <button onclick="hideQuickExpenseModal()" class="text-2xl text-slate-400">&times;</button>
+                </div>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">จำนวนเงิน (บาท)</label>
+                        <input type="number" id="quick-expense-amount" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">หมายเหตุ (ถ้ามี)</label>
+                        <input type="text" id="quick-expense-note" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:border-red-500">
+                    </div>
+                </div>
+                
+                <div class="flex gap-3 mt-8">
+                    <button onclick="hideQuickExpenseModal()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
+                    <button onclick="saveQuickExpense()" class="flex-1 py-3.5 bg-red-600 hover:bg-red-700 rounded-2xl font-semibold">บันทึก</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Expense Modal (full - for อื่นๆ) -->
         <div id="expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -289,7 +316,7 @@
             </div>
         </div>
 
-        <!-- Settings Modal (updated with fuel price) -->
+        <!-- Settings Modal (with fuel price per liter) -->
         <div id="settings-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -336,6 +363,7 @@
             depreciationRate: 1
         };
         let checkin = { start: null, end: null };
+        let currentQuickCategory = '';
 
         function loadData() {
             const savedRecords = localStorage.getItem('lalamove_records');
@@ -521,13 +549,43 @@
                     </div>
                 `;
                 
-                let pressTimer;
-                div.addEventListener('touchstart', () => {
-                    pressTimer = setTimeout(() => {
-                        if (confirm('ลบรายการนี้?')) deleteRecord(record.id);
-                    }, 600);
+                // Swipe left to delete
+                let startX = 0;
+                let currentX = 0;
+                
+                div.addEventListener('touchstart', (e) => {
+                    startX = e.touches[0].clientX;
+                    div.style.transition = 'none';
                 });
-                div.addEventListener('touchend', () => clearTimeout(pressTimer));
+                
+                div.addEventListener('touchmove', (e) => {
+                    currentX = e.touches[0].clientX;
+                    const deltaX = currentX - startX;
+                    if (deltaX < 0) {
+                        div.style.transform = `translateX(${deltaX}px)`;
+                        if (deltaX < -50) {
+                            div.style.backgroundColor = '#7f1d1d';
+                        }
+                    }
+                });
+                
+                div.addEventListener('touchend', (e) => {
+                    const endX = e.changedTouches[0].clientX;
+                    const deltaX = endX - startX;
+                    div.style.transition = 'transform 0.3s, background-color 0.3s';
+                    
+                    if (deltaX < -80) {
+                        if (confirm('ลบรายการนี้?')) {
+                            deleteRecord(record.id);
+                        } else {
+                            div.style.transform = 'translateX(0)';
+                            div.style.backgroundColor = '';
+                        }
+                    } else {
+                        div.style.transform = 'translateX(0)';
+                        div.style.backgroundColor = '';
+                    }
+                });
                 
                 container.appendChild(div);
             });
@@ -593,18 +651,53 @@
         }
 
         function quickExpense(category) {
+            currentQuickCategory = category;
             if (category === 'อื่นๆ') {
                 showAddExpenseModal();
                 return;
             }
-            // Pre-set category and open modal
-            document.getElementById('expense-category').value = category;
-            showAddExpenseModal();
-            // Focus on amount
+            document.getElementById('quick-expense-title').innerText = `บันทึก${category}`;
+            document.getElementById('quick-expense-modal').classList.remove('hidden');
+            document.getElementById('quick-expense-modal').classList.add('flex');
+            
             setTimeout(() => {
-                document.getElementById('expense-amount').focus();
-                document.getElementById('expense-amount').select();
+                document.getElementById('quick-expense-amount').focus();
+                document.getElementById('quick-expense-amount').select();
             }, 300);
+        }
+
+        function hideQuickExpenseModal() {
+            document.getElementById('quick-expense-modal').classList.remove('flex');
+            document.getElementById('quick-expense-modal').classList.add('hidden');
+            document.getElementById('quick-expense-amount').value = '';
+            document.getElementById('quick-expense-note').value = '';
+        }
+
+        function saveQuickExpense() {
+            const amount = parseFloat(document.getElementById('quick-expense-amount').value) || 0;
+            const note = document.getElementById('quick-expense-note').value.trim();
+            
+            if (amount <= 0) {
+                alert('กรุณาระบุจำนวนเงิน');
+                return;
+            }
+            
+            const record = {
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+                type: 'expense',
+                category: currentQuickCategory,
+                amount: amount,
+                note: note
+            };
+            
+            records.push(record);
+            saveData();
+            updateSummary();
+            renderTransactions();
+            hideQuickExpenseModal();
+            showToast(`บันทึก${currentQuickCategory} เรียบร้อย!`);
         }
 
         function deleteRecord(id) {
@@ -707,17 +800,21 @@
             });
             
             // Close modals on outside click
-            ['income-modal', 'expense-modal', 'settings-modal'].forEach(id => {
-                document.getElementById(id).addEventListener('click', function(e) {
-                    if (e.target.id === id) {
-                        if (id === 'income-modal') hideIncomeModal();
-                        if (id === 'expense-modal') hideExpenseModal();
-                        if (id === 'settings-modal') hideSettings();
-                    }
-                });
+            ['income-modal', 'expense-modal', 'settings-modal', 'quick-expense-modal'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener('click', function(e) {
+                        if (e.target.id === id) {
+                            if (id === 'income-modal') hideIncomeModal();
+                            if (id === 'expense-modal') hideExpenseModal();
+                            if (id === 'settings-modal') hideSettings();
+                            if (id === 'quick-expense-modal') hideQuickExpenseModal();
+                        }
+                    });
+                }
             });
             
-            console.log('%c[Lalamove Account] App updated with check-in, quick expense, GP, fuel price', 'color:#10b981');
+            console.log('%c[Lalamove Account] App updated - Quick expense simplified + Swipe delete', 'color:#10b981');
         }
 
         window.onload = initializeApp;
