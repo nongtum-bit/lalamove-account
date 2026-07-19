@@ -10,12 +10,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Noto+Sans+Thai:wght@400;500;600&amp;display=swap');
         body { font-family: 'Inter', 'Noto Sans Thai', system-ui, sans-serif; }
         .mobile-container { max-width: 480px; margin: 0 auto; }
-        .transaction-item { 
-            transition: transform 0.2s, background-color 0.2s; 
-            -webkit-user-select: none; 
-            user-select: none;
-            -webkit-touch-callout: none;
-        }
+        .transaction-item { transition: transform 0.2s, background-color 0.2s; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
         .summary-card { background: linear-gradient(135deg, #1e2937 0%, #0f172a 100%); }
         .quick-btn { transition: all 0.1s; }
         .quick-btn:active { transform: scale(0.95); }
@@ -62,6 +57,7 @@
                 <div id="checkin-duration" class="text-xs text-emerald-400 mt-2 hidden"></div>
             </div>
 
+            <!-- Summary Section (Improved) -->
             <div class="mb-4">
                 <div class="flex items-center justify-between mb-2">
                     <h2 class="text-xl font-semibold">สรุปวันนี้</h2>
@@ -70,51 +66,43 @@
                         <span>รีเซ็ตวัน</span>
                     </button>
                 </div>
-                
-                <!-- Summary Cards -->
-                <div class="grid grid-cols-2 gap-3">
+
+                <!-- Main Summary Cards -->
+                <div class="grid grid-cols-2 gap-3 mb-3">
                     <div class="summary-card p-4 rounded-2xl border border-emerald-700">
-                        <div class="flex items-center gap-2 mb-2">
-                            <i class="fas fa-wallet text-emerald-400 text-xl"></i>
-                            <span class="text-sm text-emerald-400 font-medium">รายได้</span>
+                        <div class="flex items-center gap-2 mb-1">
+                            <i class="fas fa-wallet text-emerald-400"></i>
+                            <span class="text-sm text-emerald-400">รายได้รวม</span>
                         </div>
                         <div class="text-3xl font-bold text-emerald-400" id="total-income">0</div>
-                        <div class="text-xs text-emerald-300">บาท</div>
+                        <div class="text-xs text-emerald-300">บาท (Fare + GP)</div>
                     </div>
                     
                     <div class="summary-card p-4 rounded-2xl border border-red-700">
-                        <div class="flex items-center gap-2 mb-2">
-                            <i class="fas fa-receipt text-red-400 text-xl"></i>
-                            <span class="text-sm text-red-400 font-medium">ค่าใช้จ่าย</span>
+                        <div class="flex items-center gap-2 mb-1">
+                            <i class="fas fa-receipt text-red-400"></i>
+                            <span class="text-sm text-red-400">ค่าใช้จ่ายที่หัก</span>
                         </div>
                         <div class="text-3xl font-bold text-red-400" id="total-expense">0</div>
-                        <div class="text-xs text-red-300">บาท</div>
+                        <div class="text-xs text-red-300">บาท (หักจริง)</div>
                     </div>
                 </div>
 
-                <div class="mt-3 grid grid-cols-3 gap-3">
-                    <div class="bg-slate-800 p-3 rounded-2xl border border-slate-600">
-                        <div class="text-xs text-slate-400 mb-1">กำไรสุทธิ</div>
-                        <div class="text-2xl font-bold" id="net-profit">0</div>
-                        <div class="text-xs text-emerald-400" id="net-status">บาท</div>
-                    </div>
-                    <div class="bg-slate-800 p-3 rounded-2xl border border-slate-600">
-                        <div class="text-xs text-slate-400 mb-1">จำนวนงาน</div>
-                        <div class="text-2xl font-bold" id="total-trips">0</div>
-                        <div class="text-xs text-emerald-400">รอบ</div>
-                    </div>
-                    <div class="bg-slate-800 p-3 rounded-2xl border border-slate-600">
-                        <div class="text-xs text-slate-400 mb-1">ระยะทาง</div>
-                        <div class="text-2xl font-bold" id="total-km">0</div>
-                        <div class="text-xs text-emerald-400">km</div>
-                    </div>
+                <!-- Net Profit Card -->
+                <div class="bg-slate-800 border border-emerald-600 p-4 rounded-2xl mb-3">
+                    <div class="text-sm text-emerald-400 mb-1">กำไรสุทธิจริง (หลังหักทุกอย่าง)</div>
+                    <div class="text-4xl font-bold" id="real-net">0</div>
+                    <div class="text-xs text-emerald-300 mt-1" id="net-status">บาท</div>
                 </div>
 
-                <!-- GP Summary -->
-                <div class="mt-3 bg-slate-800 p-3 rounded-2xl border border-slate-600">
-                    <div class="text-xs text-slate-400 mb-1">ค่าจีพี (GP) รวม</div>
-                    <div class="text-2xl font-bold text-amber-400" id="total-gp">0</div>
-                    <div class="text-xs text-amber-300">บาท</div>
+                <!-- Breakdown -->
+                <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 text-sm">
+                    <div class="font-medium text-slate-400 mb-2">รายละเอียดการหัก</div>
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between"><span class="text-slate-400">ค่าน้ำมัน (จากระยะทาง)</span> <span id="fuel-cost" class="font-medium">0 บาท</span></div>
+                        <div class="flex justify-between"><span class="text-slate-400">ค่าสึกหรอ (1 บาท/กม.)</span> <span id="depreciation-cost" class="font-medium">0 บาท</span></div>
+                        <div class="flex justify-between pt-1 border-t border-slate-700"><span class="font-medium text-emerald-400">ยอดสุทธิหลังหัก</span> <span id="final-net" class="font-bold text-emerald-400">0 บาท</span></div>
+                    </div>
                 </div>
             </div>
 
@@ -135,7 +123,6 @@
                     </button>
                 </div>
 
-                <!-- Quick Expense Buttons -->
                 <div>
                     <h4 class="text-xs text-slate-500 mb-2 px-1">ค่าใช้จ่ายด่วน</h4>
                     <div class="grid grid-cols-3 gap-2">
@@ -177,29 +164,6 @@
                     <p class="text-sm">ยังไม่มีรายการวันนี้</p>
                 </div>
             </div>
-
-            <!-- Auto Calculations -->
-            <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 mb-6">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-sm font-medium text-slate-400">คำนวนอัตโนมัติ</h3>
-                    <span class="text-xs text-emerald-400 cursor-pointer" onclick="showSettings()">การตั้งค่า</span>
-                </div>
-                
-                <div class="space-y-3 text-sm">
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">ค่าน้ำมัน (ตามราคาวันนี้)</span>
-                        <span class="font-medium" id="fuel-cost">0 บาท</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">ค่าสึกหรอ (1 บาท/กม.)</span>
-                        <span class="font-medium" id="depreciation-cost">0 บาท</span>
-                    </div>
-                    <div class="flex justify-between pt-2 border-t border-slate-700">
-                        <span class="font-medium text-emerald-400">กำไรสุทธิจริง</span>
-                        <span class="font-bold text-emerald-400 text-lg" id="real-net">0 บาท</span>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Bottom Navigation -->
@@ -220,7 +184,7 @@
             </div>
         </div>
 
-        <!-- Detail Modal for Transaction -->
+        <!-- Detail Modal -->
         <div id="detail-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-4">
@@ -239,7 +203,7 @@
             </div>
         </div>
 
-        <!-- Add Income Modal (with GP) -->
+        <!-- Add Income Modal -->
         <div id="income-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -276,7 +240,7 @@
             </div>
         </div>
 
-        <!-- Quick Expense Modal (simplified) -->
+        <!-- Quick Expense Modal -->
         <div id="quick-expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-4">
@@ -302,7 +266,7 @@
             </div>
         </div>
 
-        <!-- Add Expense Modal (full) -->
+        <!-- Add Expense Modal -->
         <div id="expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -518,8 +482,11 @@
                     totalKm += record.km || 0;
                     totalTrips++;
                     totalGp += record.gp || 0;
-                } else {
-                    totalExpense += record.amount;
+                } else if (record.type === 'expense') {
+                    // Only count real expenses (exclude customer-paid toll)
+                    if (record.category !== 'ทางด่วนลูกค้า') {
+                        totalExpense += record.amount;
+                    }
                 }
             });
             
@@ -529,17 +496,19 @@
             const depreciationCost = totalKm * settings.depreciationRate;
             const realNet = totalIncome - totalExpense - fuelCost - depreciationCost;
             
+            // Update DOM
             document.getElementById('total-income').textContent = totalIncome.toLocaleString();
             document.getElementById('total-expense').textContent = totalExpense.toLocaleString();
-            document.getElementById('net-profit').textContent = net.toLocaleString();
-            document.getElementById('net-status').textContent = net >= 0 ? 'กำไร' : 'ขาดทุน';
-            document.getElementById('total-trips').textContent = totalTrips;
-            document.getElementById('total-km').textContent = totalKm;
-            document.getElementById('total-gp').textContent = totalGp.toLocaleString();
+            document.getElementById('real-net').textContent = Math.round(realNet).toLocaleString();
+            document.getElementById('net-status').textContent = realNet >= 0 ? 'กำไรสุทธิ' : 'ขาดทุน';
             
             document.getElementById('fuel-cost').innerHTML = `${Math.round(fuelCost)} บาท <span class="text-xs">(${(totalKm / settings.fuelConsumption).toFixed(1)} ลิตร × ${settings.fuelPrice} บาท)</span>`;
             document.getElementById('depreciation-cost').textContent = Math.round(depreciationCost) + ' บาท';
-            document.getElementById('real-net').textContent = Math.round(realNet).toLocaleString() + ' บาท';
+            document.getElementById('final-net').textContent = Math.round(realNet).toLocaleString() + ' บาท';
+            
+            document.getElementById('total-trips').textContent = totalTrips; // if needed elsewhere
+            document.getElementById('total-km').textContent = totalKm;
+            document.getElementById('total-gp').textContent = totalGp.toLocaleString();
             
             document.getElementById('transaction-count').textContent = todayRecords.length + ' รายการ';
             
@@ -602,51 +571,30 @@
                     </div>
                 `;
                 
-                // Tap to open detail
-                div.addEventListener('click', (e) => {
-                    // Prevent if swiping
-                    if (Math.abs(e.detail) < 5) {
-                        showDetailModal(record);
-                    }
-                });
-                
-                // Prevent iOS context menu
+                div.addEventListener('click', () => showDetailModal(record));
                 div.addEventListener('contextmenu', (e) => e.preventDefault());
                 
-                // Long press for options
                 let pressTimer;
                 div.addEventListener('touchstart', (e) => {
-                    pressTimer = setTimeout(() => {
-                        showEditDeleteOptions(record, div);
-                    }, 550);
+                    pressTimer = setTimeout(() => showEditDeleteOptions(record, div), 550);
                 });
                 div.addEventListener('touchend', () => clearTimeout(pressTimer));
                 div.addEventListener('touchcancel', () => clearTimeout(pressTimer));
                 
-                // Swipe left
                 let startX = 0;
-                
-                div.addEventListener('touchstart', (e) => {
-                    startX = e.touches[0].clientX;
-                    div.style.transition = 'none';
-                });
-                
+                div.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; div.style.transition = 'none'; });
                 div.addEventListener('touchmove', (e) => {
                     const currentX = e.touches[0].clientX;
                     const deltaX = currentX - startX;
                     if (deltaX < 0) {
                         div.style.transform = `translateX(${Math.max(deltaX, -130)}px)`;
-                        if (deltaX < -50) {
-                            div.style.backgroundColor = '#7f1d1d';
-                        }
+                        if (deltaX < -50) div.style.backgroundColor = '#7f1d1d';
                     }
                 });
-                
                 div.addEventListener('touchend', (e) => {
                     const endX = e.changedTouches[0].clientX;
                     const deltaX = endX - startX;
                     div.style.transition = 'transform 0.3s, background-color 0.3s';
-                    
                     if (deltaX < -80) {
                         currentDeleteId = record.id;
                         showDeleteConfirm();
@@ -666,7 +614,6 @@
             content.innerHTML = '';
             
             let html = '';
-            
             html += `<div class="detail-row"><span class="text-slate-400">ประเภท</span><span class="font-medium">${record.category || (record.type === 'income' ? 'งานลาล่ามูฟ' : 'ค่าใช้จ่าย')}</span></div>`;
             html += `<div class="detail-row"><span class="text-slate-400">จำนวนเงิน</span><span class="font-bold ${record.type === 'income' ? 'text-emerald-400' : 'text-red-400'}">${record.type === 'income' ? '+' : '-'}${record.amount.toLocaleString()} บาท</span></div>`;
             
@@ -674,7 +621,6 @@
                 if (record.km) html += `<div class="detail-row"><span class="text-slate-400">ระยะทาง</span><span class="font-medium">${record.km} กม.</span></div>`;
                 if (record.gp && record.gp > 0) html += `<div class="detail-row"><span class="text-slate-400">ค่าจีพี (GP)</span><span class="font-medium text-amber-400">+${record.gp} บาท</span></div>`;
                 
-                // Calculated for this trip
                 const tripFuel = record.km ? (record.km / settings.fuelConsumption) * settings.fuelPrice : 0;
                 const tripDep = record.km ? record.km * settings.depreciationRate : 0;
                 
@@ -682,20 +628,13 @@
                 html += `<div class="detail-row"><span class="text-slate-400">ค่าสึกหรอ (trip นี้)</span><span class="font-medium">${Math.round(tripDep)} บาท</span></div>`;
             }
             
-            if (record.note) {
-                html += `<div class="detail-row"><span class="text-slate-400">หมายเหตุ</span><span class="font-medium">${record.note}</span></div>`;
-            }
-            
+            if (record.note) html += `<div class="detail-row"><span class="text-slate-400">หมายเหตุ</span><span class="font-medium">${record.note}</span></div>`;
             html += `<div class="detail-row"><span class="text-slate-400">เวลา</span><span class="font-medium">${record.time}</span></div>`;
             
             content.innerHTML = html;
             
-            // Setup edit button
             const editBtn = document.getElementById('detail-edit-btn');
-            editBtn.onclick = () => {
-                hideDetailModal();
-                editRecordFromDetail(record.id);
-            };
+            editBtn.onclick = () => { hideDetailModal(); editRecordFromDetail(record.id); };
             
             document.getElementById('detail-modal').classList.remove('hidden');
             document.getElementById('detail-modal').classList.add('flex');
@@ -704,7 +643,6 @@
         function editRecordFromDetail(id) {
             const record = records.find(r => r.id === id);
             if (!record) return;
-            
             currentEditId = id;
             
             if (record.type === 'income') {
@@ -713,23 +651,15 @@
                 document.getElementById('income-gp').value = record.gp || 0;
                 document.getElementById('income-note').value = record.note || '';
                 showAddIncomeModal();
-                
                 const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
-                if (saveBtn) {
-                    saveBtn.innerText = 'บันทึกการแก้ไข';
-                    saveBtn.onclick = () => updateIncomeRecord();
-                }
+                if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateIncomeRecord(); }
             } else {
                 document.getElementById('expense-category').value = record.category;
                 document.getElementById('expense-amount').value = record.amount;
                 document.getElementById('expense-note').value = record.note || '';
                 showAddExpenseModal();
-                
                 const saveBtn = document.querySelector('#expense-modal button[onclick*="addExpense"]');
-                if (saveBtn) {
-                    saveBtn.innerText = 'บันทึกการแก้ไข';
-                    saveBtn.onclick = () => updateExpenseRecord();
-                }
+                if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateExpenseRecord(); }
             }
         }
 
@@ -754,9 +684,7 @@
                         <button onclick="currentDeleteId = ${record.id}; this.closest('.fixed').remove(); showDeleteConfirm();" class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold flex items-center justify-center gap-2">
                             <i class="fas fa-trash"></i> <span>ลบ</span>
                         </button>
-                        <button onclick="this.closest('.fixed').remove()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold">
-                            ยกเลิก
-                        </button>
+                        <button onclick="this.closest('.fixed').remove()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold">ยกเลิก</button>
                     </div>
                 </div>
             `;
@@ -766,9 +694,7 @@
         function editRecord(id, element) {
             const record = records.find(r => r.id === id);
             if (!record) return;
-            
             element.closest('.fixed').remove();
-            
             currentEditId = id;
             
             if (record.type === 'income') {
@@ -777,29 +703,20 @@
                 document.getElementById('income-gp').value = record.gp || 0;
                 document.getElementById('income-note').value = record.note || '';
                 showAddIncomeModal();
-                
                 const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
-                if (saveBtn) {
-                    saveBtn.innerText = 'บันทึกการแก้ไข';
-                    saveBtn.onclick = () => updateIncomeRecord();
-                }
+                if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateIncomeRecord(); }
             } else {
                 document.getElementById('expense-category').value = record.category;
                 document.getElementById('expense-amount').value = record.amount;
                 document.getElementById('expense-note').value = record.note || '';
                 showAddExpenseModal();
-                
                 const saveBtn = document.querySelector('#expense-modal button[onclick*="addExpense"]');
-                if (saveBtn) {
-                    saveBtn.innerText = 'บันทึกการแก้ไข';
-                    saveBtn.onclick = () => updateExpenseRecord();
-                }
+                if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateExpenseRecord(); }
             }
         }
 
         function updateIncomeRecord() {
             if (!currentEditId) return;
-            
             const recordIndex = records.findIndex(r => r.id === currentEditId);
             if (recordIndex === -1) return;
             
@@ -819,18 +736,13 @@
             hideIncomeModal();
             
             const saveBtn = document.querySelector('#income-modal button');
-            if (saveBtn) {
-                saveBtn.innerText = 'บันทึกงาน';
-                saveBtn.onclick = () => addIncome();
-            }
-            
+            if (saveBtn) { saveBtn.innerText = 'บันทึกงาน'; saveBtn.onclick = () => addIncome(); }
             currentEditId = null;
             showToast('แก้ไขเรียบร้อย!');
         }
 
         function updateExpenseRecord() {
             if (!currentEditId) return;
-            
             const recordIndex = records.findIndex(r => r.id === currentEditId);
             if (recordIndex === -1) return;
             
@@ -848,11 +760,7 @@
             hideExpenseModal();
             
             const saveBtn = document.querySelector('#expense-modal button');
-            if (saveBtn) {
-                saveBtn.innerText = 'บันทึกค่าใช้จ่าย';
-                saveBtn.onclick = () => addExpense();
-            }
-            
+            if (saveBtn) { saveBtn.innerText = 'บันทึกค่าใช้จ่าย'; saveBtn.onclick = () => addExpense(); }
             currentEditId = null;
             showToast('แก้ไขเรียบร้อย!');
         }
@@ -925,11 +833,7 @@
             document.getElementById('quick-expense-title').innerText = `บันทึก${category}`;
             document.getElementById('quick-expense-modal').classList.remove('hidden');
             document.getElementById('quick-expense-modal').classList.add('flex');
-            
-            setTimeout(() => {
-                document.getElementById('quick-expense-amount').focus();
-                document.getElementById('quick-expense-amount').select();
-            }, 300);
+            setTimeout(() => { document.getElementById('quick-expense-amount').focus(); document.getElementById('quick-expense-amount').select(); }, 300);
         }
 
         function hideQuickExpenseModal() {
@@ -969,12 +873,8 @@
         function showDeleteConfirm() {
             document.getElementById('delete-confirm-modal').classList.remove('hidden');
             document.getElementById('delete-confirm-modal').classList.add('flex');
-            
             document.getElementById('confirm-delete-btn').onclick = () => {
-                if (currentDeleteId) {
-                    deleteRecord(currentDeleteId);
-                    currentDeleteId = null;
-                }
+                if (currentDeleteId) { deleteRecord(currentDeleteId); currentDeleteId = null; }
                 cancelDelete();
             };
         }
@@ -983,11 +883,7 @@
             document.getElementById('delete-confirm-modal').classList.remove('flex');
             document.getElementById('delete-confirm-modal').classList.add('hidden');
             currentDeleteId = null;
-            
-            document.querySelectorAll('.transaction-item').forEach(el => {
-                el.style.transform = 'translateX(0)';
-                el.style.backgroundColor = '';
-            });
+            document.querySelectorAll('.transaction-item').forEach(el => { el.style.transform = 'translateX(0)'; el.style.backgroundColor = ''; });
         }
 
         function deleteRecord(id) {
@@ -1046,17 +942,11 @@
             toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-emerald-600 text-white px-5 py-2 rounded-2xl shadow-lg text-sm flex items-center gap-2 z-[200]';
             toast.innerHTML = `<i class="fas fa-check-circle"></i> <span>${message}</span>`;
             document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.transition = 'all 0.3s';
-                toast.style.opacity = '0';
-                setTimeout(() => toast.remove(), 300);
-            }, 2200);
+            setTimeout(() => { toast.style.transition = 'all 0.3s'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2200);
         }
 
         function resetDay() {
             if (!confirm('ต้องการรีเซ็ตข้อมูลวันนี้ทั้งหมด?')) return;
-            
             const today = new Date().toISOString().split('T')[0];
             records = records.filter(r => r.date !== today);
             checkin = { start: null, end: null };
@@ -1069,44 +959,27 @@
         }
 
         function switchTab(tab) {
-            if (tab === 'history') {
-                alert('ประวัติจะเพิ่มในเวอร์ชันหน้า');
-            }
+            if (tab === 'history') alert('ประวัติจะเพิ่มในเวอร์ชันหน้า');
         }
 
         function initializeApp() {
             initializeTailwind();
             loadData();
-            
             updateSummary();
             renderTransactions();
             updateCheckin();
             startCheckinTimer();
             
             document.addEventListener('keydown', function(e) {
-                if (e.key === '/' && document.activeElement.tagName === 'BODY') {
-                    e.preventDefault();
-                    showAddIncomeModal();
-                }
+                if (e.key === '/' && document.activeElement.tagName === 'BODY') { e.preventDefault(); showAddIncomeModal(); }
             });
             
-            ['income-modal', 'expense-modal', 'settings-modal', 'quick-expense-modal', 'detail-modal', 'delete-confirm-modal'].forEach(id => {
+            ['income-modal','expense-modal','settings-modal','quick-expense-modal','detail-modal','delete-confirm-modal'].forEach(id => {
                 const el = document.getElementById(id);
-                if (el) {
-                    el.addEventListener('click', function(e) {
-                        if (e.target.id === id) {
-                            if (id === 'income-modal') hideIncomeModal();
-                            if (id === 'expense-modal') hideExpenseModal();
-                            if (id === 'settings-modal') hideSettings();
-                            if (id === 'quick-expense-modal') hideQuickExpenseModal();
-                            if (id === 'detail-modal') hideDetailModal();
-                            if (id === 'delete-confirm-modal') cancelDelete();
-                        }
-                    });
-                }
+                if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); } });
             });
             
-            console.log('%c[Lalamove Account] Added detail view on tap + better toll categories', 'color:#10b981');
+            console.log('%c[Lalamove Account] Improved summary + proper toll handling (customer toll excluded from expense)', 'color:#10b981');
         }
 
         window.onload = initializeApp;
