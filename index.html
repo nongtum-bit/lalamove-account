@@ -720,7 +720,7 @@
             }
             
             if (record.note) html += `<div class="detail-row"><span class="text-slate-400">หมายเหตุ</span><span class="font-medium">${record.note}</span></div>`;
-            html += `<div class="detail-row"><span class="text-slate-400">เวลา</span><span class="font-medium">${record.time}</span></div>
+            html += `<div class="detail-row"><span class="text-slate-400">เวลา</span><span class="font-medium">${record.time}</span></div>`;
             
             content.innerHTML = html;
             
@@ -923,7 +923,7 @@
                 time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
                 type: 'expense',
                 category: category,
-                amount: amount;
+                amount: amount,
                 note: note
             };
             
@@ -982,7 +982,6 @@
         }
 
         function showDeleteConfirm() {
-            // Reset the swiped element immediately when showing confirmation
             if (currentSwipedElement) {
                 currentSwipedElement.style.transition = 'transform 0.2s, background-color 0.2s';
                 currentSwipedElement.style.transform = 'translateX(0)';
@@ -1005,7 +1004,6 @@
             document.getElementById('delete-confirm-modal').classList.remove('flex');
             document.getElementById('delete-confirm-modal').classList.add('hidden');
             
-            // Reset any swiped element
             if (currentSwipedElement) {
                 currentSwipedElement.style.transform = 'translateX(0)';
                 currentSwipedElement.style.backgroundColor = '';
@@ -1014,7 +1012,6 @@
             
             currentDeleteId = null;
             
-            // Also reset all transaction items just in case
             document.querySelectorAll('.transaction-item').forEach(el => {
                 el.style.transform = 'translateX(0)';
                 el.style.backgroundColor = '';
@@ -1143,7 +1140,7 @@
                 if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); if (id==='summary-detail-modal') hideSummaryDetail(); } });
             });
             
-            console.log('%c[Lalamove Account] Targeted fix: Swipe delete confirmation now resets element immediately', 'color:#10b981');
+            console.log('%c[Lalamove Account] Syntax error fixed - app should work now', 'color:#10b981');
         }
 
         window.onload = initializeApp;
