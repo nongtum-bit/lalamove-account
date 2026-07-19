@@ -19,6 +19,7 @@
         .summary-card { background: linear-gradient(135deg, #1e2937 0%, #0f172a 100%); }
         .quick-btn { transition: all 0.1s; }
         .quick-btn:active { transform: scale(0.95); }
+        .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #334155; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
@@ -136,7 +137,7 @@
 
                 <!-- Quick Expense Buttons -->
                 <div>
-                    <h4 class="text-xs text-slate-500 mb-2 px-1">ค่าใช้จ่ายด่วน (กดปุ่มแล้วกรอกเงิน)</h4>
+                    <h4 class="text-xs text-slate-500 mb-2 px-1">ค่าใช้จ่ายด่วน</h4>
                     <div class="grid grid-cols-3 gap-2">
                         <button onclick="quickExpense('ค่าอาหาร')" class="quick-btn bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
                             <i class="fas fa-utensils"></i> <span>ค่าอาหาร</span>
@@ -147,11 +148,11 @@
                         <button onclick="quickExpense('ค่าสึกหรอ')" class="quick-btn bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
                             <i class="fas fa-tools"></i> <span>ค่าสึกหรอ</span>
                         </button>
-                        <button onclick="quickExpense('ค่าเดินทาง')" class="quick-btn bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
-                            <i class="fas fa-road"></i> <span>ค่าเดินทาง</span>
+                        <button onclick="quickExpense('ทางด่วนลูกค้า')" class="quick-btn bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
+                            <i class="fas fa-road"></i> <span>ทางด่วน (ลูกค้า)</span>
                         </button>
-                        <button onclick="quickExpense('ค่าโทรศัพท์')" class="quick-btn bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
-                            <i class="fas fa-mobile-alt"></i> <span>ค่าโทรศัพท์</span>
+                        <button onclick="quickExpense('ทางด่วนเราเอง')" class="quick-btn bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
+                            <i class="fas fa-car"></i> <span>ทางด่วน (เราเอง)</span>
                         </button>
                         <button onclick="quickExpense('อื่นๆ')" class="quick-btn bg-slate-600 hover:bg-slate-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
                             <i class="fas fa-ellipsis-h"></i> <span>อื่นๆ</span>
@@ -219,6 +220,25 @@
             </div>
         </div>
 
+        <!-- Detail Modal for Transaction -->
+        <div id="detail-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
+            <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold">รายละเอียดรายการ</h3>
+                    <button onclick="hideDetailModal()" class="text-2xl text-slate-400">&times;</button>
+                </div>
+                
+                <div id="detail-content" class="space-y-1 text-sm">
+                    <!-- Populated dynamically -->
+                </div>
+                
+                <div class="mt-6 flex gap-3">
+                    <button onclick="hideDetailModal()" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ปิด</button>
+                    <button id="detail-edit-btn" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">แก้ไข</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Add Income Modal (with GP) -->
         <div id="income-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
@@ -256,7 +276,7 @@
             </div>
         </div>
 
-        <!-- Quick Expense Modal (simplified - no dropdown) -->
+        <!-- Quick Expense Modal (simplified) -->
         <div id="quick-expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-4">
@@ -282,7 +302,7 @@
             </div>
         </div>
 
-        <!-- Add Expense Modal (full - for อื่นๆ) -->
+        <!-- Add Expense Modal (full) -->
         <div id="expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -297,7 +317,8 @@
                             <option value="น้ำมัน">น้ำมัน</option>
                             <option value="อาหาร">อาหาร</option>
                             <option value="ค่าสึกหรอ">ค่าสึกหรอ / บริการ</option>
-                            <option value="บัตรเครดิต">บัตรเครดิต</option>
+                            <option value="ทางด่วนลูกค้า">ทางด่วน (ลูกค้าจ่าย)</option>
+                            <option value="ทางด่วนเราเอง">ทางด่วน (เราเอง)</option>
                             <option value="ส่วนตัว">ส่วนตัว / อื่นๆ</option>
                         </select>
                     </div>
@@ -319,7 +340,7 @@
             </div>
         </div>
 
-        <!-- Settings Modal (with fuel price per liter) -->
+        <!-- Settings Modal -->
         <div id="settings-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -384,6 +405,7 @@
         let currentEditId = null;
         let currentDeleteId = null;
         let checkinInterval = null;
+        let currentDetailRecord = null;
 
         function loadData() {
             const savedRecords = localStorage.getItem('lalamove_records');
@@ -441,7 +463,7 @@
                 if (checkin.start && !checkin.end) {
                     updateCheckin();
                 }
-            }, 30000); // update every 30 seconds
+            }, 30000);
         }
 
         function checkIn() {
@@ -503,7 +525,6 @@
             
             const net = totalIncome - totalExpense;
             
-            // Auto fuel calculation with price per liter
             const fuelCost = (totalKm / settings.fuelConsumption) * settings.fuelPrice;
             const depreciationCost = totalKm * settings.depreciationRate;
             const realNet = totalIncome - totalExpense - fuelCost - depreciationCost;
@@ -544,7 +565,7 @@
             
             todayRecords.forEach(record => {
                 const div = document.createElement('div');
-                div.className = `transaction-item flex items-center justify-between p-3.5 bg-slate-800 rounded-2xl border border-slate-700`;
+                div.className = `transaction-item flex items-center justify-between p-3.5 bg-slate-800 rounded-2xl border border-slate-700 cursor-pointer`;
                 
                 let icon = '';
                 let color = '';
@@ -581,10 +602,18 @@
                     </div>
                 `;
                 
+                // Tap to open detail
+                div.addEventListener('click', (e) => {
+                    // Prevent if swiping
+                    if (Math.abs(e.detail) < 5) {
+                        showDetailModal(record);
+                    }
+                });
+                
                 // Prevent iOS context menu
                 div.addEventListener('contextmenu', (e) => e.preventDefault());
                 
-                // Long press for edit/delete options (improved)
+                // Long press for options
                 let pressTimer;
                 div.addEventListener('touchstart', (e) => {
                     pressTimer = setTimeout(() => {
@@ -594,7 +623,7 @@
                 div.addEventListener('touchend', () => clearTimeout(pressTimer));
                 div.addEventListener('touchcancel', () => clearTimeout(pressTimer));
                 
-                // Swipe left to delete (improved with confirmation modal)
+                // Swipe left
                 let startX = 0;
                 
                 div.addEventListener('touchstart', (e) => {
@@ -629,6 +658,84 @@
                 
                 container.appendChild(div);
             });
+        }
+
+        function showDetailModal(record) {
+            currentDetailRecord = record;
+            const content = document.getElementById('detail-content');
+            content.innerHTML = '';
+            
+            let html = '';
+            
+            html += `<div class="detail-row"><span class="text-slate-400">ประเภท</span><span class="font-medium">${record.category || (record.type === 'income' ? 'งานลาล่ามูฟ' : 'ค่าใช้จ่าย')}</span></div>`;
+            html += `<div class="detail-row"><span class="text-slate-400">จำนวนเงิน</span><span class="font-bold ${record.type === 'income' ? 'text-emerald-400' : 'text-red-400'}">${record.type === 'income' ? '+' : '-'}${record.amount.toLocaleString()} บาท</span></div>`;
+            
+            if (record.type === 'income') {
+                if (record.km) html += `<div class="detail-row"><span class="text-slate-400">ระยะทาง</span><span class="font-medium">${record.km} กม.</span></div>`;
+                if (record.gp && record.gp > 0) html += `<div class="detail-row"><span class="text-slate-400">ค่าจีพี (GP)</span><span class="font-medium text-amber-400">+${record.gp} บาท</span></div>`;
+                
+                // Calculated for this trip
+                const tripFuel = record.km ? (record.km / settings.fuelConsumption) * settings.fuelPrice : 0;
+                const tripDep = record.km ? record.km * settings.depreciationRate : 0;
+                
+                html += `<div class="detail-row"><span class="text-slate-400">ค่าน้ำมัน (trip นี้)</span><span class="font-medium">${Math.round(tripFuel)} บาท</span></div>`;
+                html += `<div class="detail-row"><span class="text-slate-400">ค่าสึกหรอ (trip นี้)</span><span class="font-medium">${Math.round(tripDep)} บาท</span></div>`;
+            }
+            
+            if (record.note) {
+                html += `<div class="detail-row"><span class="text-slate-400">หมายเหตุ</span><span class="font-medium">${record.note}</span></div>`;
+            }
+            
+            html += `<div class="detail-row"><span class="text-slate-400">เวลา</span><span class="font-medium">${record.time}</span></div>`;
+            
+            content.innerHTML = html;
+            
+            // Setup edit button
+            const editBtn = document.getElementById('detail-edit-btn');
+            editBtn.onclick = () => {
+                hideDetailModal();
+                editRecordFromDetail(record.id);
+            };
+            
+            document.getElementById('detail-modal').classList.remove('hidden');
+            document.getElementById('detail-modal').classList.add('flex');
+        }
+
+        function editRecordFromDetail(id) {
+            const record = records.find(r => r.id === id);
+            if (!record) return;
+            
+            currentEditId = id;
+            
+            if (record.type === 'income') {
+                document.getElementById('income-km').value = record.km || 0;
+                document.getElementById('income-amount').value = record.amount || 0;
+                document.getElementById('income-gp').value = record.gp || 0;
+                document.getElementById('income-note').value = record.note || '';
+                showAddIncomeModal();
+                
+                const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
+                if (saveBtn) {
+                    saveBtn.innerText = 'บันทึกการแก้ไข';
+                    saveBtn.onclick = () => updateIncomeRecord();
+                }
+            } else {
+                document.getElementById('expense-category').value = record.category;
+                document.getElementById('expense-amount').value = record.amount;
+                document.getElementById('expense-note').value = record.note || '';
+                showAddExpenseModal();
+                
+                const saveBtn = document.querySelector('#expense-modal button[onclick*="addExpense"]');
+                if (saveBtn) {
+                    saveBtn.innerText = 'บันทึกการแก้ไข';
+                    saveBtn.onclick = () => updateExpenseRecord();
+                }
+            }
+        }
+
+        function hideDetailModal() {
+            document.getElementById('detail-modal').classList.remove('flex');
+            document.getElementById('detail-modal').classList.add('hidden');
         }
 
         function showEditDeleteOptions(record, element) {
@@ -863,7 +970,6 @@
             document.getElementById('delete-confirm-modal').classList.remove('hidden');
             document.getElementById('delete-confirm-modal').classList.add('flex');
             
-            // Set the confirm button action
             document.getElementById('confirm-delete-btn').onclick = () => {
                 if (currentDeleteId) {
                     deleteRecord(currentDeleteId);
@@ -878,7 +984,6 @@
             document.getElementById('delete-confirm-modal').classList.add('hidden');
             currentDeleteId = null;
             
-            // Reset all transaction items
             document.querySelectorAll('.transaction-item').forEach(el => {
                 el.style.transform = 'translateX(0)';
                 el.style.backgroundColor = '';
@@ -978,7 +1083,6 @@
             updateCheckin();
             startCheckinTimer();
             
-            // Keyboard
             document.addEventListener('keydown', function(e) {
                 if (e.key === '/' && document.activeElement.tagName === 'BODY') {
                     e.preventDefault();
@@ -986,8 +1090,7 @@
                 }
             });
             
-            // Close modals on outside click
-            ['income-modal', 'expense-modal', 'settings-modal', 'quick-expense-modal', 'delete-confirm-modal'].forEach(id => {
+            ['income-modal', 'expense-modal', 'settings-modal', 'quick-expense-modal', 'detail-modal', 'delete-confirm-modal'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.addEventListener('click', function(e) {
@@ -996,13 +1099,14 @@
                             if (id === 'expense-modal') hideExpenseModal();
                             if (id === 'settings-modal') hideSettings();
                             if (id === 'quick-expense-modal') hideQuickExpenseModal();
+                            if (id === 'detail-modal') hideDetailModal();
                             if (id === 'delete-confirm-modal') cancelDelete();
                         }
                     });
                 }
             });
             
-            console.log('%c[Lalamove Account] Final version - iOS context menu prevented, live checkin timer, swipe with confirmation modal', 'color:#10b981');
+            console.log('%c[Lalamove Account] Added detail view on tap + better toll categories', 'color:#10b981');
         }
 
         window.onload = initializeApp;
