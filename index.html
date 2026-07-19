@@ -10,15 +10,13 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Noto+Sans+Thai:wght@400;500;600&amp;display=swap');
         body { font-family: 'Inter', 'Noto Sans Thai', system-ui, sans-serif; }
         .mobile-container { max-width: 480px; margin: 0 auto; }
-        .transaction-item { transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1); -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; position: relative; overflow: hidden; }
+        .transaction-item { transition: transform 0.2s ease; -webkit-user-select: none; user-select: none; }
         .summary-card { background: linear-gradient(135deg, #1e2937 0%, #0f172a 100%); }
         .quick-btn { transition: all 0.1s; }
         .quick-btn:active { transform: scale(0.95); }
         .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #334155; }
-        .payer-btn { transition: all 0.1s; }
-        .payer-btn.active { background-color: #10b981; color: white; border-color: #10b981; }
-        .swipe-action { position: absolute; right: 0; top: 0; bottom: 0; display: flex; align-items: center; justify-content: center; width: 70px; background: #ef4444; color: white; transform: translateX(100%); transition: transform 0.25s cubic-bezier(0.32, 0.72, 0, 1); }
-        .swipe-action.show { transform: translateX(0); }
+        .action-btn { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; transition: all 0.1s; }
+        .action-btn:active { transform: scale(0.9); }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
@@ -421,7 +419,6 @@
         let checkinInterval = null;
         let currentDetailRecord = null;
         let currentTollPayer = 'customer';
-        let currentSwipedElement = null;
 
         function loadData() {
             const savedRecords = localStorage.getItem('lalamove_records');
@@ -610,22 +607,7 @@
             
             todayRecords.forEach(record => {
                 const div = document.createElement('div');
-                div.className = `transaction-item flex items-center justify-between p-3.5 bg-slate-800 rounded-2xl border border-slate-700 cursor-pointer`;
-                
-                // Swipe action button
-                const actionDiv = document.createElement('div');
-                actionDiv.className = 'swipe-action';
-                actionDiv.innerHTML = `<i class="fas fa-trash text-xl"></i>`;
-                
-                actionDiv.addEventListener('click', function(e) {
-                    e.stopImmediatePropagation();
-                    currentDeleteId = record.id;
-                    currentSwipedElement = div;
-                    hideSwipeAction(div);
-                    showDeleteConfirm();
-                });
-                
-                div.appendChild(actionDiv);
+                div.className = `transaction-item flex items-center justify-between p-3.5 bg-slate-800 rounded-2xl border border-slate-700`;
                 
                 let icon = '';
                 let color = '';
@@ -643,130 +625,85 @@
                 }
                 
                 div.innerHTML = `
-                    <div class="flex items-center gap-3 flex-1">
-                        <div class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-700">
+                    <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <div class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-700 flex-shrink-0">
                             ${icon}
                         </div>
-                        <div>
-                            <div class="font-medium">${record.category || (record.type === 'income' ? 'งานลาล่ามูฟ' : 'ค่าใช้จ่าย')}</div>
-                            <div class="text-xs text-slate-400">${record.note || ''}</div>
+                        <div class="min-w-0 flex-1">
+                            <div class="font-medium truncate">${record.category || (record.type === 'income' ? 'งานลาล่ามูฟ' : 'ค่าใช้จ่าย')}</div>
+                            <div class="text-xs text-slate-400 truncate">${record.note || ''}</div>
                             ${record.km ? `<div class="text-xs text-emerald-400 mt-0.5">${record.km} km</div>` : ''}
                             ${extra}
                         </div>
                     </div>
-                    <div class="text-right pr-2">
-                        <div class="font-semibold ${color}">
-                            ${record.type === 'income' ? '+' : '-'}${record.amount.toLocaleString()}
+                    
+                    <!-- Right side: Amount + Action buttons -->
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <div class="text-right mr-1">
+                            <div class="font-semibold ${color}">
+                                ${record.type === 'income' ? '+' : '-'}${record.amount.toLocaleString()}
+                            </div>
+                            <div class="text-xs text-slate-500">${record.time}</div>
                         </div>
-                        <div class="text-xs text-slate-500">${record.time}</div>
+                        
+                        <!-- Action buttons -->
+                        <div class="flex gap-1">
+                            <button class="action-btn bg-emerald-600 hover:bg-emerald-700 text-white" onclick="event.stopImmediatePropagation(); editRecordDirect(${record.id})">
+                                <i class="fas fa-edit text-sm"></i>
+                            </button>
+                            <button class="action-btn bg-red-600 hover:bg-red-700 text-white" onclick="event.stopImmediatePropagation(); currentDeleteId = ${record.id}; showDeleteConfirm();">
+                                <i class="fas fa-trash text-sm"></i>
+                            </button>
+                        </div>
                     </div>
                 `;
                 
-                div.appendChild(actionDiv);
-                
-                // === ROBUST TOUCH HANDLING ===
-                let startX = 0;
-                let startY = 0;
-                let longPressTimer = null;
-                let isSwiping = false;
-                let longPressFired = false;
-                
-                div.addEventListener('touchstart', function(e) {
-                    startX = e.touches[0].clientX;
-                    startY = e.touches[0].clientY;
-                    longPressFired = false;
-                    isSwiping = false;
-                    
-                    longPressTimer = setTimeout(() => {
-                        longPressFired = true;
-                        showEditDeleteOptions(record, div);
-                    }, 520);
-                });
-                
-                div.addEventListener('touchmove', function(e) {
-                    const currentX = e.touches[0].clientX;
-                    const currentY = e.touches[0].clientY;
-                    const deltaX = currentX - startX;
-                    const deltaY = currentY - startY;
-                    
-                    if (Math.abs(deltaX) > 12 && Math.abs(deltaX) > Math.abs(deltaY)) {
-                        if (longPressTimer) {
-                            clearTimeout(longPressTimer);
-                            longPressTimer = null;
-                        }
-                        isSwiping = true;
-                        
-                        if (!div.style.transition.includes('none')) {
-                            div.style.transition = 'none';
-                        }
-                        
-                        const limited = Math.max(deltaX, -85);
-                        div.style.transform = `translateX(${limited}px)`;
-                        
-                        if (limited < -40) {
-                            actionDiv.classList.add('show');
-                        } else {
-                            actionDiv.classList.remove('show');
-                        }
-                    }
-                });
-                
-                div.addEventListener('touchend', function(e) {
-                    if (longPressTimer) {
-                        clearTimeout(longPressTimer);
-                        longPressTimer = null;
-                    }
-                    
-                    if (isSwiping) {
-                        const endX = e.changedTouches[0].clientX;
-                        const deltaX = endX - startX;
-                        
-                        div.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)';
-                        
-                        if (deltaX < -55) {
-                            div.style.transform = 'translateX(-70px)';
-                            actionDiv.classList.add('show');
-                            currentSwipedElement = div;
-                        } else {
-                            div.style.transform = 'translateX(0)';
-                            actionDiv.classList.remove('show');
-                            currentSwipedElement = null;
-                        }
-                        
-                        isSwiping = false;
-                        return; // Important: do not fall through to detail
-                    }
-                    
-                    // Normal tap - only if long press did NOT fire
-                    if (!longPressFired) {
+                // Tap on the row (not buttons) opens detail
+                div.addEventListener('click', function(e) {
+                    // Only open detail if not clicking on action buttons
+                    if (!e.target.closest('.action-btn')) {
                         showDetailModal(record);
                     }
-                    
-                    // Reset flag after a short delay
-                    setTimeout(() => { longPressFired = false; }, 400);
-                });
-                
-                div.addEventListener('touchcancel', function() {
-                    if (longPressTimer) {
-                        clearTimeout(longPressTimer);
-                        longPressTimer = null;
-                    }
-                    isSwiping = false;
-                    longPressFired = false;
-                    div.style.transform = 'translateX(0)';
-                    actionDiv.classList.remove('show');
                 });
                 
                 container.appendChild(div);
             });
         }
 
-        function hideSwipeAction(element) {
-            if (!element) return;
-            const action = element.querySelector('.swipe-action');
-            if (action) action.classList.remove('show');
-            element.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)';
-            element.style.transform = 'translateX(0)';
+        function editRecordDirect(id) {
+            const record = records.find(r => r.id === id);
+            if (!record) return;
+            
+            currentEditId = id;
+            
+            if (record.type === 'income') {
+                document.getElementById('income-km').value = record.km || 0;
+                document.getElementById('income-fare').value = record.fare || 0;
+                document.getElementById('income-tip').value = record.tip || 0;
+                document.getElementById('income-gp').value = record.gp || 0;
+                document.getElementById('income-toll').value = record.toll || 0;
+                currentTollPayer = record.tollPayer || 'customer';
+                updateTollPayerButtons();
+                document.getElementById('income-note').value = record.note || '';
+                showAddIncomeModal();
+                
+                const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
+                if (saveBtn) {
+                    saveBtn.innerText = 'บันทึกการแก้ไข';
+                    saveBtn.onclick = () => updateIncomeRecord();
+                }
+            } else {
+                document.getElementById('expense-category').value = record.category;
+                document.getElementById('expense-amount').value = record.amount;
+                document.getElementById('expense-note').value = record.note || '';
+                showAddExpenseModal();
+                
+                const saveBtn = document.querySelector('#expense-modal button[onclick*="addExpense"]');
+                if (saveBtn) {
+                    saveBtn.innerText = 'บันทึกการแก้ไข';
+                    saveBtn.onclick = () => updateExpenseRecord();
+                }
+            }
         }
 
         function showDetailModal(record) {
@@ -801,98 +738,15 @@
             content.innerHTML = html;
             
             const editBtn = document.getElementById('detail-edit-btn');
-            editBtn.onclick = () => { hideDetailModal(); editRecordFromDetail(record.id); };
+            editBtn.onclick = () => { hideDetailModal(); editRecordDirect(record.id); };
             
             document.getElementById('detail-modal').classList.remove('hidden');
             document.getElementById('detail-modal').classList.add('flex');
         }
 
-        function editRecordFromDetail(id) {
-            const record = records.find(r => r.id === id);
-            if (!record) return;
-            currentEditId = id;
-            
-            if (record.type === 'income') {
-                document.getElementById('income-km').value = record.km || 0;
-                document.getElementById('income-fare').value = record.fare || 0;
-                document.getElementById('income-tip').value = record.tip || 0;
-                document.getElementById('income-gp').value = record.gp || 0;
-                document.getElementById('income-toll').value = record.toll || 0;
-                currentTollPayer = record.tollPayer || 'customer';
-                updateTollPayerButtons();
-                document.getElementById('income-note').value = record.note || '';
-                showAddIncomeModal();
-                const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
-                if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateIncomeRecord(); }
-            } else {
-                document.getElementById('expense-category').value = record.category;
-                document.getElementById('expense-amount').value = record.amount;
-                document.getElementById('expense-note').value = record.note || '';
-                showAddExpenseModal();
-                const saveBtn = document.querySelector('#expense-modal button[onclick*="addExpense"]');
-                if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateExpenseRecord(); }
-            }
-        }
-
         function hideDetailModal() {
             document.getElementById('detail-modal').classList.remove('flex');
             document.getElementById('detail-modal').classList.add('hidden');
-        }
-
-        function showEditDeleteOptions(record, element) {
-            if (currentSwipedElement) {
-                hideSwipeAction(currentSwipedElement);
-                currentSwipedElement = null;
-            }
-            
-            const options = document.createElement('div');
-            options.className = 'fixed inset-0 bg-black/50 z-[200] flex items-center justify-center';
-            options.innerHTML = `
-                <div class="bg-slate-900 rounded-2xl p-6 w-80">
-                    <div class="text-center mb-4">
-                        <div class="font-bold text-lg">${record.category}</div>
-                        <div class="text-sm text-slate-400">${record.amount} บาท</div>
-                    </div>
-                    <div class="flex flex-col gap-3">
-                        <button onclick="editRecord(${record.id}, this)" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 rounded-xl font-semibold flex items-center justify-center gap-2">
-                            <i class="fas fa-edit"></i> <span>แก้ไข</span>
-                        </button>
-                        <button onclick="currentDeleteId = ${record.id}; this.closest('.fixed').remove(); showDeleteConfirm();" class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold flex items-center justify-center gap-2">
-                            <i class="fas fa-trash"></i> <span>ลบ</span>
-                        </button>
-                        <button onclick="this.closest('.fixed').remove()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold">ยกเลิก</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(options);
-        }
-
-        function editRecord(id, element) {
-            const record = records.find(r => r.id === id);
-            if (!record) return;
-            element.closest('.fixed').remove();
-            currentEditId = id;
-            
-            if (record.type === 'income') {
-                document.getElementById('income-km').value = record.km || 0;
-                document.getElementById('income-fare').value = record.fare || 0;
-                document.getElementById('income-tip').value = record.tip || 0;
-                document.getElementById('income-gp').value = record.gp || 0;
-                document.getElementById('income-toll').value = record.toll || 0;
-                currentTollPayer = record.tollPayer || 'customer';
-                updateTollPayerButtons();
-                document.getElementById('income-note').value = record.note || '';
-                showAddIncomeModal();
-                const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
-                if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateIncomeRecord(); }
-            } else {
-                document.getElementById('expense-category').value = record.category;
-                document.getElementById('expense-amount').value = record.amount;
-                document.getElementById('expense-note').value = record.note || '';
-                showAddExpenseModal();
-                const saveBtn = document.querySelector('#expense-modal button[onclick*="addExpense"]');
-                if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateExpenseRecord(); }
-            }
         }
 
         function updateIncomeRecord() {
@@ -1070,11 +924,6 @@
         function cancelDelete() {
             document.getElementById('delete-confirm-modal').classList.remove('flex');
             document.getElementById('delete-confirm-modal').classList.add('hidden');
-            
-            if (currentSwipedElement) {
-                hideSwipeAction(currentSwipedElement);
-                currentSwipedElement = null;
-            }
             currentDeleteId = null;
         }
 
@@ -1228,7 +1077,7 @@
                 if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); if (id==='summary-detail-modal') hideSummaryDetail(); } });
             });
             
-            console.log('%c[Lalamove Account] CRITICAL FIX: Long press no longer triggers detail view', 'color:#10b981');
+            console.log('%c[Lalamove Account] Simplified: Permanent edit + delete buttons on each row (no more gesture conflicts)', 'color:#10b981');
         }
 
         window.onload = initializeApp;
