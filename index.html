@@ -10,11 +10,10 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Noto+Sans+Thai:wght@400;500;600&amp;display=swap');
         body { font-family: 'Inter', 'Noto Sans Thai', system-ui, sans-serif; }
         .mobile-container { max-width: 480px; margin: 0 auto; }
-        .card { transition: transform 0.2s; }
         .transaction-item { transition: all 0.2s; }
-        .summary-card {
-            background: linear-gradient(135deg, #1e2937 0%, #0f172a 100%);
-        }
+        .summary-card { background: linear-gradient(135deg, #1e2937 0%, #0f172a 100%); }
+        .quick-btn { transition: all 0.1s; }
+        .quick-btn:active { transform: scale(0.95); }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
@@ -37,11 +36,30 @@
 
         <!-- Dashboard -->
         <div class="px-4 pt-4">
+            <!-- Check-in Section -->
+            <div class="mb-4 bg-slate-900 border border-slate-700 rounded-2xl p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <h3 class="text-sm font-medium text-slate-400">เช็คอินวันนี้</h3>
+                    <button onclick="resetCheckin()" class="text-xs px-2 py-0.5 bg-red-900 text-red-400 rounded hover:bg-red-800">รีเซ็ต</button>
+                </div>
+                <div id="checkin-status" class="text-sm mb-3">
+                    ยังไม่ได้เช็คอิน
+                </div>
+                <div class="flex gap-2">
+                    <button onclick="checkIn()" class="flex-1 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+                        <i class="fas fa-play"></i> <span>เช็คอินเริ่มงาน</span>
+                    </button>
+                    <button onclick="checkOut()" class="flex-1 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-sm font-semibold flex items-center justify-center gap-2">
+                        <i class="fas fa-stop"></i> <span>เช็คเอาท์</span>
+                    </button>
+                </div>
+                <div id="checkin-duration" class="text-xs text-emerald-400 mt-2 hidden"></div>
+            </div>
+
             <div class="mb-4">
                 <div class="flex items-center justify-between mb-2">
                     <h2 class="text-xl font-semibold">สรุปวันนี้</h2>
-                    <button onclick="resetDay()" 
-                            class="text-xs px-3 py-1 bg-red-900 text-red-400 rounded-lg hover:bg-red-800 flex items-center gap-1">
+                    <button onclick="resetDay()" class="text-xs px-3 py-1 bg-red-900 text-red-400 rounded-lg hover:bg-red-800 flex items-center gap-1">
                         <i class="fas fa-redo text-xs"></i>
                         <span>รีเซ็ตวัน</span>
                     </button>
@@ -49,7 +67,6 @@
                 
                 <!-- Summary Cards -->
                 <div class="grid grid-cols-2 gap-3">
-                    <!-- Income -->
                     <div class="summary-card p-4 rounded-2xl border border-emerald-700">
                         <div class="flex items-center gap-2 mb-2">
                             <i class="fas fa-wallet text-emerald-400 text-xl"></i>
@@ -59,7 +76,6 @@
                         <div class="text-xs text-emerald-300">บาท</div>
                     </div>
                     
-                    <!-- Expense -->
                     <div class="summary-card p-4 rounded-2xl border border-red-700">
                         <div class="flex items-center gap-2 mb-2">
                             <i class="fas fa-receipt text-red-400 text-xl"></i>
@@ -71,46 +87,71 @@
                 </div>
 
                 <div class="mt-3 grid grid-cols-3 gap-3">
-                    <!-- Net -->
                     <div class="bg-slate-800 p-3 rounded-2xl border border-slate-600">
                         <div class="text-xs text-slate-400 mb-1">กำไรสุทธิ</div>
                         <div class="text-2xl font-bold" id="net-profit">0</div>
                         <div class="text-xs text-emerald-400" id="net-status">บาท</div>
                     </div>
-                    
-                    <!-- Trips -->
                     <div class="bg-slate-800 p-3 rounded-2xl border border-slate-600">
                         <div class="text-xs text-slate-400 mb-1">จำนวนงาน</div>
                         <div class="text-2xl font-bold" id="total-trips">0</div>
                         <div class="text-xs text-emerald-400">รอบ</div>
                     </div>
-                    
-                    <!-- Distance -->
                     <div class="bg-slate-800 p-3 rounded-2xl border border-slate-600">
                         <div class="text-xs text-slate-400 mb-1">ระยะทาง</div>
                         <div class="text-2xl font-bold" id="total-km">0</div>
                         <div class="text-xs text-emerald-400">km</div>
                     </div>
                 </div>
+
+                <!-- GP Summary -->
+                <div class="mt-3 bg-slate-800 p-3 rounded-2xl border border-slate-600">
+                    <div class="text-xs text-slate-400 mb-1">ค่าจีพี (GP) รวม</div>
+                    <div class="text-2xl font-bold text-amber-400" id="total-gp">0</div>
+                    <div class="text-xs text-amber-300">บาท</div>
+                </div>
             </div>
 
             <!-- Quick Actions -->
             <div class="mb-4">
-                <h3 class="text-sm font-medium text-slate-400 mb-2 px-1">กระทำรวด</h3>
-                <div class="grid grid-cols-2 gap-3">
-                    <button onclick="showAddIncomeModal()" 
-                            class="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.985] transition-all text-white py-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
+                <h3 class="text-sm font-medium text-slate-400 mb-2 px-1">กระทำรวดเร็ว</h3>
+                <div class="grid grid-cols-2 gap-3 mb-3">
+                    <button onclick="showAddIncomeModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.985] transition-all text-white py-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
                         <i class="fas fa-plus-circle text-2xl mb-1"></i>
                         <span class="font-semibold text-sm">บันทึกงานใหม่</span>
-                        <span class="text-xs opacity-80">รายได้จากลาล่ามูฟ</span>
+                        <span class="text-xs opacity-80">รายได้ + GP</span>
                     </button>
                     
-                    <button onclick="showAddExpenseModal()" 
-                            class="bg-red-600 hover:bg-red-700 active:scale-[0.985] transition-all text-white py-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
+                    <button onclick="showAddExpenseModal()" class="bg-red-600 hover:bg-red-700 active:scale-[0.985] transition-all text-white py-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
                         <i class="fas fa-minus-circle text-2xl mb-1"></i>
-                        <span class="font-semibold text-sm">บันทึกค่าใช้จ่าย</span>
-                        <span class="text-xs opacity-80">น้ำมัน / อาหาร / อื่นๆ</span>
+                        <span class="font-semibold text-sm">ค่าใช้จ่ายอื่นๆ</span>
+                        <span class="text-xs opacity-80">หมวดหมู่เต็ม</span>
                     </button>
+                </div>
+
+                <!-- Quick Expense Buttons -->
+                <div>
+                    <h4 class="text-xs text-slate-500 mb-2 px-1">ค่าใช้จ่ายด่วน (กดปุ่มแล้วกรอกเงิน)</h4>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button onclick="quickExpense('ค่าอาหาร')" class="quick-btn bg-orange-600 hover:bg-orange-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
+                            <i class="fas fa-utensils"></i> <span>ค่าอาหาร</span>
+                        </button>
+                        <button onclick="quickExpense('น้ำมัน')" class="quick-btn bg-yellow-600 hover:bg-yellow-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
+                            <i class="fas fa-gas-pump"></i> <span>น้ำมัน</span>
+                        </button>
+                        <button onclick="quickExpense('ค่าสึกหรอ')" class="quick-btn bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
+                            <i class="fas fa-tools"></i> <span>ค่าสึกหรอ</span>
+                        </button>
+                        <button onclick="quickExpense('ค่าเดินทาง')" class="quick-btn bg-purple-600 hover:bg-purple-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
+                            <i class="fas fa-road"></i> <span>ค่าเดินทาง</span>
+                        </button>
+                        <button onclick="quickExpense('ค่าโทรศัพท์')" class="quick-btn bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
+                            <i class="fas fa-mobile-alt"></i> <span>ค่าโทรศัพท์</span>
+                        </button>
+                        <button onclick="quickExpense('อื่นๆ')" class="quick-btn bg-slate-600 hover:bg-slate-700 text-white py-3 rounded-xl text-sm font-medium flex items-center justify-center gap-1">
+                            <i class="fas fa-ellipsis-h"></i> <span>อื่นๆ</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -121,7 +162,7 @@
                     <span class="text-xs text-slate-500" id="transaction-count">0 รายการ</span>
                 </div>
                 
-                <div id="transactions-list" class="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+                <div id="transactions-list" class="space-y-2 max-h-[280px] overflow-y-auto pr-1">
                     <!-- Populated by JS -->
                 </div>
                 
@@ -140,11 +181,11 @@
                 
                 <div class="space-y-3 text-sm">
                     <div class="flex justify-between">
-                        <span class="text-slate-400">น้ำมัน (อัตโนมัติ)</span>
+                        <span class="text-slate-400">ค่าน้ำมัน (ตามราคาวันนี้)</span>
                         <span class="font-medium" id="fuel-cost">0 บาท</span>
                     </div>
                     <div class="flex justify-between">
-                        <span class="text-slate-400">ค่าสึกหรอ (ั 1 บาท/กม.)</span>
+                        <span class="text-slate-400">ค่าสึกหรอ (1 บาท/กม.)</span>
                         <span class="font-medium" id="depreciation-cost">0 บาท</span>
                     </div>
                     <div class="flex justify-between pt-2 border-t border-slate-700">
@@ -173,7 +214,7 @@
             </div>
         </div>
 
-        <!-- Add Income Modal -->
+        <!-- Add Income Modal (with GP) -->
         <div id="income-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -188,8 +229,13 @@
                     </div>
                     
                     <div>
-                        <label class="block text-sm text-slate-400 mb-1">รายได้ (บาท)</label>
+                        <label class="block text-sm text-slate-400 mb-1">รายได้หลัก (บาท)</label>
                         <input type="number" id="income-amount" value="250" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-emerald-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm text-slate-400 mb-1">ค่าจีพี (GP)</label>
+                        <input type="number" id="income-gp" value="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-amber-500">
                     </div>
                     
                     <div>
@@ -243,7 +289,7 @@
             </div>
         </div>
 
-        <!-- Settings Modal -->
+        <!-- Settings Modal (updated with fuel price) -->
         <div id="settings-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -253,10 +299,13 @@
                 
                 <div class="space-y-5">
                     <div>
-                        <label class="block text-sm font-medium text-slate-300 mb-2">อัตราน้ำมัน (บาท/กม.)</label>
-                        <input type="number" id="fuel-rate" value="3.5" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg">
+                        <label class="block text-sm font-medium text-slate-300 mb-2">ราคาน้ำมันวันนี้ (บาท/ลิตร)</label>
+                        <input type="number" id="fuel-price" value="32" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg">
                     </div>
-                    
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-2">อัตราสิ้นเปลือง (กม./ลิตร)</label>
+                        <input type="number" id="fuel-consumption" value="12" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg">
+                    </div>
                     <div>
                         <label class="block text-sm font-medium text-slate-300 mb-2">ค่าสึกหรอ (บาท/กม.)</label>
                         <input type="number" id="depreciation-rate" value="1" step="0.1" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg">
@@ -276,30 +325,28 @@
     </div>
 
     <script>
-        // Tailwind script
         function initializeTailwind() {
             document.documentElement.style.setProperty('--accent', '#10b981');
         }
 
-        // Data storage
         let records = [];
         let settings = {
-            fuelRate: 3.5,
+            fuelPrice: 32,
+            fuelConsumption: 12,
             depreciationRate: 1
         };
+        let checkin = { start: null, end: null };
 
         function loadData() {
             const savedRecords = localStorage.getItem('lalamove_records');
-            if (savedRecords) {
-                records = JSON.parse(savedRecords);
-            }
+            if (savedRecords) records = JSON.parse(savedRecords);
             
             const savedSettings = localStorage.getItem('lalamove_settings');
-            if (savedSettings) {
-                settings = JSON.parse(savedSettings);
-            }
+            if (savedSettings) settings = JSON.parse(savedSettings);
             
-            // Filter only today's records
+            const savedCheckin = localStorage.getItem('lalamove_checkin');
+            if (savedCheckin) checkin = JSON.parse(savedCheckin);
+            
             const today = new Date().toISOString().split('T')[0];
             records = records.filter(r => r.date === today);
         }
@@ -307,6 +354,70 @@
         function saveData() {
             localStorage.setItem('lalamove_records', JSON.stringify(records));
             localStorage.setItem('lalamove_settings', JSON.stringify(settings));
+            localStorage.setItem('lalamove_checkin', JSON.stringify(checkin));
+        }
+
+        function updateCheckin() {
+            const statusEl = document.getElementById('checkin-status');
+            const durationEl = document.getElementById('checkin-duration');
+            
+            if (!checkin.start) {
+                statusEl.innerHTML = 'ยังไม่ได้เช็คอิน';
+                durationEl.classList.add('hidden');
+                return;
+            }
+            
+            const startTime = new Date(checkin.start).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            statusEl.innerHTML = `เริ่มงานเมื่อ <span class="font-semibold text-emerald-400">${startTime}</span>`;
+            
+            if (checkin.end) {
+                const endTime = new Date(checkin.end).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                const durationMs = new Date(checkin.end) - new Date(checkin.start);
+                const hours = Math.floor(durationMs / (1000 * 60 * 60));
+                const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+                durationEl.innerHTML = `สิ้นสุด ${endTime} | ระยะเวลา: <span class="font-semibold">${hours} ชม. ${minutes} นาที</span>`;
+                durationEl.classList.remove('hidden');
+            } else {
+                const now = new Date();
+                const durationMs = now - new Date(checkin.start);
+                const hours = Math.floor(durationMs / (1000 * 60 * 60));
+                const minutes = Math.floor((durationMs % (1000 * 60 * 60)) / (1000 * 60));
+                durationEl.innerHTML = `กำลังทำงาน | ระยะเวลา: <span class="font-semibold">${hours} ชม. ${minutes} นาที</span>`;
+                durationEl.classList.remove('hidden');
+            }
+        }
+
+        function checkIn() {
+            if (checkin.start && !checkin.end) {
+                if (!confirm('คุณได้เช็คอินแล้ว ต้องการเช็คอินใหม่?')) return;
+            }
+            checkin.start = new Date().toISOString();
+            checkin.end = null;
+            saveData();
+            updateCheckin();
+            showToast('เช็คอินเรียบร้อย! เริ่มนับเวลาแล้ว');
+        }
+
+        function checkOut() {
+            if (!checkin.start) {
+                alert('กรุณาเช็คอินก่อน');
+                return;
+            }
+            if (checkin.end) {
+                alert('คุณได้เช็คเอาท์แล้ว');
+                return;
+            }
+            checkin.end = new Date().toISOString();
+            saveData();
+            updateCheckin();
+            showToast('เช็คเอาท์เรียบร้อย!');
+        }
+
+        function resetCheckin() {
+            if (!confirm('รีเซ็ตเช็คอินวันนี้?')) return;
+            checkin = { start: null, end: null };
+            saveData();
+            updateCheckin();
         }
 
         function updateSummary() {
@@ -317,12 +428,14 @@
             let totalExpense = 0;
             let totalKm = 0;
             let totalTrips = 0;
+            let totalGp = 0;
             
             todayRecords.forEach(record => {
                 if (record.type === 'income') {
-                    totalIncome += record.amount;
+                    totalIncome += record.amount + (record.gp || 0);
                     totalKm += record.km || 0;
                     totalTrips++;
+                    totalGp += record.gp || 0;
                 } else {
                     totalExpense += record.amount;
                 }
@@ -330,27 +443,25 @@
             
             const net = totalIncome - totalExpense;
             
-            // Auto calculations
-            const fuelCost = totalKm * settings.fuelRate;
+            // Auto fuel calculation with price per liter
+            const fuelCost = (totalKm / settings.fuelConsumption) * settings.fuelPrice;
             const depreciationCost = totalKm * settings.depreciationRate;
             const realNet = totalIncome - totalExpense - fuelCost - depreciationCost;
             
-            // Update DOM
             document.getElementById('total-income').textContent = totalIncome.toLocaleString();
             document.getElementById('total-expense').textContent = totalExpense.toLocaleString();
             document.getElementById('net-profit').textContent = net.toLocaleString();
             document.getElementById('net-status').textContent = net >= 0 ? 'กำไร' : 'ขาดทุน';
             document.getElementById('total-trips').textContent = totalTrips;
             document.getElementById('total-km').textContent = totalKm;
+            document.getElementById('total-gp').textContent = totalGp.toLocaleString();
             
-            document.getElementById('fuel-cost').textContent = Math.round(fuelCost) + ' บาท';
+            document.getElementById('fuel-cost').innerHTML = `${Math.round(fuelCost)} บาท <span class="text-xs">(${(totalKm / settings.fuelConsumption).toFixed(1)} ลิตร × ${settings.fuelPrice} บาท)</span>`;
             document.getElementById('depreciation-cost').textContent = Math.round(depreciationCost) + ' บาท';
             document.getElementById('real-net').textContent = Math.round(realNet).toLocaleString() + ' บาท';
             
-            // Update transaction count
             document.getElementById('transaction-count').textContent = todayRecords.length + ' รายการ';
             
-            // Update real net color
             const realNetEl = document.getElementById('real-net');
             realNetEl.style.color = realNet >= 0 ? '#10b981' : '#f87171';
         }
@@ -377,10 +488,14 @@
                 
                 let icon = '';
                 let color = '';
+                let extra = '';
                 
                 if (record.type === 'income') {
                     icon = '<i class="fas fa-arrow-up text-emerald-400"></i>';
                     color = 'text-emerald-400';
+                    if (record.gp && record.gp > 0) {
+                        extra = `<div class="text-xs text-amber-400 mt-0.5">+GP ${record.gp} บาท</div>`;
+                    }
                 } else {
                     icon = '<i class="fas fa-arrow-down text-red-400"></i>';
                     color = 'text-red-400';
@@ -395,6 +510,7 @@
                             <div class="font-medium">${record.category || (record.type === 'income' ? 'งานลาล่ามูฟ' : 'ค่าใช้จ่าย')}</div>
                             <div class="text-xs text-slate-400">${record.note || ''}</div>
                             ${record.km ? `<div class="text-xs text-emerald-400 mt-0.5">${record.km} km</div>` : ''}
+                            ${extra}
                         </div>
                     </div>
                     <div class="text-right">
@@ -405,13 +521,10 @@
                     </div>
                 `;
                 
-                // Long press to delete
                 let pressTimer;
                 div.addEventListener('touchstart', () => {
                     pressTimer = setTimeout(() => {
-                        if (confirm('ลบรายการนี้?')) {
-                            deleteRecord(record.id);
-                        }
+                        if (confirm('ลบรายการนี้?')) deleteRecord(record.id);
                     }, 600);
                 });
                 div.addEventListener('touchend', () => clearTimeout(pressTimer));
@@ -423,10 +536,11 @@
         function addIncome() {
             const km = parseFloat(document.getElementById('income-km').value) || 0;
             const amount = parseFloat(document.getElementById('income-amount').value) || 0;
+            const gp = parseFloat(document.getElementById('income-gp').value) || 0;
             const note = document.getElementById('income-note').value.trim();
             
-            if (amount <= 0) {
-                alert('กรุณาระบุรายได้');
+            if (amount <= 0 && gp <= 0) {
+                alert('กรุณาระบุรายได้หรือ GP');
                 return;
             }
             
@@ -437,6 +551,7 @@
                 type: 'income',
                 category: 'งานลาล่ามูฟ',
                 amount: amount,
+                gp: gp,
                 km: km,
                 note: note
             };
@@ -445,10 +560,7 @@
             saveData();
             updateSummary();
             renderTransactions();
-            
             hideIncomeModal();
-            
-            // Success toast
             showToast('บันทึกงานเรียบร้อยแล้ว!');
         }
 
@@ -476,9 +588,23 @@
             saveData();
             updateSummary();
             renderTransactions();
-            
             hideExpenseModal();
             showToast('บันทึกค่าใช้จ่ายเรียบร้อย!');
+        }
+
+        function quickExpense(category) {
+            if (category === 'อื่นๆ') {
+                showAddExpenseModal();
+                return;
+            }
+            // Pre-set category and open modal
+            document.getElementById('expense-category').value = category;
+            showAddExpenseModal();
+            // Focus on amount
+            setTimeout(() => {
+                document.getElementById('expense-amount').focus();
+                document.getElementById('expense-amount').select();
+            }, 300);
         }
 
         function deleteRecord(id) {
@@ -489,6 +615,7 @@
         }
 
         function showAddIncomeModal() {
+            document.getElementById('income-gp').value = '0';
             document.getElementById('income-modal').classList.remove('hidden');
             document.getElementById('income-modal').classList.add('flex');
         }
@@ -509,7 +636,8 @@
         }
 
         function showSettings() {
-            document.getElementById('fuel-rate').value = settings.fuelRate;
+            document.getElementById('fuel-price').value = settings.fuelPrice;
+            document.getElementById('fuel-consumption').value = settings.fuelConsumption;
             document.getElementById('depreciation-rate').value = settings.depreciationRate;
             document.getElementById('settings-modal').classList.remove('hidden');
             document.getElementById('settings-modal').classList.add('flex');
@@ -521,7 +649,8 @@
         }
 
         function saveSettings() {
-            settings.fuelRate = parseFloat(document.getElementById('fuel-rate').value) || 3.5;
+            settings.fuelPrice = parseFloat(document.getElementById('fuel-price').value) || 32;
+            settings.fuelConsumption = parseFloat(document.getElementById('fuel-consumption').value) || 12;
             settings.depreciationRate = parseFloat(document.getElementById('depreciation-rate').value) || 1;
             saveData();
             hideSettings();
@@ -547,16 +676,17 @@
             
             const today = new Date().toISOString().split('T')[0];
             records = records.filter(r => r.date !== today);
+            checkin = { start: null, end: null };
             saveData();
             updateSummary();
             renderTransactions();
+            updateCheckin();
             showToast('รีเซ็ตวันใหม่เรียบร้อย');
         }
 
         function switchTab(tab) {
-            // For now only today tab is active, can expand later
             if (tab === 'history') {
-                alert('ประวัติยังไม่ได้เปิดใช้ จะเพิ่มในอนาคตหน้า');
+                alert('ประวัติจะเพิ่มในเวอร์ชันหน้า');
             }
         }
 
@@ -564,19 +694,11 @@
             initializeTailwind();
             loadData();
             
-            // Initial render
             updateSummary();
             renderTransactions();
+            updateCheckin();
             
-            // Show welcome if no records
-            const today = new Date().toISOString().split('T')[0];
-            const hasToday = records.some(r => r.date === today);
-            
-            if (!hasToday) {
-                // Optional: show hint
-            }
-            
-            // Keyboard support
+            // Keyboard
             document.addEventListener('keydown', function(e) {
                 if (e.key === '/' && document.activeElement.tagName === 'BODY') {
                     e.preventDefault();
@@ -584,21 +706,20 @@
                 }
             });
             
-            // Make sure modals close on outside click
-            document.getElementById('income-modal').addEventListener('click', function(e) {
-                if (e.target.id === 'income-modal') hideIncomeModal();
-            });
-            document.getElementById('expense-modal').addEventListener('click', function(e) {
-                if (e.target.id === 'expense-modal') hideExpenseModal();
-            });
-            document.getElementById('settings-modal').addEventListener('click', function(e) {
-                if (e.target.id === 'settings-modal') hideSettings();
+            // Close modals on outside click
+            ['income-modal', 'expense-modal', 'settings-modal'].forEach(id => {
+                document.getElementById(id).addEventListener('click', function(e) {
+                    if (e.target.id === id) {
+                        if (id === 'income-modal') hideIncomeModal();
+                        if (id === 'expense-modal') hideExpenseModal();
+                        if (id === 'settings-modal') hideSettings();
+                    }
+                });
             });
             
-            console.log('%c[Lalamove Account] App initialized successfully', 'color:#10b981');
+            console.log('%c[Lalamove Account] App updated with check-in, quick expense, GP, fuel price', 'color:#10b981');
         }
 
-        // Boot app
         window.onload = initializeApp;
     </script>
 </body>
