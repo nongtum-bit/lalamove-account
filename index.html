@@ -422,7 +422,6 @@
         let currentDetailRecord = null;
         let currentTollPayer = 'customer';
         let currentSwipedElement = null;
-        let currentActionRow = null;
 
         function loadData() {
             const savedRecords = localStorage.getItem('lalamove_records');
@@ -613,17 +612,18 @@
                 const div = document.createElement('div');
                 div.className = `transaction-item flex items-center justify-between p-3.5 bg-slate-800 rounded-2xl border border-slate-700 cursor-pointer`;
                 
-                // Create swipe action button
+                // Swipe action button
                 const actionDiv = document.createElement('div');
                 actionDiv.className = 'swipe-action';
                 actionDiv.innerHTML = `<i class="fas fa-trash text-xl"></i>`;
-                actionDiv.onclick = (e) => {
+                
+                actionDiv.addEventListener('click', function(e) {
                     e.stopImmediatePropagation();
                     currentDeleteId = record.id;
                     currentSwipedElement = div;
                     hideSwipeAction(div);
                     showDeleteConfirm();
-                };
+                });
                 
                 div.appendChild(actionDiv);
                 
@@ -662,41 +662,51 @@
                     </div>
                 `;
                 
-                // Re-append action button after innerHTML
                 div.appendChild(actionDiv);
                 
-                div.addEventListener('click', () => showDetailModal(record));
-                div.addEventListener('contextmenu', (e) => e.preventDefault());
-                
-                // Long press
-                let pressTimer;
-                div.addEventListener('touchstart', (e) => {
-                    pressTimer = setTimeout(() => showEditDeleteOptions(record, div), 550);
-                });
-                div.addEventListener('touchend', () => clearTimeout(pressTimer));
-                div.addEventListener('touchcancel', () => clearTimeout(pressTimer));
-                
-                // Swipe logic
+                // === CLEAN TOUCH HANDLING ===
                 let startX = 0;
+                let startY = 0;
+                let longPressTimer = null;
                 let isSwiping = false;
+                let wasSwiped = false;
                 
-                div.addEventListener('touchstart', (e) => {
+                // Long press detection
+                div.addEventListener('touchstart', function(e) {
                     startX = e.touches[0].clientX;
-                    isSwiping = true;
-                    div.style.transition = 'none';
+                    startY = e.touches[0].clientY;
+                    wasSwiped = false;
+                    isSwiping = false;
+                    
+                    longPressTimer = setTimeout(() => {
+                        if (!isSwiping && !wasSwiped) {
+                            showEditDeleteOptions(record, div);
+                        }
+                    }, 550);
                 });
                 
-                div.addEventListener('touchmove', (e) => {
-                    if (!isSwiping) return;
-                    const currentX = e.touches[0].clientX;
-                    const deltaX = currentX - startX;
+                div.addEventListener('touchmove', function(e) {
+                    if (!longPressTimer) return;
                     
-                    if (deltaX < 0) {
-                        const limitedDelta = Math.max(deltaX, -85);
-                        div.style.transform = `translateX(${limitedDelta}px)`;
+                    const currentX = e.touches[0].clientX;
+                    const currentY = e.touches[0].clientY;
+                    const deltaX = currentX - startX;
+                    const deltaY = currentY - startY;
+                    
+                    // If moving horizontally significantly, cancel long press and start swipe
+                    if (Math.abs(deltaX) > 15 && Math.abs(deltaX) > Math.abs(deltaY)) {
+                        clearTimeout(longPressTimer);
+                        longPressTimer = null;
+                        isSwiping = true;
+                        wasSwiped = true;
+                        div.style.transition = 'none';
+                    }
+                    
+                    if (isSwiping && deltaX < 0) {
+                        const limited = Math.max(deltaX, -85);
+                        div.style.transform = `translateX(${limited}px)`;
                         
-                        // Show action button when swiped far enough
-                        if (limitedDelta < -40) {
+                        if (limited < -40) {
                             actionDiv.classList.add('show');
                         } else {
                             actionDiv.classList.remove('show');
@@ -704,28 +714,45 @@
                     }
                 });
                 
-                div.addEventListener('touchend', (e) => {
-                    if (!isSwiping) return;
-                    isSwiping = false;
+                div.addEventListener('touchend', function(e) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
                     
-                    const endX = e.changedTouches[0].clientX;
-                    const deltaX = endX - startX;
-                    
-                    div.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)';
-                    
-                    if (deltaX < -55) {
-                        // Keep it open with action visible
-                        div.style.transform = 'translateX(-70px)';
-                        actionDiv.classList.add('show');
-                        currentSwipedElement = div;
-                        currentActionRow = actionDiv;
-                    } else {
-                        // Reset
-                        div.style.transform = 'translateX(0)';
-                        actionDiv.classList.remove('show');
-                        currentSwipedElement = null;
-                        currentActionRow = null;
+                    if (isSwiping) {
+                        const endX = e.changedTouches[0].clientX;
+                        const deltaX = endX - startX;
+                        
+                        div.style.transition = 'transform 0.25s cubic-bezier(0.32, 0.72, 0, 1)';
+                        
+                        if (deltaX < -55) {
+                            div.style.transform = 'translateX(-70px)';
+                            actionDiv.classList.add('show');
+                            currentSwipedElement = div;
+                        } else {
+                            div.style.transform = 'translateX(0)';
+                            actionDiv.classList.remove('show');
+                            currentSwipedElement = null;
+                        }
+                        
+                        // Prevent click from firing after swipe
+                        setTimeout(() => { wasSwiped = false; }, 300);
+                        isSwiping = false;
+                        return;
                     }
+                    
+                    // Normal tap (not swiped)
+                    if (!wasSwiped) {
+                        showDetailModal(record);
+                    }
+                });
+                
+                div.addEventListener('touchcancel', function() {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                    isSwiping = false;
+                    wasSwiped = false;
+                    div.style.transform = 'translateX(0)';
+                    actionDiv.classList.remove('show');
                 });
                 
                 container.appendChild(div);
@@ -811,7 +838,6 @@
         }
 
         function showEditDeleteOptions(record, element) {
-            // Close any open swipe action first
             if (currentSwipedElement) {
                 hideSwipeAction(currentSwipedElement);
                 currentSwipedElement = null;
@@ -1047,7 +1073,6 @@
                 hideSwipeAction(currentSwipedElement);
                 currentSwipedElement = null;
             }
-            
             currentDeleteId = null;
         }
 
@@ -1180,7 +1205,6 @@
             startCheckinTimer();
             setupNumberInputs();
             
-            // Delete confirmation buttons
             const btnCancel = document.getElementById('btn-cancel-delete');
             const btnConfirm = document.getElementById('btn-confirm-delete');
             
@@ -1202,7 +1226,7 @@
                 if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); if (id==='summary-detail-modal') hideSummaryDetail(); } });
             });
             
-            console.log('%c[Lalamove Account] NEW: Swipe to reveal trash button (native feel) - Best UX', 'color:#10b981');
+            console.log('%c[Lalamove Account] Fixed event conflicts: Swipe + Click + LongPress now work cleanly', 'color:#10b981');
         }
 
         window.onload = initializeApp;
