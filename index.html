@@ -10,10 +10,11 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Noto+Sans+Thai:wght@400;500;600&amp;display=swap');
         body { font-family: 'Inter', 'Noto Sans Thai', system-ui, sans-serif; }
         .mobile-container { max-width: 480px; margin: 0 auto; }
-        .transaction-item { transition: all 0.2s; }
+        .transaction-item { transition: transform 0.2s, background-color 0.2s; }
         .summary-card { background: linear-gradient(135deg, #1e2937 0%, #0f172a 100%); }
         .quick-btn { transition: all 0.1s; }
         .quick-btn:active { transform: scale(0.95); }
+        .swipe-delete { background-color: #7f1d1d; color: white; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
@@ -364,6 +365,7 @@
         };
         let checkin = { start: null, end: null };
         let currentQuickCategory = '';
+        let currentEditId = null;
 
         function loadData() {
             const savedRecords = localStorage.getItem('lalamove_records');
@@ -549,6 +551,16 @@
                     </div>
                 `;
                 
+                // Long press for edit/delete options
+                let pressTimer;
+                div.addEventListener('touchstart', (e) => {
+                    pressTimer = setTimeout(() => {
+                        showEditDeleteOptions(record, div);
+                    }, 600);
+                });
+                div.addEventListener('touchend', () => clearTimeout(pressTimer));
+                div.addEventListener('touchcancel', () => clearTimeout(pressTimer));
+                
                 // Swipe left to delete
                 let startX = 0;
                 let currentX = 0;
@@ -562,8 +574,8 @@
                     currentX = e.touches[0].clientX;
                     const deltaX = currentX - startX;
                     if (deltaX < 0) {
-                        div.style.transform = `translateX(${deltaX}px)`;
-                        if (deltaX < -50) {
+                        div.style.transform = `translateX(${Math.max(deltaX, -120)}px)`;
+                        if (deltaX < -60) {
                             div.style.backgroundColor = '#7f1d1d';
                         }
                     }
@@ -589,6 +601,130 @@
                 
                 container.appendChild(div);
             });
+        }
+
+        function showEditDeleteOptions(record, element) {
+            const options = document.createElement('div');
+            options.className = 'fixed inset-0 bg-black/50 z-[200] flex items-center justify-center';
+            options.innerHTML = `
+                <div class="bg-slate-900 rounded-2xl p-6 w-80">
+                    <div class="text-center mb-4">
+                        <div class="font-bold text-lg">${record.category}</div>
+                        <div class="text-sm text-slate-400">${record.amount} บาท</div>
+                    </div>
+                    <div class="flex flex-col gap-3">
+                        <button onclick="editRecord(${record.id}, this)" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 rounded-xl font-semibold flex items-center justify-center gap-2">
+                            <i class="fas fa-edit"></i> <span>แก้ไข</span>
+                        </button>
+                        <button onclick="deleteRecord(${record.id}); this.closest('.fixed').remove();" class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold flex items-center justify-center gap-2">
+                            <i class="fas fa-trash"></i> <span>ลบ</span>
+                        </button>
+                        <button onclick="this.closest('.fixed').remove()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold">
+                            ยกเลิก
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(options);
+        }
+
+        function editRecord(id, element) {
+            const record = records.find(r => r.id === id);
+            if (!record) return;
+            
+            // Close options
+            element.closest('.fixed').remove();
+            
+            currentEditId = id;
+            
+            if (record.type === 'income') {
+                // Open income modal prefilled
+                document.getElementById('income-km').value = record.km || 0;
+                document.getElementById('income-amount').value = record.amount || 0;
+                document.getElementById('income-gp').value = record.gp || 0;
+                document.getElementById('income-note').value = record.note || '';
+                showAddIncomeModal();
+                
+                // Change button text temporarily
+                const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
+                if (saveBtn) {
+                    saveBtn.innerText = 'บันทึกการแก้ไข';
+                    saveBtn.onclick = () => updateIncomeRecord();
+                }
+            } else {
+                // Open expense modal prefilled
+                document.getElementById('expense-category').value = record.category;
+                document.getElementById('expense-amount').value = record.amount;
+                document.getElementById('expense-note').value = record.note || '';
+                showAddExpenseModal();
+                
+                const saveBtn = document.querySelector('#expense-modal button[onclick*="addExpense"]');
+                if (saveBtn) {
+                    saveBtn.innerText = 'บันทึกการแก้ไข';
+                    saveBtn.onclick = () => updateExpenseRecord();
+                }
+            }
+        }
+
+        function updateIncomeRecord() {
+            if (!currentEditId) return;
+            
+            const recordIndex = records.findIndex(r => r.id === currentEditId);
+            if (recordIndex === -1) return;
+            
+            const km = parseFloat(document.getElementById('income-km').value) || 0;
+            const amount = parseFloat(document.getElementById('income-amount').value) || 0;
+            const gp = parseFloat(document.getElementById('income-gp').value) || 0;
+            const note = document.getElementById('income-note').value.trim();
+            
+            records[recordIndex].km = km;
+            records[recordIndex].amount = amount;
+            records[recordIndex].gp = gp;
+            records[recordIndex].note = note;
+            
+            saveData();
+            updateSummary();
+            renderTransactions();
+            hideIncomeModal();
+            
+            // Reset button
+            const saveBtn = document.querySelector('#income-modal button');
+            if (saveBtn) {
+                saveBtn.innerText = 'บันทึกงาน';
+                saveBtn.onclick = () => addIncome();
+            }
+            
+            currentEditId = null;
+            showToast('แก้ไขเรียบร้อย!');
+        }
+
+        function updateExpenseRecord() {
+            if (!currentEditId) return;
+            
+            const recordIndex = records.findIndex(r => r.id === currentEditId);
+            if (recordIndex === -1) return;
+            
+            const category = document.getElementById('expense-category').value;
+            const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
+            const note = document.getElementById('expense-note').value.trim();
+            
+            records[recordIndex].category = category;
+            records[recordIndex].amount = amount;
+            records[recordIndex].note = note;
+            
+            saveData();
+            updateSummary();
+            renderTransactions();
+            hideExpenseModal();
+            
+            const saveBtn = document.querySelector('#expense-modal button');
+            if (saveBtn) {
+                saveBtn.innerText = 'บันทึกค่าใช้จ่าย';
+                saveBtn.onclick = () => addExpense();
+            }
+            
+            currentEditId = null;
+            showToast('แก้ไขเรียบร้อย!');
         }
 
         function addIncome() {
@@ -814,7 +950,7 @@
                 }
             });
             
-            console.log('%c[Lalamove Account] App updated - Quick expense simplified + Swipe delete', 'color:#10b981');
+            console.log('%c[Lalamove Account] App fixed - Swipe delete + Edit via long press', 'color:#10b981');
         }
 
         window.onload = initializeApp;
