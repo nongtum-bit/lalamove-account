@@ -419,6 +419,7 @@
         let checkinInterval = null;
         let currentDetailRecord = null;
         let currentTollPayer = 'customer';
+        let currentSwipedElement = null;
 
         function loadData() {
             const savedRecords = localStorage.getItem('lalamove_records');
@@ -477,7 +478,7 @@
                 if (checkin.start && !checkin.end) {
                     updateCheckin();
                 }
-            }, 1000); // update every second
+            }, 1000);
         }
 
         function checkIn() {
@@ -676,12 +677,15 @@
                     const endX = e.changedTouches[0].clientX;
                     const deltaX = endX - startX;
                     div.style.transition = 'transform 0.3s, background-color 0.3s';
+                    
                     if (deltaX < -80) {
                         currentDeleteId = record.id;
+                        currentSwipedElement = div;
                         showDeleteConfirm();
                     } else {
                         div.style.transform = 'translateX(0)';
                         div.style.backgroundColor = '';
+                        currentSwipedElement = null;
                     }
                 });
                 
@@ -716,7 +720,7 @@
             }
             
             if (record.note) html += `<div class="detail-row"><span class="text-slate-400">หมายเหตุ</span><span class="font-medium">${record.note}</span></div>`;
-            html += `<div class="detail-row"><span class="text-slate-400">เวลา</span><span class="font-medium">${record.time}</span></div>`;
+            html += `<div class="detail-row"><span class="text-slate-400">เวลา</span><span class="font-medium">${record.time}</span></div>
             
             content.innerHTML = html;
             
@@ -919,7 +923,7 @@
                 time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
                 type: 'expense',
                 category: category,
-                amount: amount,
+                amount: amount;
                 note: note
             };
             
@@ -978,8 +982,16 @@
         }
 
         function showDeleteConfirm() {
+            // Reset the swiped element immediately when showing confirmation
+            if (currentSwipedElement) {
+                currentSwipedElement.style.transition = 'transform 0.2s, background-color 0.2s';
+                currentSwipedElement.style.transform = 'translateX(0)';
+                currentSwipedElement.style.backgroundColor = '';
+            }
+            
             document.getElementById('delete-confirm-modal').classList.remove('hidden');
             document.getElementById('delete-confirm-modal').classList.add('flex');
+            
             document.getElementById('confirm-delete-btn').onclick = () => {
                 if (currentDeleteId) {
                     deleteRecord(currentDeleteId);
@@ -992,8 +1004,21 @@
         function cancelDelete() {
             document.getElementById('delete-confirm-modal').classList.remove('flex');
             document.getElementById('delete-confirm-modal').classList.add('hidden');
+            
+            // Reset any swiped element
+            if (currentSwipedElement) {
+                currentSwipedElement.style.transform = 'translateX(0)';
+                currentSwipedElement.style.backgroundColor = '';
+                currentSwipedElement = null;
+            }
+            
             currentDeleteId = null;
-            document.querySelectorAll('.transaction-item').forEach(el => { el.style.transform = 'translateX(0)'; el.style.backgroundColor = ''; });
+            
+            // Also reset all transaction items just in case
+            document.querySelectorAll('.transaction-item').forEach(el => {
+                el.style.transform = 'translateX(0)';
+                el.style.backgroundColor = '';
+            });
         }
 
         function deleteRecord(id) {
@@ -1077,7 +1102,6 @@
             if (tab === 'history') alert('ประวัติจะเพิ่มในเวอร์ชันหน้า');
         }
 
-        // Toll payer button selection
         function selectTollPayer(payer) {
             currentTollPayer = payer;
             updateTollPayerButtons();
@@ -1119,7 +1143,7 @@
                 if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); if (id==='summary-detail-modal') hideSummaryDetail(); } });
             });
             
-            console.log('%c[Lalamove Account] Improved: Button payer selection + live seconds timer + better delete reliability', 'color:#10b981');
+            console.log('%c[Lalamove Account] Targeted fix: Swipe delete confirmation now resets element immediately', 'color:#10b981');
         }
 
         window.onload = initializeApp;
