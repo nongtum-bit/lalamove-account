@@ -230,7 +230,7 @@
             </div>
         </div>
 
-        <!-- Add Income Modal -->
+        <!-- Add Income Modal (with Toll) -->
         <div id="income-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -260,13 +260,32 @@
                         <input type="number" id="income-gp" value="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
                     </div>
                     
+                    <!-- Toll Section -->
+                    <div class="border border-slate-600 rounded-2xl p-4 bg-slate-800/50">
+                        <div class="text-sm text-slate-400 mb-2">ค่าทางด่วน (ถ้ามี)</div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">จำนวนเงิน (บาท)</label>
+                                <input type="number" id="income-toll" value="0" class="w-full bg-slate-700 border border-slate-500 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs text-slate-400 mb-1">ใครจ่าย</label>
+                                <select id="income-toll-payer" class="w-full bg-slate-700 border border-slate-500 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
+                                    <option value="customer">ลูกค้าจ่าย</option>
+                                    <option value="self">เราเอง</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="text-xs text-slate-500 mt-1">* ลูกค้าจ่าย = ไม่หักจากกำไรเรา</div>
+                    </div>
+                    
                     <div>
                         <label class="block text-sm text-slate-400 mb-1">หมายเหตุ</label>
                         <input type="text" id="income-note" value="งานปกติ" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500">
                     </div>
                 </div>
                 
-                <div class="flex gap-3 mt-8">
+                <div class="flex gap-3 mt-6">
                     <button onclick="hideIncomeModal()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
                     <button onclick="addIncome()" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">บันทึกงาน</button>
                 </div>
@@ -510,6 +529,7 @@
             let totalFare = 0;
             let totalTip = 0;
             let totalGp = 0;
+            let totalTollSelf = 0;
             
             todayRecords.forEach(record => {
                 if (record.type === 'income') {
@@ -519,6 +539,12 @@
                     totalKm += record.km || 0;
                     totalTrips++;
                     totalGp += record.gp || 0;
+                    
+                    // Only count self-paid toll as expense
+                    if (record.tollPayer === 'self') {
+                        totalExpense += record.toll || 0;
+                        totalTollSelf += record.toll || 0;
+                    }
                 } else if (record.type === 'expense') {
                     if (record.category !== 'ทางด่วนลูกค้า') {
                         totalExpense += record.amount;
@@ -681,6 +707,10 @@
                 if (record.fare) html += `<div class="detail-row"><span class="text-slate-400">รายได้จากแอพ</span><span class="font-medium">${record.fare} บาท</span></div>`;
                 if (record.tip && record.tip > 0) html += `<div class="detail-row"><span class="text-slate-400">ทิปจากลูกค้า</span><span class="font-medium text-amber-400">+${record.tip} บาท</span></div>`;
                 if (record.gp && record.gp > 0) html += `<div class="detail-row"><span class="text-slate-400">ค่าบริการ GP (แอพหัก)</span><span class="font-medium text-red-400">-${record.gp} บาท</span></div>`;
+                if (record.toll && record.toll > 0) {
+                    const payerText = record.tollPayer === 'self' ? 'เราเอง (หัก)' : 'ลูกค้าจ่าย';
+                    html += `<div class="detail-row"><span class="text-slate-400">ค่าทางด่วน</span><span class="font-medium ${record.tollPayer === 'self' ? 'text-red-400' : 'text-emerald-400'}">${record.toll} บาท (${payerText})</span></div>`;
+                }
                 if (record.km) html += `<div class="detail-row"><span class="text-slate-400">ระยะทาง</span><span class="font-medium">${record.km} กม.</span></div>`;
                 
                 const tripFuel = record.km ? (record.km / settings.fuelConsumption) * settings.fuelPrice : 0;
@@ -712,6 +742,8 @@
                 document.getElementById('income-fare').value = record.fare || 0;
                 document.getElementById('income-tip').value = record.tip || 0;
                 document.getElementById('income-gp').value = record.gp || 0;
+                document.getElementById('income-toll').value = record.toll || 0;
+                document.getElementById('income-toll-payer').value = record.tollPayer || 'customer';
                 document.getElementById('income-note').value = record.note || '';
                 showAddIncomeModal();
                 const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
@@ -765,6 +797,8 @@
                 document.getElementById('income-fare').value = record.fare || 0;
                 document.getElementById('income-tip').value = record.tip || 0;
                 document.getElementById('income-gp').value = record.gp || 0;
+                document.getElementById('income-toll').value = record.toll || 0;
+                document.getElementById('income-toll-payer').value = record.tollPayer || 'customer';
                 document.getElementById('income-note').value = record.note || '';
                 showAddIncomeModal();
                 const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
@@ -788,12 +822,16 @@
             const fare = parseFloat(document.getElementById('income-fare').value) || 0;
             const tip = parseFloat(document.getElementById('income-tip').value) || 0;
             const gp = parseFloat(document.getElementById('income-gp').value) || 0;
+            const toll = parseFloat(document.getElementById('income-toll').value) || 0;
+            const tollPayer = document.getElementById('income-toll-payer').value;
             const note = document.getElementById('income-note').value.trim();
             
             records[recordIndex].km = km;
             records[recordIndex].fare = fare;
             records[recordIndex].tip = tip;
             records[recordIndex].gp = gp;
+            records[recordIndex].toll = toll;
+            records[recordIndex].tollPayer = tollPayer;
             records[recordIndex].amount = fare + tip;
             records[recordIndex].note = note;
             
@@ -837,6 +875,8 @@
             const fare = parseFloat(document.getElementById('income-fare').value) || 0;
             const tip = parseFloat(document.getElementById('income-tip').value) || 0;
             const gp = parseFloat(document.getElementById('income-gp').value) || 0;
+            const toll = parseFloat(document.getElementById('income-toll').value) || 0;
+            const tollPayer = document.getElementById('income-toll-payer').value;
             const note = document.getElementById('income-note').value.trim();
             
             if (fare <= 0 && tip <= 0 && gp <= 0) {
@@ -853,6 +893,8 @@
                 fare: fare,
                 tip: tip,
                 gp: gp,
+                toll: toll,
+                tollPayer: tollPayer,
                 amount: fare + tip,
                 km: km,
                 note: note
@@ -967,6 +1009,8 @@
             document.getElementById('income-fare').value = '1000';
             document.getElementById('income-tip').value = '0';
             document.getElementById('income-gp').value = '0';
+            document.getElementById('income-toll').value = '0';
+            document.getElementById('income-toll-payer').value = 'customer';
             document.getElementById('income-modal').classList.remove('hidden');
             document.getElementById('income-modal').classList.add('flex');
         }
@@ -1051,7 +1095,7 @@
                 if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); if (id==='summary-detail-modal') hideSummaryDetail(); } });
             });
             
-            console.log('%c[Lalamove Account] Stable version loaded successfully', 'color:#10b981');
+            console.log('%c[Lalamove Account] Added toll per trip with payer selection', 'color:#10b981');
         }
 
         window.onload = initializeApp;
