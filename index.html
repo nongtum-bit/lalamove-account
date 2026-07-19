@@ -70,10 +70,10 @@
                     <div class="summary-card p-3.5 rounded-2xl border border-emerald-700">
                         <div class="flex items-center gap-2 mb-1">
                             <i class="fas fa-wallet text-emerald-400 text-lg"></i>
-                            <span class="text-sm text-emerald-400">รายได้รวม</span>
+                            <span class="text-sm text-emerald-400">รายได้จริง</span>
                         </div>
                         <div class="text-3xl font-bold text-emerald-400" id="total-income">0</div>
-                        <div class="text-xs text-emerald-300">บาท</div>
+                        <div class="text-xs text-emerald-300">บาท (จากแอพ + ทิป)</div>
                     </div>
                     
                     <div class="summary-card p-3.5 rounded-2xl border border-red-700">
@@ -89,12 +89,12 @@
                 <div class="bg-emerald-900/30 border border-emerald-600 p-4 rounded-2xl mb-3">
                     <div class="text-sm text-emerald-400 mb-1">กำไรสุทธิจริง</div>
                     <div class="text-4xl font-bold text-emerald-400" id="real-net">0</div>
-                    <div class="text-xs text-emerald-300 mt-1" id="net-status">หลังหักน้ำมัน + สึกหรอ + ค่าใช้จ่าย</div>
+                    <div class="text-xs text-emerald-300 mt-1" id="net-status">หลังหัก GP + น้ำมัน + สึกหรอ + ค่าใช้จ่าย</div>
                 </div>
 
                 <div class="bg-slate-900 border border-slate-700 rounded-2xl p-3 text-sm">
-                    <div class="flex justify-between mb-1"><span class="text-slate-400">ค่าน้ำมัน</span> <span id="fuel-cost" class="font-medium">0 บาท</span></div>
-                    <div class="flex justify-between"><span class="text-slate-400">ค่าสึกหรอ</span> <span id="depreciation-cost" class="font-medium">0 บาท</span></div>
+                    <div class="flex justify-between mb-1"><span class="text-slate-400">ค่าบริการ GP</span> <span id="fuel-cost" class="font-medium">0 บาท</span></div>
+                    <div class="flex justify-between"><span class="text-slate-400">ค่าน้ำมัน + สึกหรอ</span> <span id="depreciation-cost" class="font-medium">0 บาท</span></div>
                 </div>
             </div>
 
@@ -187,15 +187,15 @@
                         <div class="bg-slate-800 rounded-2xl p-4 space-y-2 text-sm">
                             <div class="flex justify-between"><span class="text-slate-400">รายได้จากแอพ</span> <span id="sum-fare" class="font-medium">0 บาท</span></div>
                             <div class="flex justify-between"><span class="text-slate-400">ทิปจากลูกค้า</span> <span id="sum-tip" class="font-medium text-amber-400">0 บาท</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">ค่าจีพี (GP)</span> <span id="sum-gp" class="font-medium text-amber-400">0 บาท</span></div>
                             <div class="flex justify-between pt-2 border-t border-slate-700"><span class="font-semibold">รวมรายได้</span> <span id="sum-total-income" class="font-bold text-emerald-400">0 บาท</span></div>
                         </div>
                     </div>
 
-                    <!-- Expense Breakdown -->
+                    <!-- Deductions Breakdown -->
                     <div>
                         <div class="text-sm font-medium text-red-400 mb-2">หักออก</div>
                         <div class="bg-slate-800 rounded-2xl p-4 space-y-2 text-sm">
+                            <div class="flex justify-between"><span class="text-slate-400">ค่าบริการ GP (แอพหัก)</span> <span id="sum-gp" class="font-medium text-red-400">0 บาท</span></div>
                             <div class="flex justify-between"><span class="text-slate-400">ค่าน้ำมัน</span> <span id="sum-fuel" class="font-medium">0 บาท</span></div>
                             <div class="flex justify-between"><span class="text-slate-400">ค่าสึกหรอ</span> <span id="sum-depreciation" class="font-medium">0 บาท</span></div>
                             <div class="flex justify-between"><span class="text-slate-400">ค่าใช้จ่ายอื่นๆ</span> <span id="sum-other-expense" class="font-medium">0 บาท</span></div>
@@ -259,8 +259,8 @@
                     </div>
                     
                     <div>
-                        <label class="block text-sm text-slate-400 mb-1">ค่าจีพี (GP)</label>
-                        <input type="number" id="income-gp" value="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-amber-500">
+                        <label class="block text-sm text-slate-400 mb-1">ค่าบริการ GP (แอพหัก)</label>
+                        <input type="number" id="income-gp" value="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
                     </div>
                     
                     <div>
@@ -510,13 +510,13 @@
             let totalExpense = 0;
             let totalKm = 0;
             let totalTrips = 0;
-            let totalGp = 0;
             let totalFare = 0;
             let totalTip = 0;
+            let totalGp = 0;
             
             todayRecords.forEach(record => {
                 if (record.type === 'income') {
-                    totalIncome += (record.fare || 0) + (record.tip || 0) + (record.gp || 0);
+                    totalIncome += (record.fare || 0) + (record.tip || 0);
                     totalFare += record.fare || 0;
                     totalTip += record.tip || 0;
                     totalKm += record.km || 0;
@@ -532,22 +532,23 @@
             const net = totalIncome - totalExpense;
             const fuelCost = (totalKm / settings.fuelConsumption) * settings.fuelPrice;
             const depreciationCost = totalKm * settings.depreciationRate;
-            const realNet = totalIncome - totalExpense - fuelCost - depreciationCost;
+            
+            // GP is now treated as a deduction (cost), not income
+            const realNet = totalIncome - totalExpense - totalGp - fuelCost - depreciationCost;
             
             document.getElementById('total-income').textContent = totalIncome.toLocaleString();
             document.getElementById('total-expense').textContent = totalExpense.toLocaleString();
             document.getElementById('real-net').textContent = Math.round(realNet).toLocaleString();
-            document.getElementById('net-status').textContent = realNet >= 0 ? 'หลังหักน้ำมัน + สึกหรอ + ค่าใช้จ่าย' : 'ขาดทุน';
+            document.getElementById('net-status').textContent = realNet >= 0 ? 'หลังหัก GP + น้ำมัน + สึกหรอ + ค่าใช้จ่าย' : 'ขาดทุน';
             
-            document.getElementById('fuel-cost').innerHTML = `${Math.round(fuelCost)} บาท`;
-            document.getElementById('depreciation-cost').textContent = Math.round(depreciationCost) + ' บาท';
+            document.getElementById('fuel-cost').innerHTML = `${Math.round(totalGp)} บาท <span class="text-xs">(ค่าบริการแอพ)</span>`;
+            document.getElementById('depreciation-cost').textContent = Math.round(fuelCost + depreciationCost) + ' บาท';
             
             document.getElementById('transaction-count').textContent = todayRecords.length + ' รายการ';
             
             const realNetEl = document.getElementById('real-net');
             realNetEl.style.color = realNet >= 0 ? '#10b981' : '#f87171';
             
-            // Store for summary detail modal
             window.currentSummary = { totalFare, totalTip, totalGp, totalIncome, fuelCost, depreciationCost, totalExpense, realNet };
         }
 
@@ -558,13 +559,13 @@
             
             document.getElementById('sum-fare').textContent = s.totalFare.toLocaleString() + ' บาท';
             document.getElementById('sum-tip').textContent = s.totalTip.toLocaleString() + ' บาท';
-            document.getElementById('sum-gp').textContent = s.totalGp.toLocaleString() + ' บาท';
             document.getElementById('sum-total-income').textContent = s.totalIncome.toLocaleString() + ' บาท';
             
+            document.getElementById('sum-gp').textContent = Math.round(s.totalGp) + ' บาท';
             document.getElementById('sum-fuel').textContent = Math.round(s.fuelCost) + ' บาท';
             document.getElementById('sum-depreciation').textContent = Math.round(s.depreciationCost) + ' บาท';
             document.getElementById('sum-other-expense').textContent = s.totalExpense.toLocaleString() + ' บาท';
-            document.getElementById('sum-total-expense').textContent = (Math.round(s.fuelCost) + Math.round(s.depreciationCost) + s.totalExpense).toLocaleString() + ' บาท';
+            document.getElementById('sum-total-expense').textContent = (Math.round(s.totalGp) + Math.round(s.fuelCost) + Math.round(s.depreciationCost) + s.totalExpense).toLocaleString() + ' บาท';
             
             document.getElementById('sum-real-net').textContent = Math.round(s.realNet).toLocaleString() + ' บาท';
             
@@ -606,8 +607,6 @@
                     color = 'text-emerald-400';
                     if (record.tip && record.tip > 0) {
                         extra = `<div class="text-xs text-amber-400 mt-0.5">+ทิป ${record.tip} บาท</div>`;
-                    } else if (record.gp && record.gp > 0) {
-                        extra = `<div class="text-xs text-amber-400 mt-0.5">+GP ${record.gp} บาท</div>`;
                     }
                 } else {
                     icon = '<i class="fas fa-arrow-down text-red-400"></i>';
@@ -683,14 +682,14 @@
             if (record.type === 'income') {
                 if (record.fare) html += `<div class="detail-row"><span class="text-slate-400">รายได้จากแอพ</span><span class="font-medium">${record.fare} บาท</span></div>`;
                 if (record.tip && record.tip > 0) html += `<div class="detail-row"><span class="text-slate-400">ทิปจากลูกค้า</span><span class="font-medium text-amber-400">+${record.tip} บาท</span></div>`;
+                if (record.gp && record.gp > 0) html += `<div class="detail-row"><span class="text-slate-400">ค่าบริการ GP (แอพหัก)</span><span class="font-medium text-red-400">-${record.gp} บาท</span></div>`;
                 if (record.km) html += `<div class="detail-row"><span class="text-slate-400">ระยะทาง</span><span class="font-medium">${record.km} กม.</span></div>`;
-                if (record.gp && record.gp > 0) html += `<div class="detail-row"><span class="text-slate-400">ค่าจีพี (GP)</span><span class="font-medium text-amber-400">+${record.gp} บาท</span></div>`;
                 
                 const tripFuel = record.km ? (record.km / settings.fuelConsumption) * settings.fuelPrice : 0;
                 const tripDep = record.km ? record.km * settings.depreciationRate : 0;
                 
                 html += `<div class="detail-row"><span class="text-slate-400">ค่าน้ำมัน (trip นี้)</span><span class="font-medium">${Math.round(tripFuel)} บาท</span></div>`;
-                html += `<div class="detail-row"><span class="text-slate-400">ค่าสึกหรอ (trip นี้)</span><span class="font-medium">${Math.round(tripDep)} บาท</span></div>`;
+                html += `<div class="detail-row"><span class="text-slate-400">ค่าสึกหรอ (trip นี้)</span><span class="font-medium">${Math.round(tripDep)} บาท</span></div>
             }
             
             if (record.note) html += `<div class="detail-row"><span class="text-slate-400">หมายเหตุ</span><span class="font-medium">${record.note}</span></div>`;
@@ -797,7 +796,7 @@
             records[recordIndex].fare = fare;
             records[recordIndex].tip = tip;
             records[recordIndex].gp = gp;
-            records[recordIndex].amount = fare + tip + gp;
+            records[recordIndex].amount = fare + tip;
             records[recordIndex].note = note;
             
             saveData();
@@ -856,7 +855,7 @@
                 fare: fare,
                 tip: tip,
                 gp: gp,
-                amount: fare + tip + gp,
+                amount: fare + tip,
                 km: km,
                 note: note
             };
@@ -1054,7 +1053,7 @@
                 if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); if (id==='summary-detail-modal') hideSummaryDetail(); } });
             });
             
-            console.log('%c[Lalamove Account] Added Summary Detail breakdown modal', 'color:#10b981');
+            console.log('%c[Lalamove Account] Fixed: GP is now treated as deduction (cost), not income', 'color:#10b981');
         }
 
         window.onload = initializeApp;
