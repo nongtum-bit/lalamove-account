@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>ลาล่ามูฟ - บัญชีส่วนตัว</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -10,11 +10,15 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Noto+Sans+Thai:wght@400;500;600&amp;display=swap');
         body { font-family: 'Inter', 'Noto Sans Thai', system-ui, sans-serif; }
         .mobile-container { max-width: 480px; margin: 0 auto; }
-        .transaction-item { transition: transform 0.2s, background-color 0.2s; }
+        .transaction-item { 
+            transition: transform 0.2s, background-color 0.2s; 
+            -webkit-user-select: none; 
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
         .summary-card { background: linear-gradient(135deg, #1e2937 0%, #0f172a 100%); }
         .quick-btn { transition: all 0.1s; }
         .quick-btn:active { transform: scale(0.95); }
-        .swipe-delete { background-color: #7f1d1d; color: white; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
@@ -271,7 +275,6 @@
                         <input type="text" id="quick-expense-note" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:border-red-500">
                     </div>
                 </div>
-                
                 <div class="flex gap-3 mt-8">
                     <button onclick="hideQuickExpenseModal()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
                     <button onclick="saveQuickExpense()" class="flex-1 py-3.5 bg-red-600 hover:bg-red-700 rounded-2xl font-semibold">บันทึก</button>
@@ -309,7 +312,6 @@
                         <input type="text" id="expense-note" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:border-red-500">
                     </div>
                 </div>
-                
                 <div class="flex gap-3 mt-8">
                     <button onclick="hideExpenseModal()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
                     <button onclick="addExpense()" class="flex-1 py-3.5 bg-red-600 hover:bg-red-700 rounded-2xl font-semibold">บันทึกค่าใช้จ่าย</button>
@@ -343,10 +345,24 @@
                         <div class="text-xs text-slate-400 mb-1">แนะนำ: ค่าแรงประจำวัน 800 บาท</div>
                     </div>
                 </div>
-                
                 <div class="mt-8 flex gap-3">
                     <button onclick="hideSettings()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
                     <button onclick="saveSettings()" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">บันทึกการตั้งค่า</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div id="delete-confirm-modal" class="hidden fixed inset-0 bg-black/70 z-[300] flex items-center justify-center">
+            <div class="bg-slate-900 rounded-2xl p-6 w-80 mx-4">
+                <div class="text-center mb-6">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-4xl mb-3"></i>
+                    <h3 class="text-xl font-bold">ยืนยันการลบ</h3>
+                    <p class="text-sm text-slate-400 mt-2">คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้?</p>
+                </div>
+                <div class="flex gap-3">
+                    <button onclick="cancelDelete()" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold">ยกเลิก</button>
+                    <button id="confirm-delete-btn" class="flex-1 py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold">ลบ</button>
                 </div>
             </div>
         </div>
@@ -366,6 +382,8 @@
         let checkin = { start: null, end: null };
         let currentQuickCategory = '';
         let currentEditId = null;
+        let currentDeleteId = null;
+        let checkinInterval = null;
 
         function loadData() {
             const savedRecords = localStorage.getItem('lalamove_records');
@@ -417,6 +435,15 @@
             }
         }
 
+        function startCheckinTimer() {
+            if (checkinInterval) clearInterval(checkinInterval);
+            checkinInterval = setInterval(() => {
+                if (checkin.start && !checkin.end) {
+                    updateCheckin();
+                }
+            }, 30000); // update every 30 seconds
+        }
+
         function checkIn() {
             if (checkin.start && !checkin.end) {
                 if (!confirm('คุณได้เช็คอินแล้ว ต้องการเช็คอินใหม่?')) return;
@@ -425,6 +452,7 @@
             checkin.end = null;
             saveData();
             updateCheckin();
+            startCheckinTimer();
             showToast('เช็คอินเรียบร้อย! เริ่มนับเวลาแล้ว');
         }
 
@@ -440,12 +468,14 @@
             checkin.end = new Date().toISOString();
             saveData();
             updateCheckin();
+            if (checkinInterval) clearInterval(checkinInterval);
             showToast('เช็คเอาท์เรียบร้อย!');
         }
 
         function resetCheckin() {
             if (!confirm('รีเซ็ตเช็คอินวันนี้?')) return;
             checkin = { start: null, end: null };
+            if (checkinInterval) clearInterval(checkinInterval);
             saveData();
             updateCheckin();
         }
@@ -551,19 +581,21 @@
                     </div>
                 `;
                 
-                // Long press for edit/delete options
+                // Prevent iOS context menu
+                div.addEventListener('contextmenu', (e) => e.preventDefault());
+                
+                // Long press for edit/delete options (improved)
                 let pressTimer;
                 div.addEventListener('touchstart', (e) => {
                     pressTimer = setTimeout(() => {
                         showEditDeleteOptions(record, div);
-                    }, 600);
+                    }, 550);
                 });
                 div.addEventListener('touchend', () => clearTimeout(pressTimer));
                 div.addEventListener('touchcancel', () => clearTimeout(pressTimer));
                 
-                // Swipe left to delete
+                // Swipe left to delete (improved with confirmation modal)
                 let startX = 0;
-                let currentX = 0;
                 
                 div.addEventListener('touchstart', (e) => {
                     startX = e.touches[0].clientX;
@@ -571,11 +603,11 @@
                 });
                 
                 div.addEventListener('touchmove', (e) => {
-                    currentX = e.touches[0].clientX;
+                    const currentX = e.touches[0].clientX;
                     const deltaX = currentX - startX;
                     if (deltaX < 0) {
-                        div.style.transform = `translateX(${Math.max(deltaX, -120)}px)`;
-                        if (deltaX < -60) {
+                        div.style.transform = `translateX(${Math.max(deltaX, -130)}px)`;
+                        if (deltaX < -50) {
                             div.style.backgroundColor = '#7f1d1d';
                         }
                     }
@@ -587,12 +619,8 @@
                     div.style.transition = 'transform 0.3s, background-color 0.3s';
                     
                     if (deltaX < -80) {
-                        if (confirm('ลบรายการนี้?')) {
-                            deleteRecord(record.id);
-                        } else {
-                            div.style.transform = 'translateX(0)';
-                            div.style.backgroundColor = '';
-                        }
+                        currentDeleteId = record.id;
+                        showDeleteConfirm();
                     } else {
                         div.style.transform = 'translateX(0)';
                         div.style.backgroundColor = '';
@@ -616,7 +644,7 @@
                         <button onclick="editRecord(${record.id}, this)" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 rounded-xl font-semibold flex items-center justify-center gap-2">
                             <i class="fas fa-edit"></i> <span>แก้ไข</span>
                         </button>
-                        <button onclick="deleteRecord(${record.id}); this.closest('.fixed').remove();" class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold flex items-center justify-center gap-2">
+                        <button onclick="currentDeleteId = ${record.id}; this.closest('.fixed').remove(); showDeleteConfirm();" class="w-full py-3 bg-red-600 hover:bg-red-700 rounded-xl font-semibold flex items-center justify-center gap-2">
                             <i class="fas fa-trash"></i> <span>ลบ</span>
                         </button>
                         <button onclick="this.closest('.fixed').remove()" class="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded-xl font-semibold">
@@ -632,27 +660,23 @@
             const record = records.find(r => r.id === id);
             if (!record) return;
             
-            // Close options
             element.closest('.fixed').remove();
             
             currentEditId = id;
             
             if (record.type === 'income') {
-                // Open income modal prefilled
                 document.getElementById('income-km').value = record.km || 0;
                 document.getElementById('income-amount').value = record.amount || 0;
                 document.getElementById('income-gp').value = record.gp || 0;
                 document.getElementById('income-note').value = record.note || '';
                 showAddIncomeModal();
                 
-                // Change button text temporarily
                 const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
                 if (saveBtn) {
                     saveBtn.innerText = 'บันทึกการแก้ไข';
                     saveBtn.onclick = () => updateIncomeRecord();
                 }
             } else {
-                // Open expense modal prefilled
                 document.getElementById('expense-category').value = record.category;
                 document.getElementById('expense-amount').value = record.amount;
                 document.getElementById('expense-note').value = record.note || '';
@@ -687,7 +711,6 @@
             renderTransactions();
             hideIncomeModal();
             
-            // Reset button
             const saveBtn = document.querySelector('#income-modal button');
             if (saveBtn) {
                 saveBtn.innerText = 'บันทึกงาน';
@@ -836,6 +859,32 @@
             showToast(`บันทึก${currentQuickCategory} เรียบร้อย!`);
         }
 
+        function showDeleteConfirm() {
+            document.getElementById('delete-confirm-modal').classList.remove('hidden');
+            document.getElementById('delete-confirm-modal').classList.add('flex');
+            
+            // Set the confirm button action
+            document.getElementById('confirm-delete-btn').onclick = () => {
+                if (currentDeleteId) {
+                    deleteRecord(currentDeleteId);
+                    currentDeleteId = null;
+                }
+                cancelDelete();
+            };
+        }
+
+        function cancelDelete() {
+            document.getElementById('delete-confirm-modal').classList.remove('flex');
+            document.getElementById('delete-confirm-modal').classList.add('hidden');
+            currentDeleteId = null;
+            
+            // Reset all transaction items
+            document.querySelectorAll('.transaction-item').forEach(el => {
+                el.style.transform = 'translateX(0)';
+                el.style.backgroundColor = '';
+            });
+        }
+
         function deleteRecord(id) {
             records = records.filter(r => r.id !== id);
             saveData();
@@ -906,6 +955,7 @@
             const today = new Date().toISOString().split('T')[0];
             records = records.filter(r => r.date !== today);
             checkin = { start: null, end: null };
+            if (checkinInterval) clearInterval(checkinInterval);
             saveData();
             updateSummary();
             renderTransactions();
@@ -926,6 +976,7 @@
             updateSummary();
             renderTransactions();
             updateCheckin();
+            startCheckinTimer();
             
             // Keyboard
             document.addEventListener('keydown', function(e) {
@@ -936,7 +987,7 @@
             });
             
             // Close modals on outside click
-            ['income-modal', 'expense-modal', 'settings-modal', 'quick-expense-modal'].forEach(id => {
+            ['income-modal', 'expense-modal', 'settings-modal', 'quick-expense-modal', 'delete-confirm-modal'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) {
                     el.addEventListener('click', function(e) {
@@ -945,12 +996,13 @@
                             if (id === 'expense-modal') hideExpenseModal();
                             if (id === 'settings-modal') hideSettings();
                             if (id === 'quick-expense-modal') hideQuickExpenseModal();
+                            if (id === 'delete-confirm-modal') cancelDelete();
                         }
                     });
                 }
             });
             
-            console.log('%c[Lalamove Account] App fixed - Swipe delete + Edit via long press', 'color:#10b981');
+            console.log('%c[Lalamove Account] Final version - iOS context menu prevented, live checkin timer, swipe with confirmation modal', 'color:#10b981');
         }
 
         window.onload = initializeApp;
