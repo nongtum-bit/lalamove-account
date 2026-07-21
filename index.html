@@ -281,7 +281,7 @@
             </div>
         </div>
 
-        <!-- Add Expense Modal (ปุ่มกด) -->
+        <!-- Add Expense Modal -->
         <div id="expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-4">
@@ -380,7 +380,7 @@
         let currentTollPayer = 'customer';
         let undoStack = [];
         let currentTab = 'today';
-        let currentExpenseCategory = 'อื่นๆ';
+        let currentExpenseCategory = 'ส่วนตัว';
 
         function loadData() {
             const savedRecords = localStorage.getItem('lalamove_records');
@@ -653,7 +653,7 @@
                 const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
                 if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateIncomeRecord(); }
             } else {
-                currentExpenseCategory = record.category || 'อื่นๆ';
+                currentExpenseCategory = record.category || 'ส่วนตัว';
                 document.getElementById('expense-amount').value = record.amount;
                 document.getElementById('expense-note').value = record.note || '';
                 showAddExpenseModal();
@@ -688,7 +688,7 @@
                 if (record.km) html += `<div class="detail-row"><span class="text-slate-400">ระยะทาง</span><span class="font-medium">${record.km} กม.</span></div>`;
             }
             if (record.note) html += `<div class="detail-row"><span class="text-slate-400">หมายเหตุ</span><span class="font-medium">${record.note}</span></div>`;
-            html += `<div class="detail-row"><span class="text-slate-400">เวลา</span><span class="font-medium">${record.time}</span></div>";
+            html += `<div class="detail-row"><span class="text-slate-400">เวลา</span><span class="font-medium">${record.time}</span></div>`;
             
             content.innerHTML = html;
             
@@ -761,7 +761,7 @@
                 const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
                 const note = document.getElementById('expense-note').value.trim();
                 
-                records[idx].category = currentExpenseCategory || 'อื่นๆ';
+                records[idx].category = currentExpenseCategory || 'ส่วนตัว';
                 records[idx].amount = amount;
                 records[idx].note = note;
                 
@@ -845,7 +845,7 @@
                     date: new Date().toISOString().split('T')[0],
                     time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
                     type: 'expense',
-                    category: currentExpenseCategory || 'อื่นๆ',
+                    category: currentExpenseCategory || 'ส่วนตัว',
                     amount: amount,
                     note: note
                 };
@@ -959,9 +959,8 @@
             document.querySelectorAll('#expense-category-buttons button').forEach(btn => {
                 btn.classList.remove('active', 'bg-emerald-600', 'border-emerald-500');
             });
-            currentExpenseCategory = 'อื่นๆ';
+            currentExpenseCategory = 'ส่วนตัว';
             
-            // Highlight ปุ่มอื่นๆ เป็นค่าเริ่มต้น
             setTimeout(() => {
                 document.querySelectorAll('#expense-category-buttons button').forEach(btn => {
                     if (btn.innerText === 'ส่วนตัว') {
@@ -1115,7 +1114,7 @@
             
             document.getElementById('tab-content-history').classList.add('hidden');
             
-            console.log('%c[Lalamove Account] Fixed: Expense buttons now working', 'color:#10b981');
+            console.log('%c[Lalamove Account] Fixed: All buttons working now', 'color:#10b981');
         }
 
         window.onload = initializeApp;
