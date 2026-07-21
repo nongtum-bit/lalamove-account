@@ -18,6 +18,8 @@
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .btn-loading { pointer-events: none; opacity: 0.8; }
         .tab-active { border-bottom: 3px solid #10b981; color: #10b981; font-weight: 600; }
+        .category-btn { transition: all 0.1s ease; }
+        .category-btn.active { background-color: #10b981; color: white; border-color: #10b981; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
@@ -279,25 +281,26 @@
             </div>
         </div>
 
-        <!-- Add Expense Modal -->
+        <!-- Add Expense Modal (ปรับเป็นปุ่มกด) -->
         <div id="expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
-                <div class="flex justify-between items-center mb-6">
+                <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-bold">บันทึกค่าใช้จ่าย</h3>
                     <button onclick="hideExpenseModal()" class="text-2xl text-slate-400">&times;</button>
                 </div>
                 
                 <div class="space-y-4">
+                    <!-- เปลี่ยนจาก dropdown เป็นปุ่มกด -->
                     <div>
-                        <label class="block text-sm text-slate-400 mb-1">หมวดหมู่</label>
-                        <select id="expense-category" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
-                            <option value="น้ำมัน">น้ำมัน</option>
-                            <option value="อาหาร">อาหาร</option>
-                            <option value="ค่าสึกหรอ">ค่าสึกหรอ / บริการ</option>
-                            <option value="ทางด่วนลูกค้า">ทางด่วน (ลูกค้าจ่าย)</option>
-                            <option value="ทางด่วนเราเอง">ทางด่วน (เราเอง)</option>
-                            <option value="ส่วนตัว">ส่วนตัว / อื่นๆ</option>
-                        </select>
+                        <label class="block text-sm text-slate-400 mb-2">หมวดหมู่</label>
+                        <div class="grid grid-cols-3 gap-2" id="expense-category-buttons">
+                            <button type="button" onclick="selectExpenseCategory('น้ำมัน')" class="category-btn px-3 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-sm font-medium active:scale-[0.985]">น้ำมัน</button>
+                            <button type="button" onclick="selectExpenseCategory('อาหาร')" class="category-btn px-3 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-sm font-medium active:scale-[0.985]">อาหาร</button>
+                            <button type="button" onclick="selectExpenseCategory('ค่าสึกหรอ')" class="category-btn px-3 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-sm font-medium active:scale-[0.985]">สึกหรอ</button>
+                            <button type="button" onclick="selectExpenseCategory('ทางด่วนลูกค้า')" class="category-btn px-3 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-sm font-medium active:scale-[0.985]">ทางด่วนลูกค้า</button>
+                            <button type="button" onclick="selectExpenseCategory('ทางด่วนเราเอง')" class="category-btn px-3 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-sm font-medium active:scale-[0.985]">ทางด่วนเราเอง</button>
+                            <button type="button" onclick="selectExpenseCategory('ส่วนตัว')" class="category-btn px-3 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-sm font-medium active:scale-[0.985]">ส่วนตัว</button>
+                        </div>
                     </div>
                     
                     <div>
@@ -378,6 +381,7 @@
         let currentTollPayer = 'customer';
         let undoStack = [];
         let currentTab = 'today';
+        let currentExpenseCategory = '';
 
         function loadData() {
             const savedRecords = localStorage.getItem('lalamove_records');
@@ -588,7 +592,6 @@
             const container = document.getElementById('history-list');
             container.innerHTML = '';
             
-            // Group records by date
             const grouped = {};
             records.forEach(record => {
                 if (!grouped[record.date]) grouped[record.date] = [];
@@ -651,10 +654,20 @@
                 const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
                 if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateIncomeRecord(); }
             } else {
-                document.getElementById('expense-category').value = record.category;
+                // สำหรับ expense ให้เลือกปุ่มหมวดหมู่
+                currentExpenseCategory = record.category;
                 document.getElementById('expense-amount').value = record.amount;
                 document.getElementById('expense-note').value = record.note || '';
                 showAddExpenseModal();
+                
+                // Highlight ปุ่มที่เลือก
+                setTimeout(() => {
+                    document.querySelectorAll('#expense-category-buttons button').forEach(btn => {
+                        if (btn.innerText === record.category) {
+                            btn.classList.add('active', 'bg-emerald-600', 'border-emerald-500');
+                        }
+                    });
+                }, 100);
                 
                 const saveBtn = document.querySelector('#expense-modal button[onclick*="addExpense"]');
                 if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateExpenseRecord(); }
@@ -748,11 +761,10 @@
                 const idx = records.findIndex(r => r.id === currentEditId);
                 if (idx === -1) return;
                 
-                const category = document.getElementById('expense-category').value;
                 const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
                 const note = document.getElementById('expense-note').value.trim();
                 
-                records[idx].category = category;
+                records[idx].category = currentExpenseCategory || records[idx].category;
                 records[idx].amount = amount;
                 records[idx].note = note;
                 
@@ -810,7 +822,7 @@
                 hideIncomeModal();
                 showToast('บันทึกงานเรียบร้อย!');
                 
-                if (saveBtn) { saveBtn.innerText = 'บันทึกงาน'; saveBtn.classList.remove('btn-loading'); }
+                if (saveBtn) { saveBtn.innerText = 'บันทึกงาน'; saveBtn.classList.remove('btn-loading');
             }, 300);
         }
 
@@ -822,7 +834,6 @@
             }
             
             setTimeout(() => {
-                const category = document.getElementById('expense-category').value;
                 const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
                 const note = document.getElementById('expense-note').value.trim();
                 
@@ -832,12 +843,20 @@
                     return; 
                 }
                 
+                if (!currentExpenseCategory) {
+                    alert('กรุณาเลือกหมวดหมู่');
+                    if (saveBtn) { saveBtn.innerText = 'บันทึก'; saveBtn.classList.remove('btn-loading'); }
+                    return;
+                }
+                
                 const record = {
                     id: Date.now(),
                     date: new Date().toISOString().split('T')[0],
                     time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
                     type: 'expense',
-                    category, amount, note
+                    category: currentExpenseCategory,
+                    amount: amount,
+                    note: note
                 };
                 
                 records.push(record);
@@ -854,8 +873,21 @@
         function quickExpense(category) {
             currentQuickCategory = category;
             if (category === 'อื่นๆ') { showAddExpenseModal(); return; }
-            document.getElementById('expense-category').value = category;
+            currentExpenseCategory = category;
             showAddExpenseModal();
+        }
+
+        function selectExpenseCategory(category) {
+            currentExpenseCategory = category;
+            
+            // Highlight ปุ่มที่เลือก
+            document.querySelectorAll('#expense-category-buttons button').forEach(btn => {
+                if (btn.innerText === category) {
+                    btn.classList.add('active', 'bg-emerald-600', 'border-emerald-500');
+                } else {
+                    btn.classList.remove('active', 'bg-emerald-600', 'border-emerald-500');
+                }
+            });
         }
 
         function showDeleteConfirm() {
@@ -935,6 +967,14 @@
         }
 
         function showAddExpenseModal() {
+            // รีเซ็ตปุ่มหมวดหมู่
+            document.querySelectorAll('#expense-category-buttons button').forEach(btn => {
+                btn.classList.remove('active', 'bg-emerald-600', 'border-emerald-500');
+            });
+            currentExpenseCategory = '';
+            
+            document.getElementById('expense-amount').value = '';
+            document.getElementById('expense-note').value = '';
             document.getElementById('expense-modal').classList.remove('hidden');
             document.getElementById('expense-modal').classList.add('flex');
         }
@@ -1076,10 +1116,9 @@
                 if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); if (id==='summary-detail-modal') hideSummaryDetail(); } });
             });
             
-            // Default to today tab
             document.getElementById('tab-content-history').classList.add('hidden');
             
-            console.log('%c[Lalamove Account] C completed: Basic History tab added', 'color:#10b981');
+            console.log('%c[Lalamove Account] Updated: Expense category changed to button selection', 'color:#10b981');
         }
 
         window.onload = initializeApp;
