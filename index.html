@@ -18,8 +18,6 @@
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .btn-loading { pointer-events: none; opacity: 0.8; }
         .tab-active { border-bottom: 3px solid #10b981; color: #10b981; font-weight: 600; }
-        .category-btn { transition: all 0.1s ease; }
-        .category-btn.active { background-color: #10b981; color: white; border-color: #10b981; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
@@ -281,25 +279,25 @@
             </div>
         </div>
 
-        <!-- Add Expense Modal -->
+        <!-- Add Expense Modal (Dropdown แบบเดิม) -->
         <div id="expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
-                <div class="flex justify-between items-center mb-4">
+                <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold">บันทึกค่าใช้จ่าย</h3>
                     <button id="btn-close-expense" class="text-2xl text-slate-400">&times;</button>
                 </div>
                 
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm text-slate-400 mb-2">หมวดหมู่</label>
-                        <div class="grid grid-cols-3 gap-2" id="expense-category-buttons">
-                            <button type="button" onclick="selectExpenseCategory('น้ำมัน')" class="category-btn px-3 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-sm font-medium active:scale-[0.985]">น้ำมัน</button>
-                            <button type="button" onclick="selectExpenseCategory('อาหาร')" class="category-btn px-3 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-sm font-medium active:scale-[0.985]">อาหาร</button>
-                            <button type="button" onclick="selectExpenseCategory('ค่าสึกหรอ')" class="category-btn px-3 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-sm font-medium active:scale-[0.985]">สึกหรอ</button>
-                            <button type="button" onclick="selectExpenseCategory('ทางด่วนลูกค้า')" class="category-btn px-3 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-sm font-medium active:scale-[0.985]">ทางด่วนลูกค้า</button>
-                            <button type="button" onclick="selectExpenseCategory('ทางด่วนเราเอง')" class="category-btn px-3 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-sm font-medium active:scale-[0.985]">ทางด่วนเราเอง</button>
-                            <button type="button" onclick="selectExpenseCategory('ส่วนตัว')" class="category-btn px-3 py-2.5 bg-slate-800 border border-slate-600 rounded-xl text-sm font-medium active:scale-[0.985]">ส่วนตัว</button>
-                        </div>
+                        <label class="block text-sm text-slate-400 mb-1">หมวดหมู่</label>
+                        <select id="expense-category" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
+                            <option value="น้ำมัน">น้ำมัน</option>
+                            <option value="อาหาร">อาหาร</option>
+                            <option value="ค่าสึกหรอ">ค่าสึกหรอ / บริการ</option>
+                            <option value="ทางด่วนลูกค้า">ทางด่วน (ลูกค้าจ่าย)</option>
+                            <option value="ทางด่วนเราเอง">ทางด่วน (เราเอง)</option>
+                            <option value="ส่วนตัว">ส่วนตัว / อื่นๆ</option>
+                        </select>
                     </div>
                     
                     <div>
@@ -380,7 +378,6 @@
         let currentTollPayer = 'customer';
         let undoStack = [];
         let currentTab = 'today';
-        let currentExpenseCategory = 'ส่วนตัว';
 
         function loadData() {
             const savedRecords = localStorage.getItem('lalamove_records');
@@ -653,18 +650,10 @@
                 const saveBtn = document.getElementById('btn-save-income');
                 if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateIncomeRecord(); }
             } else {
-                currentExpenseCategory = record.category || 'ส่วนตัว';
+                document.getElementById('expense-category').value = record.category;
                 document.getElementById('expense-amount').value = record.amount;
                 document.getElementById('expense-note').value = record.note || '';
                 showAddExpenseModal();
-                
-                setTimeout(() => {
-                    document.querySelectorAll('#expense-category-buttons button').forEach(btn => {
-                        if (btn.innerText === currentExpenseCategory) {
-                            btn.classList.add('active', 'bg-emerald-600', 'border-emerald-500');
-                        }
-                    });
-                }, 100);
                 
                 const saveBtn = document.getElementById('btn-save-expense');
                 if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateExpenseRecord(); }
@@ -758,10 +747,11 @@
                 const idx = records.findIndex(r => r.id === currentEditId);
                 if (idx === -1) return;
                 
+                const category = document.getElementById('expense-category').value;
                 const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
                 const note = document.getElementById('expense-note').value.trim();
                 
-                records[idx].category = currentExpenseCategory || 'ส่วนตัว';
+                records[idx].category = category;
                 records[idx].amount = amount;
                 records[idx].note = note;
                 
@@ -831,6 +821,7 @@
             }
             
             setTimeout(() => {
+                const category = document.getElementById('expense-category').value;
                 const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
                 const note = document.getElementById('expense-note').value.trim();
                 
@@ -845,9 +836,7 @@
                     date: new Date().toISOString().split('T')[0],
                     time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
                     type: 'expense',
-                    category: currentExpenseCategory || 'ส่วนตัว',
-                    amount: amount,
-                    note: note
+                    category, amount, note
                 };
                 
                 records.push(record);
@@ -864,20 +853,8 @@
         function quickExpense(category) {
             currentQuickCategory = category;
             if (category === 'อื่นๆ') { showAddExpenseModal(); return; }
-            currentExpenseCategory = category;
+            document.getElementById('expense-category').value = category;
             showAddExpenseModal();
-        }
-
-        function selectExpenseCategory(category) {
-            currentExpenseCategory = category;
-            
-            document.querySelectorAll('#expense-category-buttons button').forEach(btn => {
-                if (btn.innerText === category) {
-                    btn.classList.add('active', 'bg-emerald-600', 'border-emerald-500');
-                } else {
-                    btn.classList.remove('active', 'bg-emerald-600', 'border-emerald-500');
-                }
-            });
         }
 
         function showDeleteConfirm() {
@@ -956,21 +933,6 @@
         }
 
         function showAddExpenseModal() {
-            document.querySelectorAll('#expense-category-buttons button').forEach(btn => {
-                btn.classList.remove('active', 'bg-emerald-600', 'border-emerald-500');
-            });
-            currentExpenseCategory = 'ส่วนตัว';
-            
-            setTimeout(() => {
-                document.querySelectorAll('#expense-category-buttons button').forEach(btn => {
-                    if (btn.innerText === 'ส่วนตัว') {
-                        btn.classList.add('active', 'bg-emerald-600', 'border-emerald-500');
-                    }
-                });
-            }, 100);
-            
-            document.getElementById('expense-amount').value = '';
-            document.getElementById('expense-note').value = '';
             document.getElementById('expense-modal').classList.remove('hidden');
             document.getElementById('expense-modal').classList.add('flex');
         }
@@ -1089,52 +1051,47 @@
             startCheckinTimer();
             setupNumberInputs();
             
-            // Safe event listener attachment
-            const attach = (id, fn) => {
-                const el = document.getElementById(id);
-                if (el) el.onclick = fn;
-            };
+            // Event Listeners
+            document.getElementById('btn-checkin').onclick = checkIn;
+            document.getElementById('btn-checkout').onclick = checkOut;
+            document.getElementById('btn-summary-detail').onclick = showSummaryDetail;
+            document.getElementById('btn-add-income').onclick = showAddIncomeModal;
+            document.getElementById('btn-add-expense').onclick = showAddExpenseModal;
+            document.getElementById('btn-add-first-income').onclick = showAddIncomeModal;
             
-            attach('btn-checkin', checkIn);
-            attach('btn-checkout', checkOut);
-            attach('btn-summary-detail', showSummaryDetail);
-            attach('btn-add-income', showAddIncomeModal);
-            attach('btn-add-expense', showAddExpenseModal);
-            attach('btn-add-first-income', showAddIncomeModal);
+            document.getElementById('btn-close-summary').onclick = hideSummaryDetail;
+            document.getElementById('btn-close-detail').onclick = hideDetailModal;
+            document.getElementById('btn-close-detail-2').onclick = hideDetailModal;
+            document.getElementById('btn-close-income').onclick = hideIncomeModal;
+            document.getElementById('btn-close-expense').onclick = hideExpenseModal;
+            document.getElementById('btn-close-settings').onclick = hideSettings;
             
-            attach('btn-close-summary', hideSummaryDetail);
-            attach('btn-close-detail', hideDetailModal);
-            attach('btn-close-detail-2', hideDetailModal);
-            attach('btn-close-income', hideIncomeModal);
-            attach('btn-close-expense', hideExpenseModal);
-            attach('btn-close-settings', hideSettings);
+            document.getElementById('btn-cancel-income').onclick = hideIncomeModal;
+            document.getElementById('btn-cancel-expense').onclick = hideExpenseModal;
+            document.getElementById('btn-cancel-settings').onclick = hideSettings;
+            document.getElementById('btn-cancel-delete').onclick = cancelDelete;
             
-            attach('btn-cancel-income', hideIncomeModal);
-            attach('btn-cancel-expense', hideExpenseModal);
-            attach('btn-cancel-settings', hideSettings);
-            attach('btn-cancel-delete', cancelDelete);
+            document.getElementById('btn-save-income').onclick = addIncome;
+            document.getElementById('btn-save-expense').onclick = addExpense;
+            document.getElementById('btn-save-settings').onclick = saveSettings;
             
-            attach('btn-save-income', addIncome);
-            attach('btn-save-expense', addExpense);
-            attach('btn-save-settings', saveSettings);
-            
-            attach('btn-confirm-delete', () => {
+            document.getElementById('btn-confirm-delete').onclick = () => {
                 if (currentDeleteId) {
                     deleteRecord(currentDeleteId);
                     currentDeleteId = null;
                 }
                 cancelDelete();
-            });
+            };
             
-            attach('nav-today', () => switchTab('today'));
-            attach('nav-history', () => switchTab('history'));
-            attach('nav-settings', showSettings);
+            document.getElementById('nav-today').onclick = () => switchTab('today');
+            document.getElementById('nav-history').onclick = () => switchTab('history');
+            document.getElementById('nav-settings').onclick = showSettings;
             
-            attach('tab-today-btn', () => switchTab('today'));
-            attach('tab-history-btn', () => switchTab('history'));
+            document.getElementById('tab-today-btn').onclick = () => switchTab('today');
+            document.getElementById('tab-history-btn').onclick = () => switchTab('history');
             
-            attach('btn-toll-customer', () => selectTollPayer('customer'));
-            attach('btn-toll-self', () => selectTollPayer('self'));
+            document.getElementById('btn-toll-customer').onclick = () => selectTollPayer('customer');
+            document.getElementById('btn-toll-self').onclick = () => selectTollPayer('self');
             
             document.addEventListener('keydown', function(e) {
                 if (e.key === '/' && document.activeElement.tagName === 'BODY') { e.preventDefault(); showAddIncomeModal(); }
@@ -1147,7 +1104,7 @@
             
             document.getElementById('tab-content-history').classList.add('hidden');
             
-            console.log('%c[Lalamove Account] All buttons working - safe event listeners', 'color:#10b981');
+            console.log('%c[Lalamove Account] Reverted to working version with dropdown', 'color:#10b981');
         }
 
         window.onload = initializeApp;
