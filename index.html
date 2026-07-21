@@ -41,8 +41,8 @@
         <!-- Tab Navigation -->
         <div class="px-4 pt-3 bg-slate-950 sticky top-[73px] z-40 border-b border-slate-700">
             <div class="flex">
-                <button id="tab-today-btn" class="tab-active flex-1 py-2.5 text-sm font-medium text-emerald-400">วันนี้</button>
-                <button id="tab-history-btn" class="flex-1 py-2.5 text-sm font-medium text-slate-400">ประวัติ</button>
+                <button onclick="switchTab('today')" id="tab-today" class="tab-active flex-1 py-2.5 text-sm font-medium text-emerald-400">วันนี้</button>
+                <button onclick="switchTab('history')" id="tab-history" class="flex-1 py-2.5 text-sm font-medium text-slate-400">ประวัติ</button>
             </div>
         </div>
 
@@ -56,10 +56,10 @@
                         <div id="checkin-status" class="text-sm font-medium">ยังไม่ได้เช็คอิน</div>
                     </div>
                     <div class="flex gap-2">
-                        <button id="btn-checkin" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.985] rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                        <button onclick="checkIn()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.985] rounded-xl text-xs font-semibold flex items-center gap-1.5">
                             <i class="fas fa-play text-xs"></i> <span>เช็คอิน</span>
                         </button>
-                        <button id="btn-checkout" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 active:scale-[0.985] rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                        <button onclick="checkOut()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 active:scale-[0.985] rounded-xl text-xs font-semibold flex items-center gap-1.5">
                             <i class="fas fa-stop text-xs"></i> <span>เช็คเอาท์</span>
                         </button>
                     </div>
@@ -71,7 +71,7 @@
             <div class="mb-4">
                 <div class="flex items-center justify-between mb-2 px-1">
                     <h2 class="text-lg font-semibold">สรุปวันนี้</h2>
-                    <button id="btn-summary-detail" class="text-xs px-3 py-1.5 bg-emerald-900 text-emerald-400 rounded-lg flex items-center gap-1 active:scale-[0.985]">
+                    <button onclick="showSummaryDetail()" class="text-xs px-3 py-1.5 bg-emerald-900 text-emerald-400 rounded-lg flex items-center gap-1 active:scale-[0.985]">
                         <i class="fas fa-chart-pie text-xs"></i>
                         <span>ดูรายละเอียด</span>
                     </button>
@@ -105,12 +105,12 @@
             <!-- Quick Actions -->
             <div class="mb-4">
                 <div class="grid grid-cols-2 gap-3 mb-3">
-                    <button id="btn-add-income" class="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.985] transition-all text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
+                    <button onclick="showAddIncomeModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.985] transition-all text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
                         <i class="fas fa-plus-circle text-xl mb-0.5"></i>
                         <span class="font-semibold text-sm">บันทึกงานใหม่</span>
                     </button>
                     
-                    <button id="btn-add-expense" class="bg-red-600 hover:bg-red-700 active:scale-[0.985] transition-all text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
+                    <button onclick="showAddExpenseModal()" class="bg-red-600 hover:bg-red-700 active:scale-[0.985] transition-all text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
                         <i class="fas fa-minus-circle text-xl mb-0.5"></i>
                         <span class="font-semibold text-sm">ค่าใช้จ่าย</span>
                     </button>
@@ -143,7 +143,7 @@
                 <div id="empty-state" class="hidden text-center py-10">
                     <i class="fas fa-receipt text-4xl text-slate-600 mb-3"></i>
                     <p class="text-slate-400 text-sm">ยังไม่มีรายการวันนี้</p>
-                    <button id="btn-add-first-income" class="mt-4 text-xs px-4 py-2 bg-emerald-900 text-emerald-400 rounded-lg">บันทึกงานแรก</button>
+                    <button onclick="showAddIncomeModal()" class="mt-4 text-xs px-4 py-2 bg-emerald-900 text-emerald-400 rounded-lg">บันทึกงานแรก</button>
                 </div>
             </div>
         </div>
@@ -161,15 +161,15 @@
         <!-- Bottom Navigation -->
         <div class="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-slate-900 border-t border-slate-700 px-4 py-2 z-50">
             <div class="flex justify-around">
-                <button id="nav-today" class="tab-button active flex flex-col items-center text-emerald-400 px-3 py-1">
+                <button onclick="switchTab('today')" class="tab-button active flex flex-col items-center text-emerald-400 px-3 py-1">
                     <i class="fas fa-home text-xl"></i>
                     <span class="text-xs mt-0.5">วันนี้</span>
                 </button>
-                <button id="nav-history" class="tab-button flex flex-col items-center text-slate-400 px-3 py-1">
+                <button onclick="switchTab('history')" class="tab-button flex flex-col items-center text-slate-400 px-3 py-1">
                     <i class="fas fa-history text-xl"></i>
                     <span class="text-xs mt-0.5">ประวัติ</span>
                 </button>
-                <button id="nav-settings" class="flex flex-col items-center text-slate-400 px-3 py-1">
+                <button onclick="showSettings()" class="flex flex-col items-center text-slate-400 px-3 py-1">
                     <i class="fas fa-cog text-xl"></i>
                     <span class="text-xs mt-0.5">ตั้งค่า</span>
                 </button>
@@ -181,7 +181,7 @@
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-bold">รายละเอียดสรุปวันนี้</h3>
-                    <button id="btn-close-summary" class="text-2xl text-slate-400">&times;</button>
+                    <button onclick="hideSummaryDetail()" class="text-2xl text-slate-400">&times;</button>
                 </div>
                 
                 <div class="space-y-4 text-sm">
@@ -213,13 +213,13 @@
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-bold">รายละเอียดรายการ</h3>
-                    <button id="btn-close-detail" class="text-2xl text-slate-400">&times;</button>
+                    <button onclick="hideDetailModal()" class="text-2xl text-slate-400">&times;</button>
                 </div>
                 
                 <div id="detail-content" class="space-y-1 text-sm"></div>
                 
                 <div class="mt-6 flex gap-3">
-                    <button id="btn-close-detail-2" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ปิด</button>
+                    <button onclick="hideDetailModal()" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ปิด</button>
                     <button id="detail-edit-btn" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">แก้ไข</button>
                 </div>
             </div>
@@ -230,7 +230,7 @@
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold">บันทึกงานใหม่</h3>
-                    <button id="btn-close-income" class="text-2xl text-slate-400">&times;</button>
+                    <button onclick="hideIncomeModal()" class="text-2xl text-slate-400">&times;</button>
                 </div>
                 
                 <div class="space-y-4">
@@ -261,8 +261,8 @@
                             <input type="number" id="income-toll" value="" placeholder="0" class="w-full bg-slate-700 border border-slate-500 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
                         </div>
                         <div class="flex gap-2">
-                            <button type="button" id="btn-toll-customer" class="payer-btn flex-1 py-2 bg-slate-700 border border-slate-500 rounded-xl text-sm font-medium active:scale-[0.985]">ลูกค้าจ่าย</button>
-                            <button type="button" id="btn-toll-self" class="payer-btn flex-1 py-2 bg-slate-700 border border-slate-500 rounded-xl text-sm font-medium active:scale-[0.985]">เราเอง</button>
+                            <button type="button" id="btn-toll-customer" onclick="selectTollPayer('customer')" class="payer-btn flex-1 py-2 bg-slate-700 border border-slate-500 rounded-xl text-sm font-medium active:scale-[0.985]">ลูกค้าจ่าย</button>
+                            <button type="button" id="btn-toll-self" onclick="selectTollPayer('self')" class="payer-btn flex-1 py-2 bg-slate-700 border border-slate-500 rounded-xl text-sm font-medium active:scale-[0.985]">เราเอง</button>
                         </div>
                     </div>
                     
@@ -273,18 +273,18 @@
                 </div>
                 
                 <div class="flex gap-3 mt-6">
-                    <button id="btn-cancel-income" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
-                    <button id="btn-save-income" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">บันทึกงาน</button>
+                    <button onclick="hideIncomeModal()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
+                    <button onclick="addIncome()" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold" id="btn-save-income">บันทึกงาน</button>
                 </div>
             </div>
         </div>
 
-        <!-- Add Expense Modal (Dropdown) -->
+        <!-- Add Expense Modal -->
         <div id="expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold">บันทึกค่าใช้จ่าย</h3>
-                    <button id="btn-close-expense" class="text-2xl text-slate-400">&times;</button>
+                    <button onclick="hideExpenseModal()" class="text-2xl text-slate-400">&times;</button>
                 </div>
                 
                 <div class="space-y-4">
@@ -311,8 +311,8 @@
                     </div>
                 </div>
                 <div class="flex gap-3 mt-8">
-                    <button id="btn-cancel-expense" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
-                    <button id="btn-save-expense" class="flex-1 py-3.5 bg-red-600 hover:bg-red-700 rounded-2xl font-semibold">บันทึก</button>
+                    <button onclick="hideExpenseModal()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
+                    <button onclick="addExpense()" class="flex-1 py-3.5 bg-red-600 hover:bg-red-700 rounded-2xl font-semibold" id="btn-save-expense">บันทึก</button>
                 </div>
             </div>
         </div>
@@ -322,7 +322,7 @@
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold">การตั้งค่า</h3>
-                    <button id="btn-close-settings" class="text-2xl text-slate-400">&times;</button>
+                    <button onclick="hideSettings()" class="text-2xl text-slate-400">&times;</button>
                 </div>
                 
                 <div class="space-y-5">
@@ -340,8 +340,8 @@
                     </div>
                 </div>
                 <div class="mt-8 flex gap-3">
-                    <button id="btn-cancel-settings" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
-                    <button id="btn-save-settings" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">บันทึกการตั้งค่า</button>
+                    <button onclick="hideSettings()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
+                    <button onclick="saveSettings()" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">บันทึกการตั้งค่า</button>
                 </div>
             </div>
         </div>
@@ -588,6 +588,7 @@
             const container = document.getElementById('history-list');
             container.innerHTML = '';
             
+            // Group records by date
             const grouped = {};
             records.forEach(record => {
                 if (!grouped[record.date]) grouped[record.date] = [];
@@ -647,7 +648,7 @@
                 document.getElementById('income-note').value = record.note || '';
                 showAddIncomeModal();
                 
-                const saveBtn = document.getElementById('btn-save-income');
+                const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
                 if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateIncomeRecord(); }
             } else {
                 document.getElementById('expense-category').value = record.category;
@@ -655,7 +656,7 @@
                 document.getElementById('expense-note').value = record.note || '';
                 showAddExpenseModal();
                 
-                const saveBtn = document.getElementById('btn-save-expense');
+                const saveBtn = document.querySelector('#expense-modal button[onclick*="addExpense"]');
                 if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateExpenseRecord(); }
             }
         }
@@ -694,7 +695,7 @@
         }
 
         function updateIncomeRecord() {
-            const saveBtn = document.getElementById('btn-save-income');
+            const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
             if (saveBtn) {
                 saveBtn.innerText = 'กำลังบันทึก...';
                 saveBtn.classList.add('btn-loading');
@@ -736,7 +737,7 @@
         }
 
         function updateExpenseRecord() {
-            const saveBtn = document.getElementById('btn-save-expense');
+            const saveBtn = document.querySelector('#expense-modal button[onclick*="addExpense"]');
             if (saveBtn) {
                 saveBtn.innerText = 'กำลังบันทึก...';
                 saveBtn.classList.add('btn-loading');
@@ -809,7 +810,7 @@
                 hideIncomeModal();
                 showToast('บันทึกงานเรียบร้อย!');
                 
-                if (saveBtn) { saveBtn.innerText = 'บันทึกงาน'; saveBtn.classList.remove('btn-loading');
+                if (saveBtn) { saveBtn.innerText = 'บันทึกงาน'; saveBtn.classList.remove('btn-loading'); }
             }, 300);
         }
 
@@ -846,7 +847,7 @@
                 hideExpenseModal();
                 showToast('บันทึกค่าใช้จ่ายเรียบร้อย!');
                 
-                if (saveBtn) { saveBtn.innerText = 'บันทึก'; saveBtn.classList.remove('btn-loading');
+                if (saveBtn) { saveBtn.innerText = 'บันทึก'; saveBtn.classList.remove('btn-loading'); }
             }, 300);
         }
 
@@ -895,6 +896,7 @@
             toast.innerHTML = `
                 <span>ลบรายการแล้ว</span>
                 <button class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-xs font-semibold">เลิกทำ</button>
+            `;
             
             const undoBtn = toast.querySelector('button');
             undoBtn.onclick = () => {
@@ -991,21 +993,23 @@
             
             const todayContent = document.getElementById('tab-content-today');
             const historyContent = document.getElementById('tab-content-history');
+            const tabToday = document.getElementById('tab-today');
+            const tabHistory = document.getElementById('tab-history');
             
             if (tab === 'today') {
                 todayContent.classList.remove('hidden');
                 historyContent.classList.add('hidden');
-                document.getElementById('tab-today-btn').classList.add('tab-active', 'text-emerald-400');
-                document.getElementById('tab-today-btn').classList.remove('text-slate-400');
-                document.getElementById('tab-history-btn').classList.remove('tab-active', 'text-emerald-400');
-                document.getElementById('tab-history-btn').classList.add('text-slate-400');
+                tabToday.classList.add('tab-active', 'text-emerald-400');
+                tabToday.classList.remove('text-slate-400');
+                tabHistory.classList.remove('tab-active', 'text-emerald-400');
+                tabHistory.classList.add('text-slate-400');
             } else {
                 todayContent.classList.add('hidden');
                 historyContent.classList.remove('hidden');
-                document.getElementById('tab-history-btn').classList.add('tab-active', 'text-emerald-400');
-                document.getElementById('tab-history-btn').classList.remove('text-slate-400');
-                document.getElementById('tab-today-btn').classList.remove('tab-active', 'text-emerald-400');
-                document.getElementById('tab-today-btn').classList.add('text-slate-400');
+                tabHistory.classList.add('tab-active', 'text-emerald-400');
+                tabHistory.classList.remove('text-slate-400');
+                tabToday.classList.remove('tab-active', 'text-emerald-400');
+                tabToday.classList.add('text-slate-400');
                 
                 renderHistory();
             }
@@ -1051,47 +1055,17 @@
             startCheckinTimer();
             setupNumberInputs();
             
-            // Event Listeners
-            document.getElementById('btn-checkin').onclick = checkIn;
-            document.getElementById('btn-checkout').onclick = checkOut;
-            document.getElementById('btn-summary-detail').onclick = showSummaryDetail;
-            document.getElementById('btn-add-income').onclick = showAddIncomeModal;
-            document.getElementById('btn-add-expense').onclick = showAddExpenseModal;
-            document.getElementById('btn-add-first-income').onclick = showAddIncomeModal;
+            const btnCancel = document.getElementById('btn-cancel-delete');
+            const btnConfirm = document.getElementById('btn-confirm-delete');
             
-            document.getElementById('btn-close-summary').onclick = hideSummaryDetail;
-            document.getElementById('btn-close-detail').onclick = hideDetailModal;
-            document.getElementById('btn-close-detail-2').onclick = hideDetailModal;
-            document.getElementById('btn-close-income').onclick = hideIncomeModal;
-            document.getElementById('btn-close-expense').onclick = hideExpenseModal;
-            document.getElementById('btn-close-settings').onclick = hideSettings;
-            
-            document.getElementById('btn-cancel-income').onclick = hideIncomeModal;
-            document.getElementById('btn-cancel-expense').onclick = hideExpenseModal;
-            document.getElementById('btn-cancel-settings').onclick = hideSettings;
-            document.getElementById('btn-cancel-delete').onclick = cancelDelete;
-            
-            document.getElementById('btn-save-income').onclick = addIncome;
-            document.getElementById('btn-save-expense').onclick = addExpense;
-            document.getElementById('btn-save-settings').onclick = saveSettings;
-            
-            document.getElementById('btn-confirm-delete').onclick = () => {
+            if (btnCancel) btnCancel.onclick = cancelDelete;
+            if (btnConfirm) btnConfirm.onclick = () => {
                 if (currentDeleteId) {
                     deleteRecord(currentDeleteId);
                     currentDeleteId = null;
                 }
                 cancelDelete();
             };
-            
-            document.getElementById('nav-today').onclick = () => switchTab('today');
-            document.getElementById('nav-history').onclick = () => switchTab('history');
-            document.getElementById('nav-settings').onclick = showSettings;
-            
-            document.getElementById('tab-today-btn').onclick = () => switchTab('today');
-            document.getElementById('tab-history-btn').onclick = () => switchTab('history');
-            
-            document.getElementById('btn-toll-customer').onclick = () => selectTollPayer('customer');
-            document.getElementById('btn-toll-self').onclick = () => selectTollPayer('self');
             
             document.addEventListener('keydown', function(e) {
                 if (e.key === '/' && document.activeElement.tagName === 'BODY') { e.preventDefault(); showAddIncomeModal(); }
@@ -1102,9 +1076,10 @@
                 if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); if (id==='summary-detail-modal') hideSummaryDetail(); } });
             });
             
+            // Default to today tab
             document.getElementById('tab-content-history').classList.add('hidden');
             
-            console.log('%c[Lalamove Account] Working version with dropdown - all buttons functional', 'color:#10b981');
+            console.log('%c[Lalamove Account] C completed: Basic History tab added', 'color:#10b981');
         }
 
         window.onload = initializeApp;
