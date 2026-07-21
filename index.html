@@ -1089,47 +1089,52 @@
             startCheckinTimer();
             setupNumberInputs();
             
-            // Event Listeners
-            document.getElementById('btn-checkin').onclick = checkIn;
-            document.getElementById('btn-checkout').onclick = checkOut;
-            document.getElementById('btn-summary-detail').onclick = showSummaryDetail;
-            document.getElementById('btn-add-income').onclick = showAddIncomeModal;
-            document.getElementById('btn-add-expense').onclick = showAddExpenseModal;
-            document.getElementById('btn-add-first-income').onclick = showAddIncomeModal;
+            // Safe event listener attachment
+            const attach = (id, fn) => {
+                const el = document.getElementById(id);
+                if (el) el.onclick = fn;
+            };
             
-            document.getElementById('btn-close-summary').onclick = hideSummaryDetail;
-            document.getElementById('btn-close-detail').onclick = hideDetailModal;
-            document.getElementById('btn-close-detail-2').onclick = hideDetailModal;
-            document.getElementById('btn-close-income').onclick = hideIncomeModal;
-            document.getElementById('btn-close-expense').onclick = hideExpenseModal;
-            document.getElementById('btn-close-settings').onclick = hideSettings;
+            attach('btn-checkin', checkIn);
+            attach('btn-checkout', checkOut);
+            attach('btn-summary-detail', showSummaryDetail);
+            attach('btn-add-income', showAddIncomeModal);
+            attach('btn-add-expense', showAddExpenseModal);
+            attach('btn-add-first-income', showAddIncomeModal);
             
-            document.getElementById('btn-cancel-income').onclick = hideIncomeModal;
-            document.getElementById('btn-cancel-expense').onclick = hideExpenseModal;
-            document.getElementById('btn-cancel-settings').onclick = hideSettings;
-            document.getElementById('btn-cancel-delete').onclick = cancelDelete;
+            attach('btn-close-summary', hideSummaryDetail);
+            attach('btn-close-detail', hideDetailModal);
+            attach('btn-close-detail-2', hideDetailModal);
+            attach('btn-close-income', hideIncomeModal);
+            attach('btn-close-expense', hideExpenseModal);
+            attach('btn-close-settings', hideSettings);
             
-            document.getElementById('btn-save-income').onclick = addIncome;
-            document.getElementById('btn-save-expense').onclick = addExpense;
-            document.getElementById('btn-save-settings').onclick = saveSettings;
+            attach('btn-cancel-income', hideIncomeModal);
+            attach('btn-cancel-expense', hideExpenseModal);
+            attach('btn-cancel-settings', hideSettings);
+            attach('btn-cancel-delete', cancelDelete);
             
-            document.getElementById('btn-confirm-delete').onclick = () => {
+            attach('btn-save-income', addIncome);
+            attach('btn-save-expense', addExpense);
+            attach('btn-save-settings', saveSettings);
+            
+            attach('btn-confirm-delete', () => {
                 if (currentDeleteId) {
                     deleteRecord(currentDeleteId);
                     currentDeleteId = null;
                 }
                 cancelDelete();
-            };
+            });
             
-            document.getElementById('nav-today').onclick = () => switchTab('today');
-            document.getElementById('nav-history').onclick = () => switchTab('history');
-            document.getElementById('nav-settings').onclick = showSettings;
+            attach('nav-today', () => switchTab('today'));
+            attach('nav-history', () => switchTab('history'));
+            attach('nav-settings', showSettings);
             
-            document.getElementById('tab-today-btn').onclick = () => switchTab('today');
-            document.getElementById('tab-history-btn').onclick = () => switchTab('history');
+            attach('tab-today-btn', () => switchTab('today'));
+            attach('tab-history-btn', () => switchTab('history'));
             
-            document.getElementById('btn-toll-customer').onclick = () => selectTollPayer('customer');
-            document.getElementById('btn-toll-self').onclick = () => selectTollPayer('self');
+            attach('btn-toll-customer', () => selectTollPayer('customer'));
+            attach('btn-toll-self', () => selectTollPayer('self'));
             
             document.addEventListener('keydown', function(e) {
                 if (e.key === '/' && document.activeElement.tagName === 'BODY') { e.preventDefault(); showAddIncomeModal(); }
@@ -1142,7 +1147,7 @@
             
             document.getElementById('tab-content-history').classList.add('hidden');
             
-            console.log('%c[Lalamove Account] Fixed: All buttons working with event listeners', 'color:#10b981');
+            console.log('%c[Lalamove Account] All buttons working - safe event listeners', 'color:#10b981');
         }
 
         window.onload = initializeApp;
