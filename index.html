@@ -10,15 +10,14 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500;600&display=swap');
         body { font-family: 'Inter', 'Noto Sans Thai', system-ui, sans-serif; }
         .mobile-container { max-width: 480px; margin: 0 auto; }
-        .transaction-item { transition: transform 0.2s ease; -webkit-user-select: none; user-select: none; }
+        .transaction-item { transition: all 0.2s ease; }
         .summary-card { background: linear-gradient(135deg, #1e2937 0%, #0f172a 100%); }
-        .quick-btn { transition: all 0.1s; }
-        .quick-btn:active { transform: scale(0.95); }
-        .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #334155; }
-        .action-btn { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; transition: all 0.1s; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .action-btn { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: 9999px; transition: all 0.1s ease; }
         .action-btn:active { transform: scale(0.92); }
         .toast { animation: slideUp 0.3s ease forwards; }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .btn-loading { pointer-events: none; opacity: 0.8; }
+        .tab-active { border-bottom: 3px solid #10b981; color: #10b981; font-weight: 600; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
@@ -39,8 +38,16 @@
             </div>
         </div>
 
-        <!-- Dashboard -->
-        <div class="px-4 pt-4 pb-20">
+        <!-- Tab Navigation -->
+        <div class="px-4 pt-3 bg-slate-950 sticky top-[73px] z-40 border-b border-slate-700">
+            <div class="flex">
+                <button id="tab-today-btn" class="tab-active flex-1 py-2.5 text-sm font-medium text-emerald-400">วันนี้</button>
+                <button id="tab-history-btn" class="flex-1 py-2.5 text-sm font-medium text-slate-400">ประวัติ</button>
+            </div>
+        </div>
+
+        <!-- Dashboard (Today) -->
+        <div id="tab-content-today" class="px-4 pt-4 pb-20">
             <!-- Check-in Section -->
             <div class="mb-3 bg-slate-900 border border-slate-700 rounded-2xl p-3.5">
                 <div class="flex items-center justify-between">
@@ -49,10 +56,10 @@
                         <div id="checkin-status" class="text-sm font-medium">ยังไม่ได้เช็คอิน</div>
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="checkIn()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.985] rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                        <button id="btn-checkin" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.985] rounded-xl text-xs font-semibold flex items-center gap-1.5">
                             <i class="fas fa-play text-xs"></i> <span>เช็คอิน</span>
                         </button>
-                        <button onclick="checkOut()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 active:scale-[0.985] rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                        <button id="btn-checkout" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 active:scale-[0.985] rounded-xl text-xs font-semibold flex items-center gap-1.5">
                             <i class="fas fa-stop text-xs"></i> <span>เช็คเอาท์</span>
                         </button>
                     </div>
@@ -64,7 +71,7 @@
             <div class="mb-4">
                 <div class="flex items-center justify-between mb-2 px-1">
                     <h2 class="text-lg font-semibold">สรุปวันนี้</h2>
-                    <button onclick="showSummaryDetail()" class="text-xs px-3 py-1.5 bg-emerald-900 text-emerald-400 rounded-lg flex items-center gap-1 active:scale-[0.985]">
+                    <button id="btn-summary-detail" class="text-xs px-3 py-1.5 bg-emerald-900 text-emerald-400 rounded-lg flex items-center gap-1 active:scale-[0.985]">
                         <i class="fas fa-chart-pie text-xs"></i>
                         <span>ดูรายละเอียด</span>
                     </button>
@@ -98,12 +105,12 @@
             <!-- Quick Actions -->
             <div class="mb-4">
                 <div class="grid grid-cols-2 gap-3 mb-3">
-                    <button onclick="showAddIncomeModal()" class="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.985] transition-all text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
+                    <button id="btn-add-income" class="bg-emerald-600 hover:bg-emerald-700 active:scale-[0.985] transition-all text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
                         <i class="fas fa-plus-circle text-xl mb-0.5"></i>
                         <span class="font-semibold text-sm">บันทึกงานใหม่</span>
                     </button>
                     
-                    <button onclick="showAddExpenseModal()" class="bg-red-600 hover:bg-red-700 active:scale-[0.985] transition-all text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
+                    <button id="btn-add-expense" class="bg-red-600 hover:bg-red-700 active:scale-[0.985] transition-all text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg">
                         <i class="fas fa-minus-circle text-xl mb-0.5"></i>
                         <span class="font-semibold text-sm">ค่าใช้จ่าย</span>
                     </button>
@@ -136,7 +143,17 @@
                 <div id="empty-state" class="hidden text-center py-10">
                     <i class="fas fa-receipt text-4xl text-slate-600 mb-3"></i>
                     <p class="text-slate-400 text-sm">ยังไม่มีรายการวันนี้</p>
-                    <button onclick="showAddIncomeModal()" class="mt-4 text-xs px-4 py-2 bg-emerald-900 text-emerald-400 rounded-lg">บันทึกงานแรก</button>
+                    <button id="btn-add-first-income" class="mt-4 text-xs px-4 py-2 bg-emerald-900 text-emerald-400 rounded-lg">บันทึกงานแรก</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- History Tab Content -->
+        <div id="tab-content-history" class="hidden px-4 pt-4 pb-20">
+            <div class="mb-4">
+                <h2 class="text-lg font-semibold mb-2 px-1">ประวัติ 7 วันย้อนหลัง</h2>
+                <div id="history-list" class="space-y-3">
+                    <!-- Populated by JS -->
                 </div>
             </div>
         </div>
@@ -144,15 +161,15 @@
         <!-- Bottom Navigation -->
         <div class="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-slate-900 border-t border-slate-700 px-4 py-2 z-50">
             <div class="flex justify-around">
-                <button onclick="switchTab('today')" class="tab-button active flex flex-col items-center text-emerald-400 px-3 py-1">
+                <button id="nav-today" class="tab-button active flex flex-col items-center text-emerald-400 px-3 py-1">
                     <i class="fas fa-home text-xl"></i>
                     <span class="text-xs mt-0.5">วันนี้</span>
                 </button>
-                <button onclick="switchTab('history')" class="tab-button flex flex-col items-center text-slate-400 px-3 py-1">
+                <button id="nav-history" class="tab-button flex flex-col items-center text-slate-400 px-3 py-1">
                     <i class="fas fa-history text-xl"></i>
                     <span class="text-xs mt-0.5">ประวัติ</span>
                 </button>
-                <button onclick="showSettings()" class="flex flex-col items-center text-slate-400 px-3 py-1">
+                <button id="nav-settings" class="flex flex-col items-center text-slate-400 px-3 py-1">
                     <i class="fas fa-cog text-xl"></i>
                     <span class="text-xs mt-0.5">ตั้งค่า</span>
                 </button>
@@ -164,7 +181,7 @@
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-bold">รายละเอียดสรุปวันนี้</h3>
-                    <button onclick="hideSummaryDetail()" class="text-2xl text-slate-400">&times;</button>
+                    <button id="btn-close-summary" class="text-2xl text-slate-400">&times;</button>
                 </div>
                 
                 <div class="space-y-4 text-sm">
@@ -196,13 +213,13 @@
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-xl font-bold">รายละเอียดรายการ</h3>
-                    <button onclick="hideDetailModal()" class="text-2xl text-slate-400">&times;</button>
+                    <button id="btn-close-detail" class="text-2xl text-slate-400">&times;</button>
                 </div>
                 
                 <div id="detail-content" class="space-y-1 text-sm"></div>
                 
                 <div class="mt-6 flex gap-3">
-                    <button onclick="hideDetailModal()" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ปิด</button>
+                    <button id="btn-close-detail-2" class="flex-1 py-3 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ปิด</button>
                     <button id="detail-edit-btn" class="flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">แก้ไข</button>
                 </div>
             </div>
@@ -213,7 +230,7 @@
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold">บันทึกงานใหม่</h3>
-                    <button onclick="hideIncomeModal()" class="text-2xl text-slate-400">&times;</button>
+                    <button id="btn-close-income" class="text-2xl text-slate-400">&times;</button>
                 </div>
                 
                 <div class="space-y-4">
@@ -237,14 +254,15 @@
                         <label class="block text-sm text-slate-400 mb-1">ค่าบริการ GP (แอพหัก)</label>
                         <input type="number" id="income-gp" value="" placeholder="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
                     </div>
+                    
                     <div class="border border-slate-600 rounded-2xl p-4 bg-slate-800/50">
                         <div class="text-sm text-slate-400 mb-2">ค่าทางด่วน (ถ้ามี)</div>
                         <div class="mb-2">
                             <input type="number" id="income-toll" value="" placeholder="0" class="w-full bg-slate-700 border border-slate-500 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-emerald-500">
                         </div>
                         <div class="flex gap-2">
-                            <button type="button" id="btn-toll-customer" onclick="selectTollPayer('customer')" class="payer-btn flex-1 py-2 bg-slate-700 border border-slate-500 rounded-xl text-sm font-medium active:scale-[0.985]">ลูกค้าจ่าย</button>
-                            <button type="button" id="btn-toll-self" onclick="selectTollPayer('self')" class="payer-btn flex-1 py-2 bg-slate-700 border border-slate-500 rounded-xl text-sm font-medium active:scale-[0.985]">เราเอง</button>
+                            <button type="button" id="btn-toll-customer" class="payer-btn flex-1 py-2 bg-slate-700 border border-slate-500 rounded-xl text-sm font-medium active:scale-[0.985]">ลูกค้าจ่าย</button>
+                            <button type="button" id="btn-toll-self" class="payer-btn flex-1 py-2 bg-slate-700 border border-slate-500 rounded-xl text-sm font-medium active:scale-[0.985]">เราเอง</button>
                         </div>
                     </div>
                     
@@ -253,20 +271,19 @@
                         <input type="text" id="income-note" value="งานปกติ" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:border-emerald-500">
                     </div>
                 </div>
-                
                 <div class="flex gap-3 mt-6">
-                    <button onclick="hideIncomeModal()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
-                    <button onclick="addIncome()" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">บันทึกงาน</button>
+                    <button id="btn-cancel-income" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
+                    <button id="btn-save-income" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">บันทึกงาน</button>
                 </div>
             </div>
         </div>
 
-        <!-- Add Expense Modal -->
+        <!-- Add Expense Modal (Dropdown) -->
         <div id="expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
-            <div class="w-full max-w=[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
+            <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold">บันทึกค่าใช้จ่าย</h3>
-                    <button onclick="hideExpenseModal()" class="text-2xl text-slate-400">&times;</button>
+                    <button id="btn-close-expense" class="text-2xl text-slate-400">&times;</button>
                 </div>
                 
                 <div class="space-y-4">
@@ -286,14 +303,15 @@
                         <label class="block text-sm text-slate-400 mb-1">จำนวนเงิน (บาท)</label>
                         <input type="number" id="expense-amount" value="" placeholder="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
                     </div>
+                    
                     <div>
                         <label class="block text-sm text-slate-400 mb-1">หมายเหตุ</label>
                         <input type="text" id="expense-note" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 focus:outline-none focus:border-red-500">
                     </div>
                 </div>
                 <div class="flex gap-3 mt-8">
-                    <button onclick="hideExpenseModal()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
-                    <button onclick="addExpense()" class="flex-1 py-3.5 bg-red-600 hover:bg-red-700 rounded-2xl font-semibold">บันทึก</button>
+                    <button id="btn-cancel-expense" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
+                    <button id="btn-save-expense" class="flex-1 py-3.5 bg-red-600 hover:bg-red-700 rounded-2xl font-semibold">บันทึก</button>
                 </div>
             </div>
         </div>
@@ -303,7 +321,7 @@
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold">การตั้งค่า</h3>
-                    <button onclick="hideSettings()" class="text-2xl text-slate-400">&times;</button>
+                    <button id="btn-close-settings" class="text-2xl text-slate-400">&times;</button>
                 </div>
                 
                 <div class="space-y-5">
@@ -321,8 +339,8 @@
                     </div>
                 </div>
                 <div class="mt-8 flex gap-3">
-                    <button onclick="hideSettings()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
-                    <button onclick="saveSettings()" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">บันทึกการตั้งค่า</button>
+                    <button id="btn-cancel-settings" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
+                    <button id="btn-save-settings" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">บันทึกการตั้งค่า</button>
                 </div>
             </div>
         </div>
@@ -358,6 +376,7 @@
         let currentDetailRecord = null;
         let currentTollPayer = 'customer';
         let undoStack = [];
+        let currentTab = 'today';
 
         function loadData() {
             const savedRecords = localStorage.getItem('lalamove_records');
@@ -368,9 +387,6 @@
             
             const savedCheckin = localStorage.getItem('lalamove_checkin');
             if (savedCheckin) checkin = JSON.parse(savedCheckin);
-            
-            const today = new Date().toISOString().split('T')[0];
-            records = records.filter(r => r.date === today);
         }
 
         function saveData() {
@@ -567,6 +583,52 @@
             });
         }
 
+        function renderHistory() {
+            const container = document.getElementById('history-list');
+            container.innerHTML = '';
+            
+            const grouped = {};
+            records.forEach(record => {
+                if (!grouped[record.date]) grouped[record.date] = [];
+                grouped[record.date].push(record);
+            });
+            
+            const sortedDates = Object.keys(grouped).sort().reverse().slice(0, 7);
+            
+            if (sortedDates.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">ยังไม่มีประวัติ</div>`;
+                return;
+            }
+            
+            sortedDates.forEach(date => {
+                const dayRecords = grouped[date];
+                let dayIncome = 0;
+                let dayExpense = 0;
+                
+                dayRecords.forEach(r => {
+                    if (r.type === 'income') dayIncome += r.amount;
+                    else if (r.category !== 'ทางด่วนลูกค้า') dayExpense += r.amount;
+                });
+                
+                const net = dayIncome - dayExpense;
+                
+                const div = document.createElement('div');
+                div.className = 'bg-slate-800 border border-slate-700 rounded-2xl p-4';
+                div.innerHTML = `
+                    <div class="flex justify-between items-center mb-2">
+                        <div class="font-semibold">${new Date(date).toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' })}</div>
+                        <div class="text-xs text-slate-400">${dayRecords.length} รายการ</div>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <div class="text-emerald-400">+${dayIncome.toLocaleString()}</div>
+                        <div class="text-red-400">-${dayExpense.toLocaleString()}</div>
+                        <div class="font-semibold ${net >= 0 ? 'text-emerald-400' : 'text-red-400'}">${net >= 0 ? '+' : ''}${net.toLocaleString()}</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
         function editRecordDirect(id) {
             const record = records.find(r => r.id === id);
             if (!record) return;
@@ -584,7 +646,7 @@
                 document.getElementById('income-note').value = record.note || '';
                 showAddIncomeModal();
                 
-                const saveBtn = document.querySelector('#income-modal button[onclick*="addIncome"]');
+                const saveBtn = document.getElementById('btn-save-income');
                 if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateIncomeRecord(); }
             } else {
                 document.getElementById('expense-category').value = record.category;
@@ -592,7 +654,7 @@
                 document.getElementById('expense-note').value = record.note || '';
                 showAddExpenseModal();
                 
-                const saveBtn = document.querySelector('#expense-modal button[onclick*="addExpense"]');
+                const saveBtn = document.getElementById('btn-save-expense');
                 if (saveBtn) { saveBtn.innerText = 'บันทึกการแก้ไข'; saveBtn.onclick = () => updateExpenseRecord(); }
             }
         }
@@ -603,7 +665,7 @@
             content.innerHTML = '';
             
             let html = '';
-            html += `<div class="detail-row"><span class="text-slate-400">ประเภท</span><span class="font-medium">${record.category || (record.type === 'income' ? 'งานลาล่ามูฟ' : 'ค่าใช้จ่าย')}</span></div>`;
+            html += `<div class="detail-row"><span class="text-slate-400">ประเภะ</span><span class="font-medium">${record.category || (record.type === 'income' ? 'งานลาล่ามูฟ' : 'ค่าใช้จ่าย')}</span></div>`;
             html += `<div class="detail-row"><span class="text-slate-400">จำนวนเงิน</span><span class="font-bold ${record.type === 'income' ? 'text-emerald-400' : 'text-red-400'}">${record.type === 'income' ? '+' : '-'}${record.amount.toLocaleString()} บาท</span></div>`;
             
             if (record.type === 'income') {
@@ -631,106 +693,160 @@
         }
 
         function updateIncomeRecord() {
-            if (!currentEditId) return;
-            const idx = records.findIndex(r => r.id === currentEditId);
-            if (idx === -1) return;
+            const saveBtn = document.getElementById('btn-save-income');
+            if (saveBtn) {
+                saveBtn.innerText = 'กำลังบันทึก...';
+                saveBtn.classList.add('btn-loading');
+            }
             
-            const km = parseFloat(document.getElementById('income-km').value) || 0;
-            const fare = parseFloat(document.getElementById('income-fare').value) || 0;
-            const tip = parseFloat(document.getElementById('income-tip').value) || 0;
-            const gp = parseFloat(document.getElementById('income-gp').value) || 0;
-            const toll = parseFloat(document.getElementById('income-toll').value) || 0;
-            const note = document.getElementById('income-note').value.trim();
-            
-            records[idx].km = km;
-            records[idx].fare = fare;
-            records[idx].tip = tip;
-            records[idx].gp = gp;
-            records[idx].toll = toll;
-            records[idx].tollPayer = currentTollPayer;
-            records[idx].amount = fare + tip;
-            records[idx].note = note;
-            
-            saveData();
-            updateSummary();
-            renderTransactions();
-            hideIncomeModal();
-            currentEditId = null;
-            showToast('แก้ไขเรียบร้อย!');
+            setTimeout(() => {
+                if (!currentEditId) return;
+                const idx = records.findIndex(r => r.id === currentEditId);
+                if (idx === -1) return;
+                
+                const km = parseFloat(document.getElementById('income-km').value) || 0;
+                const fare = parseFloat(document.getElementById('income-fare').value) || 0;
+                const tip = parseFloat(document.getElementById('income-tip').value) || 0;
+                const gp = parseFloat(document.getElementById('income-gp').value) || 0;
+                const toll = parseFloat(document.getElementById('income-toll').value) || 0;
+                const note = document.getElementById('income-note').value.trim();
+                
+                records[idx].km = km;
+                records[idx].fare = fare;
+                records[idx].tip = tip;
+                records[idx].gp = gp;
+                records[idx].toll = toll;
+                records[idx].tollPayer = currentTollPayer;
+                records[idx].amount = fare + tip;
+                records[idx].note = note;
+                
+                saveData();
+                updateSummary();
+                renderTransactions();
+                hideIncomeModal();
+                currentEditId = null;
+                showToast('แก้ไขเรียบร้อย!');
+                
+                if (saveBtn) {
+                    saveBtn.innerText = 'บันทึกงาน';
+                    saveBtn.classList.remove('btn-loading');
+                }
+            }, 300);
         }
 
         function updateExpenseRecord() {
-            if (!currentEditId) return;
-            const idx = records.findIndex(r => r.id === currentEditId);
-            if (idx === -1) return;
+            const saveBtn = document.getElementById('btn-save-expense');
+            if (saveBtn) {
+                saveBtn.innerText = 'กำลังบันทึก...';
+                saveBtn.classList.add('btn-loading');
+            }
             
-            const category = document.getElementById('expense-category').value;
-            const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
-            const note = document.getElementById('expense-note').value.trim();
-            
-            records[idx].category = category;
-            records[idx].amount = amount;
-            records[idx].note = note;
-            
-            saveData();
-            updateSummary();
-            renderTransactions();
-            hideExpenseModal();
-            currentEditId = null;
-            showToast('แก้ไขเรียบร้อย!');
+            setTimeout(() => {
+                if (!currentEditId) return;
+                const idx = records.findIndex(r => r.id === currentEditId);
+                if (idx === -1) return;
+                
+                const category = document.getElementById('expense-category').value;
+                const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
+                const note = document.getElementById('expense-note').value.trim();
+                
+                records[idx].category = category;
+                records[idx].amount = amount;
+                records[idx].note = note;
+                
+                saveData();
+                updateSummary();
+                renderTransactions();
+                hideExpenseModal();
+                currentEditId = null;
+                showToast('แก้ไขเรียบร้อย!');
+                
+                if (saveBtn) {
+                    saveBtn.innerText = 'บันทึก';
+                    saveBtn.classList.remove('btn-loading');
+                }
+            }, 300);
         }
 
         function addIncome() {
-            const km = parseFloat(document.getElementById('income-km').value) || 0;
-            const fare = parseFloat(document.getElementById('income-fare').value) || 0;
-            const tip = parseFloat(document.getElementById('income-tip').value) || 0;
-            const gp = parseFloat(document.getElementById('income-gp').value) || 0;
-            const toll = parseFloat(document.getElementById('income-toll').value) || 0;
-            const note = document.getElementById('income-note').value.trim();
+            const saveBtn = document.getElementById('btn-save-income');
+            if (saveBtn) {
+                saveBtn.innerText = 'กำลังบันทึก...';
+                saveBtn.classList.add('btn-loading');
+            }
             
-            if (fare <= 0 && tip <= 0 && gp <= 0) { alert('กรุณาระบุรายได้'); return; }
-            
-            const record = {
-                id: Date.now(),
-                date: new Date().toISOString().split('T')[0],
-                time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-                type: 'income',
-                category: 'งานลาล่ามูฟ',
-                fare, tip, gp, toll,
-                tollPayer: currentTollPayer,
-                amount: fare + tip,
-                km, note
-            };
-            
-            records.push(record);
-            saveData();
-            updateSummary();
-            renderTransactions();
-            hideIncomeModal();
-            showToast('บันทึกงานเรียบร้อย!');
+            setTimeout(() => {
+                const km = parseFloat(document.getElementById('income-km').value) || 0;
+                const fare = parseFloat(document.getElementById('income-fare').value) || 0;
+                const tip = parseFloat(document.getElementById('income-tip').value) || 0;
+                const gp = parseFloat(document.getElementById('income-gp').value) || 0;
+                const toll = parseFloat(document.getElementById('income-toll').value) || 0;
+                const note = document.getElementById('income-note').value.trim();
+                
+                if (fare <= 0 && tip <= 0 && gp <= 0) { 
+                    alert('กรุณาระบุรายได้');
+                    if (saveBtn) { saveBtn.innerText = 'บันทึกงาน'; saveBtn.classList.remove('btn-loading'); }
+                    return; 
+                }
+                
+                const record = {
+                    id: Date.now(),
+                    date: new Date().toISOString().split('T')[0],
+                    time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+                    type: 'income',
+                    category: 'งานลาล่ามูฟ',
+                    fare, tip, gp, toll,
+                    tollPayer: currentTollPayer,
+                    amount: fare + tip,
+                    km, note
+                };
+                
+                records.push(record);
+                saveData();
+                updateSummary();
+                renderTransactions();
+                hideIncomeModal();
+                showToast('บันทึกงานเรียบร้อย!');
+                
+                if (saveBtn) { saveBtn.innerText = 'บันทึกงาน'; saveBtn.classList.remove('btn-loading');
+            }, 300);
         }
 
         function addExpense() {
-            const category = document.getElementById('expense-category').value;
-            const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
-            const note = document.getElementById('expense-note').value.trim();
+            const saveBtn = document.getElementById('btn-save-expense');
+            if (saveBtn) {
+                saveBtn.innerText = 'กำลังบันทึก...';
+                saveBtn.classList.add('btn-loading');
+            }
             
-            if (amount <= 0) { alert('กรุณาระบุจำนวนเงิน'); return; }
-            
-            const record = {
-                id: Date.now(),
-                date: new Date().toISOString().split('T')[0],
-                time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-                type: 'expense',
-                category, amount, note
-            };
-            
-            records.push(record);
-            saveData();
-            updateSummary();
-            renderTransactions();
-            hideExpenseModal();
-            showToast('บันทึกค่าใช้จ่ายเรียบร้อย!');
+            setTimeout(() => {
+                const category = document.getElementById('expense-category').value;
+                const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
+                const note = document.getElementById('expense-note').value.trim();
+                
+                if (amount <= 0) { 
+                    alert('กรุณาระบุจำนวนเงิน');
+                    if (saveBtn) { saveBtn.innerText = 'บันทึก'; saveBtn.classList.remove('btn-loading'); }
+                    return; 
+                }
+                
+                const record = {
+                    id: Date.now(),
+                    date: new Date().toISOString().split('T')[0],
+                    time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+                    type: 'expense',
+                    category, amount, note
+                };
+                
+                records.push(record);
+                saveData();
+                updateSummary();
+                renderTransactions();
+                hideExpenseModal();
+                showToast('บันทึกค่าใช้จ่ายเรียบร้อย!');
+                
+                if (saveBtn) { saveBtn.innerText = 'บันทึก'; saveBtn.classList.remove('btn-loading');
+            }, 300);
         }
 
         function quickExpense(category) {
@@ -870,7 +986,28 @@
         }
 
         function switchTab(tab) {
-            if (tab === 'history') alert('ประวัติจะเพิ่มในเวอร์ชันหน้า');
+            currentTab = tab;
+            
+            const todayContent = document.getElementById('tab-content-today');
+            const historyContent = document.getElementById('tab-content-history');
+            
+            if (tab === 'today') {
+                todayContent.classList.remove('hidden');
+                historyContent.classList.add('hidden');
+                document.getElementById('tab-today-btn').classList.add('tab-active', 'text-emerald-400');
+                document.getElementById('tab-today-btn').classList.remove('text-slate-400');
+                document.getElementById('tab-history-btn').classList.remove('tab-active', 'text-emerald-400');
+                document.getElementById('tab-history-btn').classList.add('text-slate-400');
+            } else {
+                todayContent.classList.add('hidden');
+                historyContent.classList.remove('hidden');
+                document.getElementById('tab-history-btn').classList.add('tab-active', 'text-emerald-400');
+                document.getElementById('tab-history-btn').classList.remove('text-slate-400');
+                document.getElementById('tab-today-btn').classList.remove('tab-active', 'text-emerald-400');
+                document.getElementById('tab-today-btn').classList.add('text-slate-400');
+                
+                renderHistory();
+            }
         }
 
         function selectTollPayer(payer) {
@@ -913,17 +1050,47 @@
             startCheckinTimer();
             setupNumberInputs();
             
-            const btnCancel = document.getElementById('btn-cancel-delete');
-            const btnConfirm = document.getElementById('btn-confirm-delete');
+            // Event Listeners
+            document.getElementById('btn-checkin').onclick = checkIn;
+            document.getElementById('btn-checkout').onclick = checkOut;
+            document.getElementById('btn-summary-detail').onclick = showSummaryDetail;
+            document.getElementById('btn-add-income').onclick = showAddIncomeModal;
+            document.getElementById('btn-add-expense').onclick = showAddExpenseModal;
+            document.getElementById('btn-add-first-income').onclick = showAddIncomeModal;
             
-            if (btnCancel) btnCancel.onclick = cancelDelete;
-            if (btnConfirm) btnConfirm.onclick = () => {
+            document.getElementById('btn-close-summary').onclick = hideSummaryDetail;
+            document.getElementById('btn-close-detail').onclick = hideDetailModal;
+            document.getElementById('btn-close-detail-2').onclick = hideDetailModal;
+            document.getElementById('btn-close-income').onclick = hideIncomeModal;
+            document.getElementById('btn-close-expense').onclick = hideExpenseModal;
+            document.getElementById('btn-close-settings').onclick = hideSettings;
+            
+            document.getElementById('btn-cancel-income').onclick = hideIncomeModal;
+            document.getElementById('btn-cancel-expense').onclick = hideExpenseModal;
+            document.getElementById('btn-cancel-settings').onclick = hideSettings;
+            document.getElementById('btn-cancel-delete').onclick = cancelDelete;
+            
+            document.getElementById('btn-save-income').onclick = addIncome;
+            document.getElementById('btn-save-expense').onclick = addExpense;
+            document.getElementById('btn-save-settings').onclick = saveSettings;
+            
+            document.getElementById('btn-confirm-delete').onclick = () => {
                 if (currentDeleteId) {
                     deleteRecord(currentDeleteId);
                     currentDeleteId = null;
                 }
                 cancelDelete();
             };
+            
+            document.getElementById('nav-today').onclick = () => switchTab('today');
+            document.getElementById('nav-history').onclick = () => switchTab('history');
+            document.getElementById('nav-settings').onclick = showSettings;
+            
+            document.getElementById('tab-today-btn').onclick = () => switchTab('today');
+            document.getElementById('tab-history-btn').onclick = () => switchTab('history');
+            
+            document.getElementById('btn-toll-customer').onclick = () => selectTollPayer('customer');
+            document.getElementById('btn-toll-self').onclick = () => selectTollPayer('self');
             
             document.addEventListener('keydown', function(e) {
                 if (e.key === '/' && document.activeElement.tagName === 'BODY') { e.preventDefault(); showAddIncomeModal(); }
@@ -934,7 +1101,9 @@
                 if (el) el.addEventListener('click', function(e) { if (e.target.id === id) { if (id==='income-modal') hideIncomeModal(); if (id==='expense-modal') hideExpenseModal(); if (id==='settings-modal') hideSettings(); if (id==='quick-expense-modal') hideQuickExpenseModal(); if (id==='detail-modal') hideDetailModal(); if (id==='delete-confirm-modal') cancelDelete(); if (id==='summary-detail-modal') hideSummaryDetail(); } });
             });
             
-            console.log('%c[Lalamove Account] A completed: Undo + High value confirmation added', 'color:#10b981');
+            document.getElementById('tab-content-history').classList.add('hidden');
+            
+            console.log('%c[Lalamove Account] Reverted to working version with dropdown', 'color:#10b981');
         }
 
         window.onload = initializeApp;
