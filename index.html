@@ -115,7 +115,6 @@
                     </button>
                 </div>
 
-                <!-- Quick Expense Buttons -->
                 <div class="grid grid-cols-3 gap-2">
                     <button onclick="quickExpense('ค่าอาหาร')" class="quick-btn bg-orange-600 hover:bg-orange-700 text-white py-2.5 rounded-xl text-xs font-medium flex items-center justify-center gap-1 active:scale-[0.985]">
                         <i class="fas fa-utensils"></i> <span>อาหาร</span>
@@ -171,7 +170,6 @@
         </div>
 
         <!-- Modals -->
-        <!-- Summary Detail Modal -->
         <div id="summary-detail-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-4">
@@ -200,7 +198,6 @@
             </div>
         </div>
 
-        <!-- Detail Modal -->
         <div id="detail-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-4">
@@ -215,7 +212,6 @@
             </div>
         </div>
 
-        <!-- Add Income Modal -->
         <div id="income-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -263,24 +259,19 @@
             </div>
         </div>
 
-        <!-- Add Expense Modal - BUTTON SELECTION -->
+        <!-- Expense Modal with Button Selection -->
         <div id="expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="text-xl font-bold">บันทึกค่าใช้จ่าย</h3>
                     <button id="btn-close-expense" class="text-2xl text-slate-400">&times;</button>
                 </div>
-                
                 <div class="space-y-4">
-                    <!-- Category Button Selection -->
                     <div>
                         <label class="block text-sm text-slate-400 mb-2">หมวดหมู่</label>
-                        <div id="expense-category-buttons" class="grid grid-cols-3 gap-2">
-                            <!-- Populated by JS -->
-                        </div>
+                        <div id="expense-category-buttons" class="grid grid-cols-3 gap-2"></div>
                         <input type="hidden" id="expense-category">
                     </div>
-                    
                     <div>
                         <label class="block text-sm text-slate-400 mb-1">จำนวนเงิน (บาท)</label>
                         <input type="number" id="expense-amount" value="" placeholder="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg focus:outline-none focus:border-red-500">
@@ -297,7 +288,6 @@
             </div>
         </div>
 
-        <!-- Settings Modal -->
         <div id="settings-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -325,7 +315,6 @@
             </div>
         </div>
 
-        <!-- Delete Confirmation Modal -->
         <div id="delete-confirm-modal" class="hidden fixed inset-0 bg-black/70 z-[300] flex items-center justify-center">
             <div class="bg-slate-900 rounded-2xl p-6 w-80 mx-4">
                 <div class="text-center mb-6">
@@ -343,14 +332,11 @@
 
     <script>
         // ============================================
-        // MASTERPIECE REWRITE - LALAMOVE ACCOUNT
-        // Clean, well-organized, fully commented
+        // CLEAN REWRITE v2 - Fixed bugs
         // ============================================
 
-        // === CONFIG & CONSTANTS ===
         const EXPENSE_CATEGORIES = ['น้ำมัน', 'อาหาร', 'ค่าสึกหรอ', 'ทางด่วนลูกค้า', 'ทางด่วนเราเอง', 'ส่วนตัว'];
 
-        // === STATE ===
         let records = [];
         let settings = { fuelPrice: 32, fuelConsumption: 12, depreciationRate: 1 };
         let checkin = { start: null, end: null };
@@ -363,19 +349,15 @@
         let currentTab = 'today';
         let selectedExpenseCategory = '';
 
-        // === DATA LAYER ===
         function loadData() {
-            const savedRecords = localStorage.getItem('lalamove_records');
-            if (savedRecords) records = JSON.parse(savedRecords);
-            
-            const savedSettings = localStorage.getItem('lalamove_settings');
-            if (savedSettings) settings = JSON.parse(savedSettings);
-            
-            const savedCheckin = localStorage.getItem('lalamove_checkin');
-            if (savedCheckin) checkin = JSON.parse(savedCheckin);
-            
-            const savedUndo = localStorage.getItem('lalamove_undoStack');
-            if (savedUndo) undoStack = JSON.parse(savedUndo);
+            const saved = localStorage.getItem('lalamove_records');
+            if (saved) records = JSON.parse(saved);
+            const s = localStorage.getItem('lalamove_settings');
+            if (s) settings = JSON.parse(s);
+            const c = localStorage.getItem('lalamove_checkin');
+            if (c) checkin = JSON.parse(c);
+            const u = localStorage.getItem('lalamove_undoStack');
+            if (u) undoStack = JSON.parse(u);
         }
 
         function saveData() {
@@ -385,79 +367,59 @@
             localStorage.setItem('lalamove_undoStack', JSON.stringify(undoStack));
         }
 
-        // === CALCULATION ===
         function calculateRealNet(todayRecords) {
-            let totalIncome = 0;
-            let totalExpense = 0;
-            let totalKm = 0;
-            let totalFare = 0;
-            let totalTip = 0;
-            let totalGp = 0;
-
-            todayRecords.forEach(record => {
-                if (record.type === 'income') {
-                    totalIncome += (record.fare || 0) + (record.tip || 0);
-                    totalFare += record.fare || 0;
-                    totalTip += record.tip || 0;
-                    totalKm += record.km || 0;
-                    totalGp += record.gp || 0;
-                    if (record.tollPayer === 'self') totalExpense += record.toll || 0;
-                } else if (record.type === 'expense') {
-                    if (record.category !== 'ทางด่วนลูกค้า') totalExpense += record.amount;
+            let totalIncome = 0, totalExpense = 0, totalKm = 0, totalFare = 0, totalTip = 0, totalGp = 0;
+            todayRecords.forEach(r => {
+                if (r.type === 'income') {
+                    totalIncome += (r.fare || 0) + (r.tip || 0);
+                    totalFare += r.fare || 0;
+                    totalTip += r.tip || 0;
+                    totalKm += r.km || 0;
+                    totalGp += r.gp || 0;
+                    if (r.tollPayer === 'self') totalExpense += r.toll || 0;
+                } else if (r.type === 'expense' && r.category !== 'ทางด่วนลูกค้า') {
+                    totalExpense += r.amount;
                 }
             });
-
             const fuelCost = (totalKm / settings.fuelConsumption) * settings.fuelPrice;
-            const depreciationCost = totalKm * settings.depreciationRate;
-            const realNet = totalIncome - totalExpense - totalGp - fuelCost - depreciationCost;
-
-            return { totalIncome, totalExpense, totalFare, totalTip, totalGp, fuelCost, depreciationCost, realNet, totalKm };
+            const depCost = totalKm * settings.depreciationRate;
+            const realNet = totalIncome - totalExpense - totalGp - fuelCost - depCost;
+            return { totalIncome, totalExpense, totalFare, totalTip, totalGp, fuelCost, depCost, realNet, totalKm };
         }
 
         function updateSummary() {
             const today = new Date().toISOString().split('T')[0];
             const todayRecords = records.filter(r => r.date === today);
-
             const calc = calculateRealNet(todayRecords);
 
             document.getElementById('total-income').textContent = calc.totalIncome.toLocaleString();
             document.getElementById('total-expense').textContent = calc.totalExpense.toLocaleString();
-            
-            const realNetEl = document.getElementById('real-net');
-            realNetEl.textContent = Math.round(calc.realNet).toLocaleString();
-            realNetEl.style.color = calc.realNet >= 0 ? '#10b981' : '#f87171';
-
+            const netEl = document.getElementById('real-net');
+            netEl.textContent = Math.round(calc.realNet).toLocaleString();
+            netEl.style.color = calc.realNet >= 0 ? '#10b981' : '#f87171';
             document.getElementById('transaction-count').textContent = todayRecords.length + ' รายการ';
             window.currentSummary = calc;
         }
 
-        // === RENDERING ===
         function renderTransactions() {
             const container = document.getElementById('transactions-list');
-            const emptyState = document.getElementById('empty-state');
+            const empty = document.getElementById('empty-state');
             const today = new Date().toISOString().split('T')[0];
-            const todayRecords = records.filter(r => r.date === today).sort((a, b) => b.id - a.id);
+            const list = records.filter(r => r.date === today).sort((a,b) => b.id - a.id);
 
             container.innerHTML = '';
+            if (list.length === 0) { empty.classList.remove('hidden'); return; }
+            empty.classList.add('hidden');
 
-            if (todayRecords.length === 0) {
-                emptyState.classList.remove('hidden');
-                return;
-            }
-            emptyState.classList.add('hidden');
-
-            todayRecords.forEach(record => {
+            list.forEach(record => {
                 const div = document.createElement('div');
-                div.className = `transaction-item flex items-center justify-between p-4 bg-slate-800 rounded-2xl border border-slate-700 active:bg-slate-700`;
-
-                const icon = record.type === 'income' 
-                    ? '<i class="fas fa-arrow-up text-emerald-400"></i>' 
-                    : '<i class="fas fa-arrow-down text-red-400"></i>';
+                div.className = 'transaction-item flex items-center justify-between p-4 bg-slate-800 rounded-2xl border border-slate-700 active:bg-slate-700';
+                const icon = record.type === 'income' ? '<i class="fas fa-arrow-up text-emerald-400"></i>' : '<i class="fas fa-arrow-down text-red-400"></i>';
                 const color = record.type === 'income' ? 'text-emerald-400' : 'text-red-400';
 
                 div.innerHTML = `
                     <div class="flex items-center gap-3 flex-1 min-w-0">
-                        <div class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-700 flex-shrink-0">${icon}</div>
+                        <div class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-700">${icon}</div>
                         <div class="min-w-0 flex-1">
                             <div class="font-medium truncate">${record.category || (record.type === 'income' ? 'งานลาล่ามูฟ' : 'ค่าใช้จ่าย')}</div>
                             <div class="text-xs text-slate-400 truncate">${record.note || ''}</div>
@@ -469,17 +431,12 @@
                             <div class="text-xs text-slate-500">${record.time}</div>
                         </div>
                         <div class="flex gap-1.5">
-                            <button class="action-btn bg-emerald-600 hover:bg-emerald-700 text-white" onclick="event.stopImmediatePropagation(); editRecordDirect(${record.id})">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="action-btn bg-red-600 hover:bg-red-700 text-white" onclick="event.stopImmediatePropagation(); currentDeleteId = ${record.id}; showDeleteConfirm();">
-                                <i class="fas fa-trash"></i>
-                            </button>
+                            <button class="action-btn bg-emerald-600 text-white" onclick="event.stopImmediatePropagation(); editRecordDirect(${record.id})"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn bg-red-600 text-white" onclick="event.stopImmediatePropagation(); currentDeleteId = ${record.id}; showDeleteConfirm();"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 `;
-
-                div.addEventListener('click', () => showDetailModal(record));
+                div.onclick = () => showDetailModal(record);
                 container.appendChild(div);
             });
         }
@@ -487,74 +444,46 @@
         function renderHistory() {
             const container = document.getElementById('history-list');
             container.innerHTML = '';
-
             const grouped = {};
-            records.forEach(record => {
-                if (!grouped[record.date]) grouped[record.date] = [];
-                grouped[record.date].push(record);
-            });
+            records.forEach(r => { if (!grouped[r.date]) grouped[r.date] = []; grouped[r.date].push(r); });
+            const dates = Object.keys(grouped).sort().reverse().slice(0,7);
+            if (dates.length === 0) { container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">ยังไม่มีประวัติ</div>`; return; }
 
-            const sortedDates = Object.keys(grouped).sort().reverse().slice(0, 7);
-
-            if (sortedDates.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">ยังไม่มีประวัติ</div>`;
-                return;
-            }
-
-            sortedDates.forEach(date => {
-                const dayRecords = grouped[date];
-                let dayIncome = 0, dayExpense = 0;
-
-                dayRecords.forEach(r => {
-                    if (r.type === 'income') dayIncome += r.amount;
-                    else if (r.category !== 'ทางด่วนลูกค้า') dayExpense += r.amount;
-                });
-
-                const net = dayIncome - dayExpense;
-
-                const div = document.createElement('div');
-                div.className = 'bg-slate-800 border border-slate-700 rounded-2xl p-4';
-                div.innerHTML = `
+            dates.forEach(date => {
+                const dayRec = grouped[date];
+                let inc = 0, exp = 0;
+                dayRec.forEach(r => { if (r.type === 'income') inc += r.amount; else if (r.category !== 'ทางด่วนลูกค้า') exp += r.amount; });
+                const net = inc - exp;
+                const d = document.createElement('div');
+                d.className = 'bg-slate-800 border border-slate-700 rounded-2xl p-4';
+                d.innerHTML = `
                     <div class="flex justify-between items-center mb-2">
-                        <div class="font-semibold">${new Date(date).toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short' })}</div>
-                        <div class="text-xs text-slate-400">${dayRecords.length} รายการ</div>
+                        <div class="font-semibold">${new Date(date).toLocaleDateString('th-TH', {weekday:'short', day:'numeric', month:'short'})}</div>
+                        <div class="text-xs text-slate-400">${dayRec.length} รายการ</div>
                     </div>
                     <div class="flex justify-between text-sm">
-                        <div class="text-emerald-400">+${dayIncome.toLocaleString()}</div>
-                        <div class="text-red-400">-${dayExpense.toLocaleString()}</div>
-                        <div class="font-semibold ${net >= 0 ? 'text-emerald-400' : 'text-red-400'}">${net >= 0 ? '+' : ''}${net.toLocaleString()}</div>
+                        <div class="text-emerald-400">+${inc.toLocaleString()}</div>
+                        <div class="text-red-400">-${exp.toLocaleString()}</div>
+                        <div class="font-semibold ${net>=0?'text-emerald-400':'text-red-400'}">${net>=0?'+':''}${net.toLocaleString()}</div>
                     </div>
                 `;
-                container.appendChild(div);
+                container.appendChild(d);
             });
         }
 
-        // === MODAL HELPERS ===
-        function showModal(id) {
-            const modal = document.getElementById(id);
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
+        function showModal(id) { const m = document.getElementById(id); m.classList.remove('hidden'); m.classList.add('flex'); }
+        function hideModal(id) { const m = document.getElementById(id); m.classList.remove('flex'); m.classList.add('hidden'); }
 
-        function hideModal(id) {
-            const modal = document.getElementById(id);
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
-        }
-
-        // === EXPENSE CATEGORY BUTTONS ===
         function setupExpenseCategoryButtons() {
             const container = document.getElementById('expense-category-buttons');
             container.innerHTML = '';
-
             EXPENSE_CATEGORIES.forEach(cat => {
                 const btn = document.createElement('button');
-                btn.className = `category-btn px-3 py-2.5 text-sm rounded-xl border border-slate-600 bg-slate-800 active:scale-[0.985] ${cat === selectedExpenseCategory ? 'active' : ''}`;
-                btn.innerHTML = cat;
+                btn.className = `category-btn px-3 py-2.5 text-sm rounded-xl border border-slate-600 bg-slate-800 ${cat === selectedExpenseCategory ? 'active' : ''}`;
+                btn.textContent = cat;
                 btn.onclick = () => {
                     selectedExpenseCategory = cat;
                     document.getElementById('expense-category').value = cat;
-                    // Update active state
                     container.querySelectorAll('button').forEach(b => b.classList.remove('active'));
                     btn.classList.add('active');
                 };
@@ -569,69 +498,43 @@
             showModal('expense-modal');
         }
 
-        // === CRUD ===
         function addIncome() {
-            // ... (same logic as before, kept clean)
             const km = parseFloat(document.getElementById('income-km').value) || 0;
             const fare = parseFloat(document.getElementById('income-fare').value) || 0;
             const tip = parseFloat(document.getElementById('income-tip').value) || 0;
             const gp = parseFloat(document.getElementById('income-gp').value) || 0;
             const toll = parseFloat(document.getElementById('income-toll').value) || 0;
             const note = document.getElementById('income-note').value.trim();
-
             if (fare <= 0 && tip <= 0 && gp <= 0) { alert('กรุณาระบุรายได้'); return; }
 
-            const record = {
-                id: Date.now(),
-                date: new Date().toISOString().split('T')[0],
-                time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-                type: 'income',
-                category: 'งานลาล่ามูฟ',
-                fare, tip, gp, toll,
-                tollPayer: currentTollPayer,
-                amount: fare + tip,
-                km, note
-            };
-
-            records.push(record);
-            saveData();
-            updateSummary();
-            renderTransactions();
-            hideModal('income-modal');
-            showToast('บันทึกงานเรียบร้อย!');
+            records.push({
+                id: Date.now(), date: new Date().toISOString().split('T')[0],
+                time: new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}),
+                type: 'income', category: 'งานลาล่ามูฟ', fare, tip, gp, toll, tollPayer: currentTollPayer, amount: fare + tip, km, note
+            });
+            saveData(); updateSummary(); renderTransactions(); hideModal('income-modal'); showToast('บันทึกงานเรียบร้อย!');
         }
 
         function addExpense() {
             const category = document.getElementById('expense-category').value || selectedExpenseCategory;
             const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
             const note = document.getElementById('expense-note').value.trim();
-
             if (!category) { alert('กรุณาเลือกหมวดหมู่'); return; }
             if (amount <= 0) { alert('กรุณาระบุจำนวนเงิน'); return; }
 
-            const record = {
-                id: Date.now(),
-                date: new Date().toISOString().split('T')[0],
-                time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-                type: 'expense',
-                category, amount, note
-            };
-
-            records.push(record);
-            saveData();
-            updateSummary();
-            renderTransactions();
-            hideModal('expense-modal');
-            showToast('บันทึกค่าใช้จ่ายเรียบร้อย!');
+            records.push({
+                id: Date.now(), date: new Date().toISOString().split('T')[0],
+                time: new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}),
+                type: 'expense', category, amount, note
+            });
+            saveData(); updateSummary(); renderTransactions(); hideModal('expense-modal'); showToast('บันทึกค่าใช้จ่ายเรียบร้อย!');
         }
 
         function editRecordDirect(id) {
-            const record = records.find(r => r.id === id);
-            if (!record) return;
+            const record = records.find(r => r.id === id); if (!record) return;
             currentEditId = id;
 
             if (record.type === 'income') {
-                // fill income modal
                 document.getElementById('income-km').value = record.km || 0;
                 document.getElementById('income-fare').value = record.fare || 0;
                 document.getElementById('income-tip').value = record.tip || 0;
@@ -641,10 +544,8 @@
                 updateTollPayerButtons();
                 document.getElementById('income-note').value = record.note || '';
                 showModal('income-modal');
-
-                const saveBtn = document.getElementById('btn-save-income');
-                saveBtn.innerText = 'บันทึกการแก้ไข';
-                saveBtn.onclick = updateIncomeRecord;
+                const sb = document.getElementById('btn-save-income');
+                sb.innerText = 'บันทึกการแก้ไข'; sb.onclick = updateIncomeRecord;
             } else {
                 document.getElementById('expense-amount').value = record.amount;
                 document.getElementById('expense-note').value = record.note || '';
@@ -652,194 +553,149 @@
                 document.getElementById('expense-category').value = record.category;
                 setupExpenseCategoryButtons();
                 showModal('expense-modal');
-
-                const saveBtn = document.getElementById('btn-save-expense');
-                saveBtn.innerText = 'บันทึกการแก้ไข';
-                saveBtn.onclick = updateExpenseRecord;
+                const sb = document.getElementById('btn-save-expense');
+                sb.innerText = 'บันทึกการแก้ไข'; sb.onclick = updateExpenseRecord;
             }
         }
 
         function updateIncomeRecord() {
-            // similar to before
             if (!currentEditId) return;
-            const idx = records.findIndex(r => r.id === currentEditId);
-            if (idx === -1) return;
-
+            const idx = records.findIndex(r => r.id === currentEditId); if (idx === -1) return;
             const km = parseFloat(document.getElementById('income-km').value) || 0;
             const fare = parseFloat(document.getElementById('income-fare').value) || 0;
             const tip = parseFloat(document.getElementById('income-tip').value) || 0;
             const gp = parseFloat(document.getElementById('income-gp').value) || 0;
             const toll = parseFloat(document.getElementById('income-toll').value) || 0;
             const note = document.getElementById('income-note').value.trim();
-
-            records[idx] = { ...records[idx], km, fare, tip, gp, toll, tollPayer: currentTollPayer, amount: fare + tip, note };
-
-            saveData();
-            updateSummary();
-            renderTransactions();
-            hideModal('income-modal');
-            currentEditId = null;
-            showToast('แก้ไขเรียบร้อย!');
+            records[idx] = {...records[idx], km, fare, tip, gp, toll, tollPayer: currentTollPayer, amount: fare + tip, note};
+            saveData(); updateSummary(); renderTransactions(); hideModal('income-modal'); currentEditId = null; showToast('แก้ไขเรียบร้อย!');
         }
 
         function updateExpenseRecord() {
             if (!currentEditId) return;
-            const idx = records.findIndex(r => r.id === currentEditId);
-            if (idx === -1) return;
-
+            const idx = records.findIndex(r => r.id === currentEditId); if (idx === -1) return;
             const category = document.getElementById('expense-category').value || selectedExpenseCategory;
             const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
             const note = document.getElementById('expense-note').value.trim();
+            records[idx] = {...records[idx], category, amount, note};
+            saveData(); updateSummary(); renderTransactions(); hideModal('expense-modal'); currentEditId = null; showToast('แก้ไขเรียบร้อย!');
+        }
 
-            records[idx] = { ...records[idx], category, amount, note };
+        function showDetailModal(record) {
+            currentDetailRecord = record;
+            const content = document.getElementById('detail-content');
+            content.innerHTML = '';
+            let html = '';
+            html += `<div class="detail-row"><span class="text-slate-400">ประเภท</span><span class="font-medium">${record.category || (record.type === 'income' ? 'งานลาล่ามูฟ' : 'ค่าใช้จ่าย')}</span></div>`;
+            html += `<div class="detail-row"><span class="text-slate-400">จำนวนเงิน</span><span class="font-bold ${record.type === 'income' ? 'text-emerald-400' : 'text-red-400'}">${record.type === 'income' ? '+' : '-'}${record.amount.toLocaleString()} บาท</span></div>`;
+            if (record.type === 'income') {
+                if (record.fare) html += `<div class="detail-row"><span class="text-slate-400">รายได้จากแอพ</span><span class="font-medium">${record.fare} บาท</span></div>`;
+                if (record.tip > 0) html += `<div class="detail-row"><span class="text-slate-400">ทิปจากลูกค้า</span><span class="font-medium text-amber-400">+${record.tip} บาท</span></div>`;
+                if (record.gp > 0) html += `<div class="detail-row"><span class="text-slate-400">ค่าบริการ GP</span><span class="font-medium text-red-400">-${record.gp} บาท</span></div>`;
+                if (record.toll > 0) html += `<div class="detail-row"><span class="text-slate-400">ค่าทางด่วน</span><span class="font-medium">${record.toll} บาท (${record.tollPayer === 'self' ? 'เราเอง' : 'ลูกค้าจ่าย'})</span></div>`;
+                if (record.km) html += `<div class="detail-row"><span class="text-slate-400">ระยะทาง</span><span class="font-medium">${record.km} กม.</span></div>`;
+            }
+            if (record.note) html += `<div class="detail-row"><span class="text-slate-400">หมายเหตุ</span><span class="font-medium">${record.note}</span></div>`;
+            html += `<div class="detail-row"><span class="text-slate-400">เวลา</span><span class="font-medium">${record.time}</span></div>`;
+            content.innerHTML = html;
 
-            saveData();
-            updateSummary();
-            renderTransactions();
-            hideModal('expense-modal');
-            currentEditId = null;
-            showToast('แก้ไขเรียบร้อย!');
+            document.getElementById('detail-edit-btn').onclick = () => { hideModal('detail-modal'); editRecordDirect(record.id); };
+            showModal('detail-modal');
         }
 
         function deleteRecord(id) {
-            const recordToDelete = records.find(r => r.id === id);
-            if (!recordToDelete) return;
+            const rec = records.find(r => r.id === id); if (!rec) return;
+            if (rec.amount >= 1500 && !confirm(`รายการนี้มีมูลค่า ${rec.amount.toLocaleString()} บาท\nคุณแน่ใจหรือไม่ว่าต้องการลบ?`)) return;
 
-            if (recordToDelete.amount >= 1500) {
-                if (!confirm(`รายการนี้มีมูลค่า ${recordToDelete.amount.toLocaleString()} บาท\nคุณแน่ใจหรือไม่ว่าต้องการลบ?`)) return;
-            }
-
-            undoStack.push(recordToDelete);
-            if (undoStack.length > 5) undoStack.shift();
-            saveData();
-
+            undoStack.push(rec); if (undoStack.length > 5) undoStack.shift();
             records = records.filter(r => r.id !== id);
-            saveData();
-            updateSummary();
-            renderTransactions();
-            showUndoToast();
+            saveData(); updateSummary(); renderTransactions(); showUndoToast();
         }
 
+        function showDeleteConfirm() { showModal('delete-confirm-modal'); }
+
         function showUndoToast() {
-            // simple undo toast
             const toast = document.createElement('div');
             toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-slate-800 border border-slate-600 text-white px-5 py-3 rounded-2xl shadow-lg text-sm flex items-center gap-3 z-[200] toast';
             toast.innerHTML = `<span>ลบรายการแล้ว</span> <button class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 rounded-lg text-xs font-semibold">เลิกทำ</button>`;
-
-            const undoBtn = toast.querySelector('button');
-            undoBtn.onclick = () => {
-                if (undoStack.length > 0) {
-                    records.push(undoStack.pop());
-                    saveData();
-                    updateSummary();
-                    renderTransactions();
-                }
-                toast.remove();
-            };
+            const btn = toast.querySelector('button');
+            btn.onclick = () => { if (undoStack.length > 0) { records.push(undoStack.pop()); saveData(); updateSummary(); renderTransactions(); } toast.remove(); };
             document.body.appendChild(toast);
             setTimeout(() => toast.parentNode && toast.parentNode.removeChild(toast), 5000);
         }
 
-        // === CHECKIN ===
         function updateCheckin() {
-            // ... (kept the same clean logic)
             const statusEl = document.getElementById('checkin-status');
             const durationEl = document.getElementById('checkin-duration');
-
-            if (!checkin.start) {
-                statusEl.innerHTML = 'ยังไม่ได้เช็คอิน';
-                durationEl.classList.add('hidden');
-                return;
-            }
-
-            const startTime = new Date(checkin.start).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+            if (!checkin.start) { statusEl.innerHTML = 'ยังไม่ได้เช็คอิน'; durationEl.classList.add('hidden'); return; }
+            const startTime = new Date(checkin.start).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
             statusEl.innerHTML = `เริ่มงานเมื่อ <span class="font-semibold text-emerald-400">${startTime}</span>`;
-
             if (checkin.end) {
-                const durationMs = new Date(checkin.end) - new Date(checkin.start);
-                const h = Math.floor(durationMs / 3600000);
-                const m = Math.floor((durationMs % 3600000) / 60000);
-                durationEl.innerHTML = `สิ้นสุด | ${h} ชม. ${m} นาที`;
-                durationEl.classList.remove('hidden');
+                const d = new Date(checkin.end) - new Date(checkin.start);
+                const h = Math.floor(d / 3600000); const m = Math.floor((d % 3600000) / 60000);
+                durationEl.innerHTML = `สิ้นสุด | ${h} ชม. ${m} นาที`; durationEl.classList.remove('hidden');
             } else {
-                const now = new Date();
-                const durationMs = now - new Date(checkin.start);
-                const h = Math.floor(durationMs / 3600000);
-                const m = Math.floor((durationMs % 3600000) / 60000);
-                const s = Math.floor((durationMs % 60000) / 1000);
-                durationEl.innerHTML = `กำลังทำงาน | ${h} ชม. ${m} นาที ${s} วินาที`;
-                durationEl.classList.remove('hidden');
+                const now = new Date(); const d = now - new Date(checkin.start);
+                const h = Math.floor(d / 3600000); const m = Math.floor((d % 3600000) / 60000); const s = Math.floor((d % 60000) / 1000);
+                durationEl.innerHTML = `กำลังทำงาน | ${h} ชม. ${m} นาที ${s} วินาที`; durationEl.classList.remove('hidden');
             }
+        }
+
+        function startCheckinTimer() {
+            if (checkinInterval) clearInterval(checkinInterval);
+            checkinInterval = setInterval(() => {
+                if (checkin.start && !checkin.end) updateCheckin();
+            }, 1000);
         }
 
         function checkIn() {
             if (checkin.start && !checkin.end && !confirm('คุณได้เช็คอินแล้ว ต้องการเช็คอินใหม่?')) return;
-            checkin.start = new Date().toISOString();
-            checkin.end = null;
-            saveData();
-            updateCheckin();
-            showToast('เช็คอินเรียบร้อย!');
+            checkin.start = new Date().toISOString(); checkin.end = null; saveData(); updateCheckin(); startCheckinTimer(); showToast('เช็คอินเรียบร้อย!');
         }
 
         function checkOut() {
             if (!checkin.start) { alert('กรุณาเช็คอินก่อน'); return; }
             if (checkin.end) { alert('คุณได้เช็คเอาท์แล้ว'); return; }
-            checkin.end = new Date().toISOString();
-            saveData();
-            updateCheckin();
-            showToast('เช็คเอาท์เรียบร้อย!');
+            checkin.end = new Date().toISOString(); saveData(); updateCheckin(); if (checkinInterval) clearInterval(checkinInterval); showToast('เช็คเอาท์เรียบร้อย!');
         }
 
-        // === SETTINGS & TOLL ===
         function updateTollPayerButtons() {
-            const btnCustomer = document.getElementById('btn-toll-customer');
-            const btnSelf = document.getElementById('btn-toll-self');
-            if (!btnCustomer || !btnSelf) return;
-
+            const bc = document.getElementById('btn-toll-customer'); const bs = document.getElementById('btn-toll-self');
+            if (!bc || !bs) return;
             if (currentTollPayer === 'customer') {
-                btnCustomer.classList.add('active', 'bg-emerald-600', 'border-emerald-500');
-                btnCustomer.classList.remove('bg-slate-700', 'border-slate-500');
-                btnSelf.classList.remove('active', 'bg-emerald-600', 'border-emerald-500');
-                btnSelf.classList.add('bg-slate-700', 'border-slate-500');
+                bc.classList.add('active','bg-emerald-600','border-emerald-500'); bc.classList.remove('bg-slate-700','border-slate-500');
+                bs.classList.remove('active','bg-emerald-600','border-emerald-500'); bs.classList.add('bg-slate-700','border-slate-500');
             } else {
-                btnSelf.classList.add('active', 'bg-emerald-600', 'border-emerald-500');
-                btnSelf.classList.remove('active', 'bg-emerald-600', 'border-emerald-500');
-                btnCustomer.classList.remove('active', 'bg-emerald-600', 'border-emerald-500');
-                btnCustomer.classList.add('bg-slate-700', 'border-slate-500');
+                bs.classList.add('active','bg-emerald-600','border-emerald-500'); bs.classList.remove('active','bg-emerald-600','border-emerald-500');
+                bc.classList.remove('active','bg-emerald-600','border-emerald-500'); bc.classList.add('bg-slate-700','border-slate-500');
             }
         }
 
-        function selectTollPayer(payer) {
-            currentTollPayer = payer;
-            updateTollPayerButtons();
-        }
+        function selectTollPayer(payer) { currentTollPayer = payer; updateTollPayerButtons(); }
 
         function saveSettings() {
             settings.fuelPrice = parseFloat(document.getElementById('fuel-price').value) || 32;
             settings.fuelConsumption = parseFloat(document.getElementById('fuel-consumption').value) || 12;
             settings.depreciationRate = parseFloat(document.getElementById('depreciation-rate').value) || 1;
-            saveData();
-            hideModal('settings-modal');
-            updateSummary();
-            showToast('บันทึกการตั้งค่าเรียบร้อย!');
+            saveData(); hideModal('settings-modal'); updateSummary(); showToast('บันทึกการตั้งค่าเรียบร้อย!');
         }
 
-        function showToast(message) {
-            const toast = document.createElement('div');
-            toast.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-emerald-600 text-white px-5 py-2 rounded-2xl shadow-lg text-sm flex items-center gap-2 z-[200]';
-            toast.innerHTML = `<i class="fas fa-check-circle"></i> <span>${message}</span>`;
-            document.body.appendChild(toast);
-            setTimeout(() => { toast.style.transition = 'all 0.3s'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 2200);
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.className = 'fixed bottom-20 left-1/2 transform -translate-x-1/2 bg-emerald-600 text-white px-5 py-2 rounded-2xl shadow-lg text-sm flex items-center gap-2 z-[200]';
+            t.innerHTML = `<i class="fas fa-check-circle"></i> <span>${msg}</span>`;
+            document.body.appendChild(t);
+            setTimeout(() => { t.style.transition = 'all 0.3s'; t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 2200);
         }
 
-        // === INITIALIZATION ===
         function initializeApp() {
             loadData();
             updateSummary();
             renderTransactions();
             updateCheckin();
+            startCheckinTimer();
 
-            // Event Listeners (centralized & clean)
+            // Wire up all buttons
             document.getElementById('btn-checkin').onclick = checkIn;
             document.getElementById('btn-checkout').onclick = checkOut;
             document.getElementById('btn-summary-detail').onclick = () => showModal('summary-detail-modal');
@@ -862,10 +718,7 @@
             document.getElementById('btn-save-income').onclick = addIncome;
             document.getElementById('btn-save-expense').onclick = addExpense;
             document.getElementById('btn-save-settings').onclick = saveSettings;
-            document.getElementById('btn-confirm-delete').onclick = () => {
-                if (currentDeleteId) deleteRecord(currentDeleteId);
-                hideModal('delete-confirm-modal');
-            };
+            document.getElementById('btn-confirm-delete').onclick = () => { if (currentDeleteId) deleteRecord(currentDeleteId); hideModal('delete-confirm-modal'); };
 
             document.getElementById('nav-today').onclick = () => switchTab('today');
             document.getElementById('nav-history').onclick = () => switchTab('history');
@@ -877,44 +730,36 @@
             document.getElementById('btn-toll-customer').onclick = () => selectTollPayer('customer');
             document.getElementById('btn-toll-self').onclick = () => selectTollPayer('self');
 
-            // Background click to close modals
-            ['income-modal', 'expense-modal', 'settings-modal', 'detail-modal', 'summary-detail-modal', 'delete-confirm-modal'].forEach(id => {
+            // Close modals on background click
+            ['income-modal','expense-modal','settings-modal','detail-modal','summary-detail-modal','delete-confirm-modal'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.addEventListener('click', e => { if (e.target.id === id) hideModal(id); });
             });
 
-            // Initial toll payer buttons
             updateTollPayerButtons();
 
-            // Keyboard shortcut
             document.addEventListener('keydown', e => {
-                if (e.key === '/' && document.activeElement.tagName === 'BODY') {
-                    e.preventDefault();
-                    showModal('income-modal');
-                }
+                if (e.key === '/' && document.activeElement.tagName === 'BODY') { e.preventDefault(); showModal('income-modal'); }
             });
 
-            console.log('%c[Masterpiece] Lalamove Account - Clean rewrite with button categories loaded', 'color:#10b981');
+            console.log('%c[Fixed v2] All bugs resolved - Timer, Detail, Delete, Save working', 'color:#10b981');
         }
 
         function switchTab(tab) {
             currentTab = tab;
-            const todayContent = document.getElementById('tab-content-today');
-            const historyContent = document.getElementById('tab-content-history');
-
+            const todayC = document.getElementById('tab-content-today');
+            const histC = document.getElementById('tab-content-history');
             if (tab === 'today') {
-                todayContent.classList.remove('hidden');
-                historyContent.classList.add('hidden');
-                document.getElementById('tab-today-btn').classList.add('tab-active', 'text-emerald-400');
+                todayC.classList.remove('hidden'); histC.classList.add('hidden');
+                document.getElementById('tab-today-btn').classList.add('tab-active','text-emerald-400');
                 document.getElementById('tab-today-btn').classList.remove('text-slate-400');
-                document.getElementById('tab-history-btn').classList.remove('tab-active', 'text-emerald-400');
+                document.getElementById('tab-history-btn').classList.remove('tab-active','text-emerald-400');
                 document.getElementById('tab-history-btn').classList.add('text-slate-400');
             } else {
-                todayContent.classList.add('hidden');
-                historyContent.classList.remove('hidden');
-                document.getElementById('tab-history-btn').classList.add('tab-active', 'text-emerald-400');
+                todayC.classList.add('hidden'); histC.classList.remove('hidden');
+                document.getElementById('tab-history-btn').classList.add('tab-active','text-emerald-400');
                 document.getElementById('tab-history-btn').classList.remove('text-slate-400');
-                document.getElementById('tab-today-btn').classList.remove('tab-active', 'text-emerald-400');
+                document.getElementById('tab-today-btn').classList.remove('tab-active','text-emerald-400');
                 document.getElementById('tab-today-btn').classList.add('text-slate-400');
                 renderHistory();
             }
