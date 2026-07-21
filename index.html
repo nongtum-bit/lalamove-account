@@ -19,6 +19,7 @@
         .category-btn { transition: all 0.1s ease; }
         .category-btn.active { background-color: #ef4444; color: white; border-color: #ef4444; }
         .tab-active { border-bottom: 3px solid #10b981; color: #10b981; font-weight: 600; }
+        .detail-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #334155; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
@@ -259,7 +260,6 @@
             </div>
         </div>
 
-        <!-- Expense with Button Selection -->
         <div id="expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -332,7 +332,8 @@
 
     <script>
         // ============================================
-        // FINAL FIXED VERSION
+        // CLEAN ARCHITECTURE VERSION
+        // Event Delegation for reliable row clicks
         // ============================================
 
         const EXPENSE_CATEGORIES = ['น้ำมัน', 'อาหาร', 'ค่าสึกหรอ', 'ทางด่วนลูกค้า', 'ทางด่วนเราเอง', 'ส่วนตัว'];
@@ -398,6 +399,7 @@
             window.currentSummary = calc;
         }
 
+        // === RENDER TRANSACTIONS WITH EVENT DELEGATION ===
         function renderTransactions() {
             const container = document.getElementById('transactions-list');
             const empty = document.getElementById('empty-state');
@@ -411,6 +413,7 @@
             list.forEach(record => {
                 const div = document.createElement('div');
                 div.className = 'transaction-item flex items-center justify-between p-4 bg-slate-800 rounded-2xl border border-slate-700 active:bg-slate-700';
+                div.dataset.id = record.id; // Important for delegation
 
                 const icon = record.type === 'income' ? '<i class="fas fa-arrow-up text-emerald-400"></i>' : '<i class="fas fa-arrow-down text-red-400"></i>';
                 const color = record.type === 'income' ? 'text-emerald-400' : 'text-red-400';
@@ -429,40 +432,65 @@
                             <div class="text-xs text-slate-500">${record.time}</div>
                         </div>
                         <div class="flex gap-1.5">
-                            <button class="action-btn bg-emerald-600 text-white" data-action="edit"><i class="fas fa-edit"></i></button>
-                            <button class="action-btn bg-red-600 text-white" data-action="delete"><i class="fas fa-trash"></i></button>
+                            <button class="action-btn bg-emerald-600 text-white edit-btn" data-id="${record.id}"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn bg-red-600 text-white delete-btn" data-id="${record.id}"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 `;
-
-                // Row click for detail (ignore action buttons)
-                div.addEventListener('click', function(e) {
-                    if (e.target.closest('[data-action]')) return;
-                    showDetailModal(record);
-                });
-
-                // Edit button
-                div.querySelector('[data-action="edit"]').onclick = function(e) {
-                    e.stopImmediatePropagation();
-                    editRecordDirect(record.id);
-                };
-
-                // Delete button
-                div.querySelector('[data-action="delete"]').onclick = function(e) {
-                    e.stopImmediatePropagation();
-                    currentDeleteId = record.id;
-
-                    if (record.amount >= 1500) {
-                        if (!confirm(`รายการนี้มีมูลค่า ${record.amount.toLocaleString()} บาท\nคุณแน่ใจหรือไม่ว่าต้องการลบ?`)) {
-                            currentDeleteId = null;
-                            return;
-                        }
-                    }
-                    showDeleteConfirm();
-                };
-
                 container.appendChild(div);
             });
+        }
+
+        // === EVENT DELEGATION - Single listener for all transaction actions ===
+        function setupTransactionListeners() {
+            const container = document.getElementById('transactions-list');
+
+            container.addEventListener('click', function(e) {
+                const target = e.target;
+                const row = target.closest('.transaction-item');
+                if (!row) return;
+
+                const id = parseInt(row.dataset.id);
+                if (!id) return;
+
+                // Clicked on Edit button
+                if (target.closest('.edit-btn')) {
+                    e.stopImmediatePropagation();
+                    editRecordDirect(id);
+                    return;
+                }
+
+                // Clicked on Delete button
+                if (target.closest('.delete-btn')) {
+                    e.stopImmediatePropagation();
+                    handleDeleteClick(id);
+                    return;
+                }
+
+                // Clicked on the row itself (not buttons) → Show Detail
+                showDetailModalById(id);
+            });
+        }
+
+        function handleDeleteClick(id) {
+            const record = records.find(r => r.id === id);
+            if (!record) return;
+
+            currentDeleteId = id;
+
+            if (record.amount >= 1500) {
+                if (!confirm(`รายการนี้มีมูลค่า ${record.amount.toLocaleString()} บาท\nคุณแน่ใจหรือไม่ว่าต้องการลบ?`)) {
+                    currentDeleteId = null;
+                    return;
+                }
+            }
+            showDeleteConfirm();
+        }
+
+        function showDetailModalById(id) {
+            const record = records.find(r => r.id === id);
+            if (!record) return;
+            showDetailModal(record);
         }
 
         function renderHistory() {
@@ -623,9 +651,7 @@
             saveData(); updateSummary(); renderTransactions(); showUndoToast();
         }
 
-        function showDeleteConfirm() {
-            showModal('delete-confirm-modal');
-        }
+        function showDeleteConfirm() { showModal('delete-confirm-modal'); }
 
         function showUndoToast() {
             const toast = document.createElement('div');
@@ -706,6 +732,9 @@
             updateCheckin();
             startCheckinTimer();
 
+            // Setup event delegation for transactions (THIS IS THE KEY FIX)
+            setupTransactionListeners();
+
             document.getElementById('btn-checkin').onclick = checkIn;
             document.getElementById('btn-checkout').onclick = checkOut;
             document.getElementById('btn-summary-detail').onclick = () => showModal('summary-detail-modal');
@@ -755,7 +784,7 @@
                 if (e.key === '/' && document.activeElement.tagName === 'BODY') { e.preventDefault(); showModal('income-modal'); }
             });
 
-            console.log('%c[FINAL FIXED] Detail click + High-value delete now working correctly', 'color:#10b981');
+            console.log('%c[CLEAN ARCHITECTURE] Event delegation active - Detail clicks now reliable', 'color:#10b981');
         }
 
         function switchTab(tab) {
