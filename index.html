@@ -259,7 +259,7 @@
             </div>
         </div>
 
-        <!-- Expense Modal with Button Selection -->
+        <!-- Expense with Button Selection -->
         <div id="expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
             <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
                 <div class="flex justify-between items-center mb-6">
@@ -332,7 +332,7 @@
 
     <script>
         // ============================================
-        // CLEAN REWRITE v2 - Fixed bugs
+        // FINAL FIXED VERSION
         // ============================================
 
         const EXPENSE_CATEGORIES = ['น้ำมัน', 'อาหาร', 'ค่าสึกหรอ', 'ทางด่วนลูกค้า', 'ทางด่วนเราเอง', 'ส่วนตัว'];
@@ -372,10 +372,7 @@
             todayRecords.forEach(r => {
                 if (r.type === 'income') {
                     totalIncome += (r.fare || 0) + (r.tip || 0);
-                    totalFare += r.fare || 0;
-                    totalTip += r.tip || 0;
-                    totalKm += r.km || 0;
-                    totalGp += r.gp || 0;
+                    totalFare += r.fare || 0; totalTip += r.tip || 0; totalKm += r.km || 0; totalGp += r.gp || 0;
                     if (r.tollPayer === 'self') totalExpense += r.toll || 0;
                 } else if (r.type === 'expense' && r.category !== 'ทางด่วนลูกค้า') {
                     totalExpense += r.amount;
@@ -414,6 +411,7 @@
             list.forEach(record => {
                 const div = document.createElement('div');
                 div.className = 'transaction-item flex items-center justify-between p-4 bg-slate-800 rounded-2xl border border-slate-700 active:bg-slate-700';
+
                 const icon = record.type === 'income' ? '<i class="fas fa-arrow-up text-emerald-400"></i>' : '<i class="fas fa-arrow-down text-red-400"></i>';
                 const color = record.type === 'income' ? 'text-emerald-400' : 'text-red-400';
 
@@ -431,12 +429,38 @@
                             <div class="text-xs text-slate-500">${record.time}</div>
                         </div>
                         <div class="flex gap-1.5">
-                            <button class="action-btn bg-emerald-600 text-white" onclick="event.stopImmediatePropagation(); editRecordDirect(${record.id})"><i class="fas fa-edit"></i></button>
-                            <button class="action-btn bg-red-600 text-white" onclick="event.stopImmediatePropagation(); currentDeleteId = ${record.id}; showDeleteConfirm();"><i class="fas fa-trash"></i></button>
+                            <button class="action-btn bg-emerald-600 text-white" data-action="edit"><i class="fas fa-edit"></i></button>
+                            <button class="action-btn bg-red-600 text-white" data-action="delete"><i class="fas fa-trash"></i></button>
                         </div>
                     </div>
                 `;
-                div.onclick = () => showDetailModal(record);
+
+                // Row click for detail (ignore action buttons)
+                div.addEventListener('click', function(e) {
+                    if (e.target.closest('[data-action]')) return;
+                    showDetailModal(record);
+                });
+
+                // Edit button
+                div.querySelector('[data-action="edit"]').onclick = function(e) {
+                    e.stopImmediatePropagation();
+                    editRecordDirect(record.id);
+                };
+
+                // Delete button
+                div.querySelector('[data-action="delete"]').onclick = function(e) {
+                    e.stopImmediatePropagation();
+                    currentDeleteId = record.id;
+
+                    if (record.amount >= 1500) {
+                        if (!confirm(`รายการนี้มีมูลค่า ${record.amount.toLocaleString()} บาท\nคุณแน่ใจหรือไม่ว่าต้องการลบ?`)) {
+                            currentDeleteId = null;
+                            return;
+                        }
+                    }
+                    showDeleteConfirm();
+                };
+
                 container.appendChild(div);
             });
         }
@@ -507,11 +531,7 @@
             const note = document.getElementById('income-note').value.trim();
             if (fare <= 0 && tip <= 0 && gp <= 0) { alert('กรุณาระบุรายได้'); return; }
 
-            records.push({
-                id: Date.now(), date: new Date().toISOString().split('T')[0],
-                time: new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}),
-                type: 'income', category: 'งานลาล่ามูฟ', fare, tip, gp, toll, tollPayer: currentTollPayer, amount: fare + tip, km, note
-            });
+            records.push({ id: Date.now(), date: new Date().toISOString().split('T')[0], time: new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}), type: 'income', category: 'งานลาล่ามูฟ', fare, tip, gp, toll, tollPayer: currentTollPayer, amount: fare + tip, km, note });
             saveData(); updateSummary(); renderTransactions(); hideModal('income-modal'); showToast('บันทึกงานเรียบร้อย!');
         }
 
@@ -522,11 +542,7 @@
             if (!category) { alert('กรุณาเลือกหมวดหมู่'); return; }
             if (amount <= 0) { alert('กรุณาระบุจำนวนเงิน'); return; }
 
-            records.push({
-                id: Date.now(), date: new Date().toISOString().split('T')[0],
-                time: new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}),
-                type: 'expense', category, amount, note
-            });
+            records.push({ id: Date.now(), date: new Date().toISOString().split('T')[0], time: new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}), type: 'expense', category, amount, note });
             saveData(); updateSummary(); renderTransactions(); hideModal('expense-modal'); showToast('บันทึกค่าใช้จ่ายเรียบร้อย!');
         }
 
@@ -544,8 +560,7 @@
                 updateTollPayerButtons();
                 document.getElementById('income-note').value = record.note || '';
                 showModal('income-modal');
-                const sb = document.getElementById('btn-save-income');
-                sb.innerText = 'บันทึกการแก้ไข'; sb.onclick = updateIncomeRecord;
+                const sb = document.getElementById('btn-save-income'); sb.innerText = 'บันทึกการแก้ไข'; sb.onclick = updateIncomeRecord;
             } else {
                 document.getElementById('expense-amount').value = record.amount;
                 document.getElementById('expense-note').value = record.note || '';
@@ -553,8 +568,7 @@
                 document.getElementById('expense-category').value = record.category;
                 setupExpenseCategoryButtons();
                 showModal('expense-modal');
-                const sb = document.getElementById('btn-save-expense');
-                sb.innerText = 'บันทึกการแก้ไข'; sb.onclick = updateExpenseRecord;
+                const sb = document.getElementById('btn-save-expense'); sb.innerText = 'บันทึกการแก้ไข'; sb.onclick = updateExpenseRecord;
             }
         }
 
@@ -598,21 +612,20 @@
             if (record.note) html += `<div class="detail-row"><span class="text-slate-400">หมายเหตุ</span><span class="font-medium">${record.note}</span></div>`;
             html += `<div class="detail-row"><span class="text-slate-400">เวลา</span><span class="font-medium">${record.time}</span></div>`;
             content.innerHTML = html;
-
             document.getElementById('detail-edit-btn').onclick = () => { hideModal('detail-modal'); editRecordDirect(record.id); };
             showModal('detail-modal');
         }
 
         function deleteRecord(id) {
             const rec = records.find(r => r.id === id); if (!rec) return;
-            if (rec.amount >= 1500 && !confirm(`รายการนี้มีมูลค่า ${rec.amount.toLocaleString()} บาท\nคุณแน่ใจหรือไม่ว่าต้องการลบ?`)) return;
-
             undoStack.push(rec); if (undoStack.length > 5) undoStack.shift();
             records = records.filter(r => r.id !== id);
             saveData(); updateSummary(); renderTransactions(); showUndoToast();
         }
 
-        function showDeleteConfirm() { showModal('delete-confirm-modal'); }
+        function showDeleteConfirm() {
+            showModal('delete-confirm-modal');
+        }
 
         function showUndoToast() {
             const toast = document.createElement('div');
@@ -643,9 +656,7 @@
 
         function startCheckinTimer() {
             if (checkinInterval) clearInterval(checkinInterval);
-            checkinInterval = setInterval(() => {
-                if (checkin.start && !checkin.end) updateCheckin();
-            }, 1000);
+            checkinInterval = setInterval(() => { if (checkin.start && !checkin.end) updateCheckin(); }, 1000);
         }
 
         function checkIn() {
@@ -695,7 +706,6 @@
             updateCheckin();
             startCheckinTimer();
 
-            // Wire up all buttons
             document.getElementById('btn-checkin').onclick = checkIn;
             document.getElementById('btn-checkout').onclick = checkOut;
             document.getElementById('btn-summary-detail').onclick = () => showModal('summary-detail-modal');
@@ -713,12 +723,16 @@
             document.getElementById('btn-cancel-income').onclick = () => hideModal('income-modal');
             document.getElementById('btn-cancel-expense').onclick = () => hideModal('expense-modal');
             document.getElementById('btn-cancel-settings').onclick = () => hideModal('settings-modal');
-            document.getElementById('btn-cancel-delete').onclick = () => hideModal('delete-confirm-modal');
+            document.getElementById('btn-cancel-delete').onclick = () => { hideModal('delete-confirm-modal'); currentDeleteId = null; };
 
             document.getElementById('btn-save-income').onclick = addIncome;
             document.getElementById('btn-save-expense').onclick = addExpense;
             document.getElementById('btn-save-settings').onclick = saveSettings;
-            document.getElementById('btn-confirm-delete').onclick = () => { if (currentDeleteId) deleteRecord(currentDeleteId); hideModal('delete-confirm-modal'); };
+            document.getElementById('btn-confirm-delete').onclick = () => {
+                if (currentDeleteId) deleteRecord(currentDeleteId);
+                hideModal('delete-confirm-modal');
+                currentDeleteId = null;
+            };
 
             document.getElementById('nav-today').onclick = () => switchTab('today');
             document.getElementById('nav-history').onclick = () => switchTab('history');
@@ -730,7 +744,6 @@
             document.getElementById('btn-toll-customer').onclick = () => selectTollPayer('customer');
             document.getElementById('btn-toll-self').onclick = () => selectTollPayer('self');
 
-            // Close modals on background click
             ['income-modal','expense-modal','settings-modal','detail-modal','summary-detail-modal','delete-confirm-modal'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.addEventListener('click', e => { if (e.target.id === id) hideModal(id); });
@@ -742,7 +755,7 @@
                 if (e.key === '/' && document.activeElement.tagName === 'BODY') { e.preventDefault(); showModal('income-modal'); }
             });
 
-            console.log('%c[Fixed v2] All bugs resolved - Timer, Detail, Delete, Save working', 'color:#10b981');
+            console.log('%c[FINAL FIXED] Detail click + High-value delete now working correctly', 'color:#10b981');
         }
 
         function switchTab(tab) {
