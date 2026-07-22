@@ -27,7 +27,7 @@
                 </div>
                 <div class="bg-emerald-900 text-emerald-400 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                     <i class="fas fa-circle text-xs"></i>
-                    <span>ออนไลน์</span>
+                    <span>อนไลน์</span>
                 </div>
             </div>
         </div>
@@ -100,7 +100,12 @@
             <div>
                 <div class="flex items-center justify-between mb-2 px-1">
                     <h3 class="text-sm font-medium text-slate-400">รายการวันนี้</h3>
-                    <span class="text-xs text-slate-500" id="transaction-count">0 รายการ</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs text-slate-500" id="transaction-count">0 รายการ</span>
+                        <button id="btn-export-csv" class="text-xs px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg flex items-center gap-1">
+                            <i class="fas fa-download text-xs"></i> <span>Export CSV</span>
+                        </button>
+                    </div>
                 </div>
                 <div id="transactions-list" class="space-y-2.5"></div>
             </div>
@@ -109,8 +114,8 @@
         <!-- PERSONAL FINANCE MODULE -->
         <div id="module-personal-finance" class="module-section px-4 pt-8 pb-20 text-center">
             <i class="fas fa-wallet text-6xl text-slate-700 mb-4"></i>
-            <h2 class="text-xl font-semibold mb-2">รายัป-รายจ่ายส่วนตัว</h2>
-            <p class="text-slate-400 text-sm">โมดูลนี้ยังอยู่ในการพัฒนา<br>จะเพิ่มเร็ือๆ นี้</p>
+            <h2 class="text-xl font-semibold mb-2">รายรับ-รายจ่ายส่วนตัว</h2>
+            <p class="text-slate-400 text-sm">โมดูลนี้ยังอยู่ในการพัฒนา<br>จะเพิ่มเร็ว ๆ นี้</p>
         </div>
 
         <!-- Bottom Navigation -->
@@ -155,7 +160,7 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm text-slate-400 mb-1">ค่าบริการ GP</label>
+                    <label class="block text-sm text-slate-400 mb-1">ค่าบริการ GP (หัก)</label>
                     <input type="number" id="income-gp" placeholder="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg">
                 </div>
                 <div>
@@ -210,277 +215,5 @@
     <script src="js/core/app.js"></script>
     <script src="js/modules/lalamove/lalamove.js"></script>
     <script src="js/modules/lalamove/lalamove-ui.js"></script>
-
-    <script>
-        let records = [];
-        let checkin = { start: null, end: null };
-        let selectedExpenseCategory = '';
-
-        function loadData() {
-            const saved = localStorage.getItem('lalamove_records');
-            if (saved) records = JSON.parse(saved);
-            const c = localStorage.getItem('lalamove_checkin');
-            if (c) checkin = JSON.parse(c);
-        }
-
-        function saveData() {
-            localStorage.setItem('lalamove_records', JSON.stringify(records));
-            localStorage.setItem('lalamove_checkin', JSON.stringify(checkin));
-        }
-
-        function updateSummary() {
-            const today = new Date().toISOString().split('T')[0];
-            const todayRecords = records.filter(r => r.date === today);
-            
-            let totalIncome = 0, totalExpense = 0;
-            todayRecords.forEach(r => {
-                if (r.type === 'income') totalIncome += r.amount;
-                else totalExpense += r.amount;
-            });
-
-            document.getElementById('total-income').textContent = totalIncome.toLocaleString();
-            document.getElementById('total-expense').textContent = totalExpense.toLocaleString();
-            
-            const net = totalIncome - totalExpense;
-            const netEl = document.getElementById('real-net');
-            netEl.textContent = net.toLocaleString();
-            netEl.style.color = net >= 0 ? '#10b981' : '#f87171';
-            
-            document.getElementById('transaction-count').textContent = todayRecords.length + ' รายการ';
-        }
-
-        function renderTransactions() {
-            const container = document.getElementById('transactions-list');
-            const today = new Date().toISOString().split('T')[0];
-            const list = records.filter(r => r.date === today).sort((a,b) => b.id - a.id);
-
-            container.innerHTML = '';
-
-            if (list.length === 0) {
-                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">ยังไม่มีรายการวันนี้</div>`;
-                return;
-            }
-
-            list.forEach(record => {
-                const div = document.createElement('div');
-                div.className = 'transaction-item flex items-center justify-between p-4 bg-slate-800 rounded-2xl border border-slate-700';
-                const icon = record.type === 'income' ? '<i class="fas fa-arrow-up text-emerald-400"></i>' : '<i class="fas fa-arrow-down text-red-400"></i>';
-                const color = record.type === 'income' ? 'text-emerald-400' : 'text-red-400';
-
-                div.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <div class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-700">${icon}</div>
-                        <div>
-                            <div class="font-medium">งานลาล่ามูฟ</div>
-                            <div class="text-xs text-slate-400">รายได้ ${record.fare || 0} | ทิป ${record.tip || 0}</div>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <div class="font-semibold ${color}">${record.type === 'income' ? '+' : '-'}${record.amount.toLocaleString()}</div>
-                        <div class="text-xs text-slate-500">เวลา ${record.time}</div>
-                    </div>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        function updateCheckin() {
-            const statusEl = document.getElementById('checkin-status');
-            const durationEl = document.getElementById('checkin-duration');
-
-            if (!checkin.start) {
-                statusEl.innerHTML = 'ยังไม่ได้เช็คอิน';
-                durationEl.classList.add('hidden');
-                return;
-            }
-
-            const startTime = new Date(checkin.start).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
-            statusEl.innerHTML = `เริ่มงานเมื่อ <span class="font-semibold text-emerald-400">${startTime}</span>`;
-            durationEl.classList.remove('hidden');
-            durationEl.innerHTML = 'กำลังทำงาน...';
-        }
-
-        function checkIn() {
-            checkin.start = new Date().toISOString();
-            checkin.end = null;
-            saveData();
-            updateCheckin();
-        }
-
-        function checkOut() {
-            if (!checkin.start) return;
-            checkin.end = new Date().toISOString();
-            saveData();
-            updateCheckin();
-        }
-
-        function showIncomeModal() {
-            document.getElementById('income-modal').classList.remove('hidden');
-            document.getElementById('income-modal').classList.add('flex');
-        }
-
-        function hideIncomeModal() {
-            document.getElementById('income-modal').classList.remove('flex');
-            document.getElementById('income-modal').classList.add('hidden');
-        }
-
-        function showExpenseModal() {
-            selectedExpenseCategory = '';
-            document.getElementById('expense-category').value = '';
-            document.querySelectorAll('.expense-cat-btn').forEach(btn => btn.classList.remove('active', 'bg-emerald-600', 'border-emerald-500'));
-            document.getElementById('expense-modal').classList.remove('hidden');
-            document.getElementById('expense-modal').classList.add('flex');
-        }
-
-        function hideExpenseModal() {
-            document.getElementById('expense-modal').classList.remove('flex');
-            document.getElementById('expense-modal').classList.add('hidden');
-        }
-
-        function saveIncome() {
-            const km = parseFloat(document.getElementById('income-km').value) || 0;
-            const fare = parseFloat(document.getElementById('income-fare').value) || 0;
-            const tip = parseFloat(document.getElementById('income-tip').value) || 0;
-            const gp = parseFloat(document.getElementById('income-gp').value) || 0;
-            const note = document.getElementById('income-note').value.trim();
-
-            if (fare <= 0 && tip <= 0) {
-                alert('กรุณาระบุรายได้');
-                return;
-            }
-
-            records.push({
-                id: Date.now(),
-                date: new Date().toISOString().split('T')[0],
-                time: new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}),
-                type: 'income',
-                category: 'งานลาล่ามูฟ',
-                fare: fare,
-                tip: tip,
-                gp: gp,
-                amount: fare + tip,
-                km: km,
-                note: note
-            });
-
-            saveData();
-            updateSummary();
-            renderTransactions();
-            hideIncomeModal();
-            
-            // Clear form
-            document.getElementById('income-fare').value = '';
-            document.getElementById('income-tip').value = '';
-            document.getElementById('income-gp').value = '';
-        }
-
-        function saveExpense() {
-            const category = document.getElementById('expense-category').value || selectedExpenseCategory;
-            const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
-            const note = document.getElementById('expense-note').value.trim();
-
-            if (!category) {
-                alert('กรุณาเลือกหมวดหมู่');
-                return;
-            }
-            if (amount <= 0) {
-                alert('กรุณาระบุจำนวนเงิน');
-                return;
-            }
-
-            records.push({
-                id: Date.now(),
-                date: new Date().toISOString().split('T')[0],
-                time: new Date().toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'}),
-                type: 'expense',
-                category: category,
-                amount: amount,
-                note: note
-            });
-
-            saveData();
-            updateSummary();
-            renderTransactions();
-            hideExpenseModal();
-            
-            // Clear form
-            document.getElementById('expense-amount').value = '';
-            document.getElementById('expense-note').value = '';
-        }
-
-        function initializeExpenseCategoryButtons() {
-            document.querySelectorAll('.expense-cat-btn').forEach(btn => {
-                btn.onclick = () => {
-                    selectedExpenseCategory = btn.dataset.category;
-                    document.getElementById('expense-category').value = selectedExpenseCategory;
-                    
-                    document.querySelectorAll('.expense-cat-btn').forEach(b => b.classList.remove('active', 'bg-emerald-600', 'border-emerald-500'));
-                    btn.classList.add('active', 'bg-emerald-600', 'border-emerald-500');
-                };
-            });
-        }
-
-        function initializeApp() {
-            loadData();
-            updateSummary();
-            renderTransactions();
-            updateCheckin();
-            initializeExpenseCategoryButtons();
-
-            // Check-in
-            document.getElementById('btn-checkin').onclick = checkIn;
-            document.getElementById('btn-checkout').onclick = checkOut;
-
-            // Income Modal
-            document.getElementById('btn-add-income').onclick = showIncomeModal;
-            document.getElementById('btn-close-income').onclick = hideIncomeModal;
-            document.getElementById('btn-cancel-income').onclick = hideIncomeModal;
-            document.getElementById('btn-save-income').onclick = saveIncome;
-
-            // Expense Modal
-            document.getElementById('btn-add-expense').onclick = showExpenseModal;
-            document.getElementById('btn-close-expense').onclick = hideExpenseModal;
-            document.getElementById('btn-cancel-expense').onclick = hideExpenseModal;
-            document.getElementById('btn-save-expense').onclick = saveExpense;
-
-            // Close modal when clicking outside
-            document.getElementById('income-modal').onclick = (e) => {
-                if (e.target.id === 'income-modal') hideIncomeModal();
-            };
-            document.getElementById('expense-modal').onclick = (e) => {
-                if (e.target.id === 'expense-modal') hideExpenseModal();
-            };
-
-            // Router
-            if (window.Router) {
-                window.Router.register('lalamove', {
-                    show: () => {
-                        document.getElementById('module-lalamove').classList.add('active');
-                        document.getElementById('module-personal-finance').classList.remove('active');
-                    },
-                    hide: () => {
-                        document.getElementById('module-lalamove').classList.remove('active');
-                    }
-                });
-
-                window.Router.register('personal-finance', {
-                    show: () => {
-                        document.getElementById('module-lalamove').classList.remove('active');
-                        document.getElementById('module-personal-finance').classList.add('active');
-                    },
-                    hide: () => {
-                        document.getElementById('module-personal-finance').classList.remove('active');
-                    }
-                });
-            }
-
-            document.getElementById('nav-lalamove').onclick = () => window.Router && window.Router.navigate('lalamove');
-            document.getElementById('nav-personal-finance').onclick = () => window.Router && window.Router.navigate('personal-finance');
-
-            console.log('%c[LalaDaily] App ready with working modals', 'color:#10b981');
-        }
-
-        window.onload = initializeApp;
-    </script>
 </body>
 </html>

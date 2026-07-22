@@ -3,48 +3,34 @@
  * 
  * จุดเริ่มต้นของแอพพลิเคชัน
  * รับผิดชอบ:
- * - โหลดข้อมูลพื้นฐาน
- * - ลงทะเบียนโมดูล
- * - เริ่มต้น Router
- * - กำหนดโมดูลเริ่มต้น
+ * - โหลดโมดูล Lalamove
+ * - เรียกใช้ LalamoveUI
  */
 
 const App = (() => {
-    let initialized = false;
-
     return {
-        /**
-         * เริ่มต้นแอพพลิเคชัน
-         */
         init() {
-            if (initialized) return;
-            initialized = true;
+            console.log('%c[LalaDaily] Initializing modular application...', 'color:#10b981');
 
-            console.log('%c[LalaFinance] Initializing application...', 'color:#10b981');
+            if (window.LalamoveModule) LalamoveModule.init();
+            if (window.LalamoveUI) LalamoveUI.init();
 
-            // โหลดข้อมูลพื้นฐาน (ถ้ามี)
-            if (window.Storage) {
-                // สามารถโหลดการตั้งค่าทั่วไปได้ที่นี่
+            // Router setup
+            if (window.Router) {
+                Router.register('lalamove', {
+                    show: () => document.getElementById('module-lalamove').classList.add('active'),
+                    hide: () => document.getElementById('module-lalamove').classList.remove('active')
+                });
+                Router.register('personal-finance', {
+                    show: () => document.getElementById('module-personal-finance').classList.add('active'),
+                    hide: () => document.getElementById('module-personal-finance').classList.remove('active')
+                });
             }
 
-            // TODO: ลงทะเบียนโมดูล (จะเพิ่มในขั้นตอนต่อไป)
-            // Router.register('lalamove', LalamoveModule);
-            // Router.register('personal-finance', PersonalFinanceModule);
-
-            // TODO: กำหนดโมดูลเริ่มต้น
-            // Router.navigate('lalamove');
-
-            console.log('%c[LalaFinance] Application initialized successfully.', 'color:#10b981');
+            console.log('%c[LalaDaily] Application initialized successfully (Modular v2).', 'color:#10b981');
         }
     };
 })();
 
-// เริ่มต้นแอพเมื่อโหลดหน้าเสร็จ
-window.addEventListener('load', () => {
-    if (window.App) {
-        window.App.init();
-    }
-});
-
-// Export
 window.App = App;
+window.addEventListener('load', () => App.init());

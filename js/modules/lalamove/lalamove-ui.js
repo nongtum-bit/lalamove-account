@@ -1,28 +1,207 @@
-/**
- * Lalamove UI Module
- * 
- * จัดการส่วนแสดงผลและ Event Handling ของโมดูล Lalamove
- */
-
 const LalamoveUI = (() => {
-    function initUI() {
-        // Setup buttons
-        const checkinBtn = document.getElementById('btn-checkin');
-        const checkoutBtn = document.getElementById('btn-checkout');
-        const addIncomeBtn = document.getElementById('btn-add-income');
-        const addExpenseBtn = document.getElementById('btn-add-expense');
+    let selectedExpenseCategory = '';
 
-        if (checkinBtn) checkinBtn.onclick = () => LalamoveModule.checkIn && LalamoveModule.checkIn();
-        if (checkoutBtn) checkoutBtn.onclick = () => LalamoveModule.checkOut && LalamoveModule.checkOut();
-        if (addIncomeBtn) addIncomeBtn.onclick = () => alert('เปิด Modal บันทึกงาน (กำลังพัฒนา)');
-        if (addExpenseBtn) addExpenseBtn.onclick = () => alert('เปิด Modal ค่าใช้จ่าย (กำลังพัฒนา)');
-
-        console.log('%c[LalamoveUI] UI initialized', 'color:#10b981');
+    function updateSummary() {
+        const summary = LalamoveModule.calculateTodaySummary();
+        
+        document.getElementById('total-income').textContent = summary.totalIncome.toLocaleString();
+        document.getElementById('total-expense').textContent = summary.totalExpense.toLocaleString();
+        
+        const netEl = document.getElementById('real-net');
+        netEl.textContent = summary.net.toLocaleString();
+        netEl.style.color = summary.net >= 0 ? '#10b981' : '#f87171';
+        
+        document.getElementById('transaction-count').textContent = summary.count + ' รายการ';
     }
 
-    return {
-        init: initUI
-    };
+    function renderTransactions() {
+        const container = document.getElementById('transactions-list');
+        const list = LalamoveModule.getTodayRecords().sort((a, b) => b.id - a.id);
+
+        container.innerHTML = '';
+
+        if (list.length === 0) {
+            container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">ยังไม่มีรายการวันนี้</div>`;
+            return;
+        }
+
+        list.forEach(record => {
+            const div = document.createElement('div');
+            div.className = 'transaction-item flex items-center justify-between p-4 bg-slate-800 rounded-2xl border border-slate-700';
+            
+            const icon = record.type === 'income' 
+                ? '<i class="fas fa-arrow-up text-emerald-400"></i>' 
+                : '<i class="fas fa-arrow-down text-red-400"></i>';
+            const color = record.type === 'income' ? 'text-emerald-400' : 'text-red-400';
+
+            let detail = '';
+            if (record.type === 'income') {
+                detail = `รายได้ ${record.fare} | ทิป ${record.tip} | GP ${record.gp}`;
+            } else {
+                detail = record.category;
+            }
+
+            div.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-700">${icon}</div>
+                    <div>
+                        <div class="font-medium">${record.type === 'income' ? 'งานลาล่ามูฟ' : record.category}</div>
+                        <div class="text-xs text-slate-400">${detail}</div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="font-semibold ${color}">${record.type === 'income' ? '+' : '-'}${record.amount.toLocaleString()}</div>
+                    <div class="text-xs text-slate-500">เวลา ${record.time}</div>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    function updateCheckinUI() {
+        const statusEl = document.getElementById('checkin-status');
+        const durationEl = document.getElementById('checkin-duration');
+        const checkinData = LalamoveModule.getCheckinStatus();
+
+        if (!checkinData.start) {
+            statusEl.innerHTML = 'ยังไม่ได้เช็คอิน';
+            durationEl.classList.add('hidden');
+            return;
+        }
+
+        const startTime = new Date(checkinData.start).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        statusEl.innerHTML = `เริ่มงานเมื่อ <span class="font-semibold text-emerald-400">${startTime}</span>`;
+
+        if (!checkinData.end) {
+            durationEl.classList.remove('hidden');
+        } else {
+            durationEl.classList.add('hidden');
+        }
+    }
+
+    function updateLiveDuration() {
+        const durationEl = document.getElementById('checkin-duration');
+        const checkinData = LalamoveModule.getCheckinStatus();
+
+        if (!checkinData.start || checkinData.end) {
+            durationEl.classList.add('hidden');
+            return;
+        }
+
+        const start = new Date(checkinData.start);
+        const now = new Date();
+        const diffMs = now - start;
+        const hours = Math.floor(diffMs / 3600000);
+        const minutes = Math.floor((diffMs % 3600000) / 60000);
+        const seconds = Math.floor((diffMs % 60000) / 1000);
+
+        durationEl.innerHTML = `ทำงานมาแล้ว <span class="font-mono">${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}</span>`;
+        durationEl.classList.remove('hidden');
+    }
+
+    function initEventListeners() {
+        // Check-in / Check-out
+        document.getElementById('btn-checkin').onclick = () => {
+            if (LalamoveModule.checkIn()) updateCheckinUI();
+        };
+        document.getElementById('btn-checkout').onclick = () => {
+            if (LalamoveModule.checkOut()) updateCheckinUI();
+        };
+
+        // Income Modal
+        const incomeModal = document.getElementById('income-modal');
+        document.getElementById('btn-add-income').onclick = () => {
+            incomeModal.classList.remove('hidden');
+            incomeModal.classList.add('flex');
+        };
+        document.getElementById('btn-close-income').onclick = () => incomeModal.classList.add('hidden');
+        document.getElementById('btn-cancel-income').onclick = () => incomeModal.classList.add('hidden');
+        
+        document.getElementById('btn-save-income').onclick = () => {
+            const data = {
+                km: parseFloat(document.getElementById('income-km').value) || 0,
+                fare: parseFloat(document.getElementById('income-fare').value) || 0,
+                tip: parseFloat(document.getElementById('income-tip').value) || 0,
+                gp: parseFloat(document.getElementById('income-gp').value) || 0,
+                note: document.getElementById('income-note').value.trim()
+            };
+            if (data.fare <= 0 && data.tip <= 0) {
+                alert('กรุณาระบุรายได้');
+                return;
+            }
+            LalamoveModule.addIncome(data);
+            incomeModal.classList.add('hidden');
+            document.getElementById('income-fare').value = '';
+            document.getElementById('income-tip').value = '';
+            document.getElementById('income-gp').value = '';
+        };
+
+        // Expense Modal
+        const expenseModal = document.getElementById('expense-modal');
+        document.getElementById('btn-add-expense').onclick = () => {
+            selectedExpenseCategory = '';
+            document.getElementById('expense-category').value = '';
+            document.querySelectorAll('.expense-cat-btn').forEach(b => b.classList.remove('active', 'bg-emerald-600', 'border-emerald-500'));
+            expenseModal.classList.remove('hidden');
+            expenseModal.classList.add('flex');
+        };
+        document.getElementById('btn-close-expense').onclick = () => expenseModal.classList.add('hidden');
+        document.getElementById('btn-cancel-expense').onclick = () => expenseModal.classList.add('hidden');
+
+        document.querySelectorAll('.expense-cat-btn').forEach(btn => {
+            btn.onclick = () => {
+                selectedExpenseCategory = btn.dataset.category;
+                document.getElementById('expense-category').value = selectedExpenseCategory;
+                document.querySelectorAll('.expense-cat-btn').forEach(b => b.classList.remove('active', 'bg-emerald-600', 'border-emerald-500'));
+                btn.classList.add('active', 'bg-emerald-600', 'border-emerald-500');
+            };
+        });
+
+        document.getElementById('btn-save-expense').onclick = () => {
+            const category = document.getElementById('expense-category').value || selectedExpenseCategory;
+            const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
+            const note = document.getElementById('expense-note').value.trim();
+
+            if (!category) { alert('กรุณาเลือกหมวดหมู่'); return; }
+            if (amount <= 0) { alert('กรุณาระบุจำนวนเงิน'); return; }
+
+            LalamoveModule.addExpense({ category, amount, note });
+            expenseModal.classList.add('hidden');
+            document.getElementById('expense-amount').value = '';
+            document.getElementById('expense-note').value = '';
+        };
+
+        // Export CSV
+        document.getElementById('btn-export-csv').onclick = () => {
+            LalamoveModule.exportTodayCSV();
+        };
+
+        // Event Bus
+        EventBus.on('records:updated', () => {
+            updateSummary();
+            renderTransactions();
+        });
+        EventBus.on('checkin:updated', updateCheckinUI);
+        EventBus.on('checkin:tick', updateLiveDuration);
+
+        // Close modals
+        document.getElementById('income-modal').onclick = (e) => { if (e.target.id === 'income-modal') e.target.classList.add('hidden'); };
+        document.getElementById('expense-modal').onclick = (e) => { if (e.target.id === 'expense-modal') e.target.classList.add('hidden'); };
+    }
+
+    function init() {
+        updateSummary();
+        renderTransactions();
+        updateCheckinUI();
+        initEventListeners();
+
+        const checkinData = LalamoveModule.getCheckinStatus();
+        if (checkinData.start && !checkinData.end) {
+            updateLiveDuration();
+        }
+    }
+
+    return { init };
 })();
 
 window.LalamoveUI = LalamoveUI;
