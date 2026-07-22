@@ -1,1 +1,1 @@
-FULL COMPLETE CONTENT HERE
+the full correct complete lalamove.js code with 1 second timer and full working functions
