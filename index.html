@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>LalaFinance</title>
+    <title>LalaDaily</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <style>
@@ -20,7 +20,7 @@
         <div class="bg-slate-900 border-b border-slate-700 px-4 py-4 sticky top-0 z-50">
             <div class="flex items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-emerald-400">LalaFinance</h1>
+                    <h1 class="text-2xl font-bold text-emerald-400">LalaDaily</h1>
                     <p class="text-sm text-slate-400">Lalamove + Personal Finance</p>
                 </div>
                 <div class="bg-emerald-900 text-emerald-400 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
@@ -52,17 +52,17 @@
                             <i class="fas fa-play text-xs"></i> <span>เช็คอิน</span>
                         </button>
                         <button id="btn-checkout" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-semibold flex items-center gap-1.5">
-                            <i class="fas fa-stop text-xs"></i> <span>เช็คเอาท์</span>
+                            <i class="fas fa-stop text-xs"></i> <span>เช็คเฮาท์</span>
                         </button>
                     </div>
                 </div>
                 <div id="checkin-duration" class="text-xs text-emerald-400 mt-2 hidden font-mono"></div>
             </div>
 
-            <!-- Summary -->
+            <!-- Summary - ภาพรวมวันนี้ -->
             <div class="mb-4">
                 <div class="flex items-center justify-between mb-2 px-1">
-                    <h2 class="text-lg font-semibold">สรุปวันนี้</h2>
+                    <h2 class="text-lg font-semibold">ภาพรวมวันนี้</h2>
                 </div>
                 <div class="grid grid-cols-2 gap-3 mb-3">
                     <div class="bg-slate-900 border border-emerald-700 p-4 rounded-2xl">
@@ -107,7 +107,7 @@
         <!-- PERSONAL FINANCE MODULE -->
         <div id="module-personal-finance" class="module-section px-4 pt-8 pb-20 text-center">
             <i class="fas fa-wallet text-6xl text-slate-700 mb-4"></i>
-            <h2 class="text-xl font-semibold mb-2">รายรับ-รายจ่ายส่วนตัว</h2>
+            <h2 class="text-xl font-semibold mb-2">รายรัป-รายจ่ายส่วนตัว</h2>
             <p class="text-slate-400 text-sm">โมดูลนี้ยังอยู่ในการพัฒนา<br>จะเพิ่มเร็วๆ นี้</p>
         </div>
 
@@ -139,13 +139,123 @@
     <script src="js/modules/lalamove/lalamove-ui.js"></script>
 
     <script>
-        function initializeApp() {
-            // Initialize Lalamove Module
-            if (window.LalamoveModule) {
-                window.LalamoveModule.init();
+        // Temporary Lalamove logic (will be moved to module later)
+        let records = [];
+        let checkin = { start: null, end: null };
+
+        function loadData() {
+            const saved = localStorage.getItem('lalamove_records');
+            if (saved) records = JSON.parse(saved);
+            const c = localStorage.getItem('lalamove_checkin');
+            if (c) checkin = JSON.parse(c);
+        }
+
+        function saveData() {
+            localStorage.setItem('lalamove_records', JSON.stringify(records));
+            localStorage.setItem('lalamove_checkin', JSON.stringify(checkin));
+        }
+
+        function updateSummary() {
+            const today = new Date().toISOString().split('T')[0];
+            const todayRecords = records.filter(r => r.date === today);
+            
+            let totalIncome = 0, totalExpense = 0;
+            todayRecords.forEach(r => {
+                if (r.type === 'income') totalIncome += r.amount;
+                else totalExpense += r.amount;
+            });
+
+            document.getElementById('total-income').textContent = totalIncome.toLocaleString();
+            document.getElementById('total-expense').textContent = totalExpense.toLocaleString();
+            
+            const net = totalIncome - totalExpense;
+            const netEl = document.getElementById('real-net');
+            netEl.textContent = net.toLocaleString();
+            netEl.style.color = net >= 0 ? '#10b981' : '#f87171';
+            
+            document.getElementById('transaction-count').textContent = todayRecords.length + ' รายการ';
+        }
+
+        function renderTransactions() {
+            const container = document.getElementById('transactions-list');
+            const today = new Date().toISOString().split('T')[0];
+            const list = records.filter(r => r.date === today).sort((a,b) => b.id - a.id);
+
+            container.innerHTML = '';
+
+            if (list.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-sm">ยังไม่มีรายการวันนี้</div>`;
+                return;
             }
 
-            // Setup Router
+            list.forEach(record => {
+                const div = document.createElement('div');
+                div.className = 'transaction-item flex items-center justify-between p-4 bg-slate-800 rounded-2xl border border-slate-700';
+                const icon = record.type === 'income' ? '<i class="fas fa-arrow-up text-emerald-400"></i>' : '<i class="fas fa-arrow-down text-red-400"></i>';
+                const color = record.type === 'income' ? 'text-emerald-400' : 'text-red-400';
+
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <div class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-700">${icon}</div>
+                        <div>
+                            <div class="font-medium">${record.category || 'งานลาล่ามูฟ'}</div>
+                            <div class="text-xs text-slate-400">${record.note || ''}</div>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-semibold ${color}">${record.type === 'income' ? '+' : '-'}${record.amount.toLocaleString()}</div>
+                        <div class="text-xs text-slate-500">${record.time}</div>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function updateCheckin() {
+            const statusEl = document.getElementById('checkin-status');
+            const durationEl = document.getElementById('checkin-duration');
+
+            if (!checkin.start) {
+                statusEl.innerHTML = 'ยังไม่ได้เช็คอิน';
+                durationEl.classList.add('hidden');
+                return;
+            }
+
+            const startTime = new Date(checkin.start).toLocaleTimeString('th-TH', {hour:'2-digit', minute:'2-digit'});
+            statusEl.innerHTML = `เริ่มงานเมื่อ <span class="font-semibold text-emerald-400">${startTime}</span>`;
+            durationEl.classList.remove('hidden');
+            durationEl.innerHTML = 'กำลังทำงาน...';
+        }
+
+        function checkIn() {
+            checkin.start = new Date().toISOString();
+            checkin.end = null;
+            saveData();
+            updateCheckin();
+        }
+
+        function checkOut() {
+            if (!checkin.start) return;
+            checkin.end = new Date().toISOString();
+            saveData();
+            updateCheckin();
+        }
+
+        function initializeLalamove() {
+            loadData();
+            updateSummary();
+            renderTransactions();
+            updateCheckin();
+
+            document.getElementById('btn-checkin').onclick = checkIn;
+            document.getElementById('btn-checkout').onclick = checkOut;
+            document.getElementById('btn-add-income').onclick = () => alert('กำลังพัฒนา Modal บันทึกงาน...');
+            document.getElementById('btn-add-expense').onclick = () => alert('กำลังพัฒนา Modal ค่าใช้จ่าย...');
+        }
+
+        function initializeApp() {
+            initializeLalamove();
+            
             if (window.Router) {
                 window.Router.register('lalamove', {
                     show: () => {
@@ -168,11 +278,10 @@
                 });
             }
 
-            // Navigation
             document.getElementById('nav-lalamove').onclick = () => window.Router && window.Router.navigate('lalamove');
             document.getElementById('nav-personal-finance').onclick = () => window.Router && window.Router.navigate('personal-finance');
 
-            console.log('%c[LalaFinance] App initialized with modular structure', 'color:#10b981');
+            console.log('%c[LalaDaily] App ready', 'color:#10b981');
         }
 
         window.onload = initializeApp;
