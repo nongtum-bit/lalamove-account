@@ -4,13 +4,23 @@ const LalamoveModule = (() => {
     let timerInterval = null;
 
     function loadData() {
-        records = Storage.get('records', []);
-        checkin = Storage.get('checkin', { start: null, end: null });
+        try {
+            records = Storage.get('records', []);
+            checkin = Storage.get('checkin', { start: null, end: null });
+        } catch (e) {
+            console.error('[LalamoveModule] loadData error:', e);
+            records = [];
+            checkin = { start: null, end: null };
+        }
     }
 
     function saveData() {
-        Storage.set('records', records);
-        Storage.set('checkin', checkin);
+        try {
+            Storage.set('records', records);
+            Storage.set('checkin', checkin);
+        } catch (e) {
+            console.error('[LalamoveModule] saveData error:', e);
+        }
     }
 
     function getTodayRecords() {
@@ -36,64 +46,89 @@ const LalamoveModule = (() => {
     }
 
     function addIncome(data) {
-        const record = {
-            id: Date.now(),
-            date: new Date().toISOString().split('T')[0],
-            time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-            type: 'income',
-            category: 'งานลาล่ามูฟ',
-            fare: data.fare || 0,
-            tip: data.tip || 0,
-            gp: data.gp || 0,
-            amount: (data.fare || 0) + (data.tip || 0) - (data.gp || 0),
-            km: data.km || 0,
-            note: data.note || ''
-        };
-        records.push(record);
-        saveData();
-        EventBus.emit('records:updated');
-        return record;
+        try {
+            const record = {
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+                type: 'income',
+                category: 'งานลาล่ามูฟ',
+                fare: data.fare || 0,
+                tip: data.tip || 0,
+                gp: data.gp || 0,
+                amount: (data.fare || 0) + (data.tip || 0) - (data.gp || 0),
+                km: data.km || 0,
+                note: data.note || ''
+            };
+            records.push(record);
+            saveData();
+            if (window.EventBus) EventBus.emit('records:updated');
+            return record;
+        } catch (e) {
+            console.error('[LalamoveModule] addIncome error:', e);
+            return null;
+        }
     }
 
     function addExpense(data) {
-        const record = {
-            id: Date.now(),
-            date: new Date().toISOString().split('T')[0],
-            time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
-            type: 'expense',
-            category: data.category,
-            amount: data.amount,
-            note: data.note || ''
-        };
-        records.push(record);
-        saveData();
-        EventBus.emit('records:updated');
-        return record;
+        try {
+            const record = {
+                id: Date.now(),
+                date: new Date().toISOString().split('T')[0],
+                time: new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' }),
+                type: 'expense',
+                category: data.category,
+                amount: data.amount,
+                note: data.note || ''
+            };
+            records.push(record);
+            saveData();
+            if (window.EventBus) EventBus.emit('records:updated');
+            return record;
+        } catch (e) {
+            console.error('[LalamoveModule] addExpense error:', e);
+            return null;
+        }
     }
 
     function checkIn() {
-        if (checkin.start) return false;
-        checkin.start = new Date().toISOString();
-        checkin.end = null;
-        saveData();
-        startLiveTimer();
-        EventBus.emit('checkin:updated');
-        return true;
+        try {
+            if (checkin.start) {
+                console.log('[LalamoveModule] Already checked in');
+                return false;
+            }
+            checkin.start = new Date().toISOString();
+            checkin.end = null;
+            saveData();
+            startLiveTimer();
+            if (window.EventBus) EventBus.emit('checkin:updated');
+            console.log('[LalamoveModule] Check-in successful');
+            return true;
+        } catch (e) {
+            console.error('[LalamoveModule] checkIn error:', e);
+            return false;
+        }
     }
 
     function checkOut() {
-        if (!checkin.start) return false;
-        checkin.end = new Date().toISOString();
-        saveData();
-        stopLiveTimer();
-        EventBus.emit('checkin:updated');
-        return true;
+        try {
+            if (!checkin.start) return false;
+            checkin.end = new Date().toISOString();
+            saveData();
+            stopLiveTimer();
+            if (window.EventBus) EventBus.emit('checkin:updated');
+            console.log('[LalamoveModule] Check-out successful');
+            return true;
+        } catch (e) {
+            console.error('[LalamoveModule] checkOut error:', e);
+            return false;
+        }
     }
 
     function startLiveTimer() {
         stopLiveTimer();
         timerInterval = setInterval(() => {
-            EventBus.emit('checkin:tick');
+            if (window.EventBus) EventBus.emit('checkin:tick');
         }, 1000);
     }
 
@@ -109,35 +144,42 @@ const LalamoveModule = (() => {
     }
 
     function exportTodayCSV() {
-        const todayRecords = getTodayRecords().sort((a, b) => b.id - a.id);
-        if (todayRecords.length === 0) {
-            alert('ไม่มีรายการวันนี้ให้ export');
-            return;
-        }
-
-        let csv = 'เวลา,ประเภท,รายได้,ทิป,GP,จำนวนเงิน,กม.,หมวดหมู่,หมายเหตุ\n';
-        
-        todayRecords.forEach(r => {
-            if (r.type === 'income') {
-                csv += `${r.time},รายได้,${r.fare},${r.tip},${r.gp},${r.amount},${r.km},,${r.note}\n`;
-            } else {
-                csv += `${r.time},รายจ่าย,,,,${r.amount},,${r.category},${r.note}\n`;
+        try {
+            const todayRecords = getTodayRecords().sort((a, b) => b.id - a.id);
+            if (todayRecords.length === 0) {
+                alert('ไม่มีรายการวันนี้ให้ export');
+                return;
             }
-        });
 
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        const url = URL.createObjectURL(blob);
-        link.href = url;
-        link.download = `lalamove_${new Date().toISOString().split('T')[0]}.csv`;
-        link.click();
+            let csv = 'เวลา,ประเภท,รายได้,ทิป,GP,จำนวนเงิน,กม.,หมวดหมู่,หมายเหตุ\n';
+            
+            todayRecords.forEach(r => {
+                if (r.type === 'income') {
+                    csv += `${r.time},รายได้,${r.fare},${r.tip},${r.gp},${r.amount},${r.km},,${r.note}\n`;
+                } else {
+                    csv += `${r.time},รายจ่าย,,,,${r.amount},,${r.category},${r.note}\n`;
+                }
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.href = url;
+            link.download = `lalamove_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        } catch (e) {
+            console.error('[LalamoveModule] exportTodayCSV error:', e);
+            alert('เกิดข้อผิดพลาดในการ export CSV');
+        }
     }
 
     function init() {
+        console.log('[LalamoveModule] Initializing...');
         loadData();
         if (checkin.start && !checkin.end) {
             startLiveTimer();
         }
+        console.log('[LalamoveModule] Initialized successfully');
     }
 
     return {
