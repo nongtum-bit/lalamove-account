@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0">
     <title>LalaDaily</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -11,12 +11,10 @@
         .mobile-container { max-width: 480px; margin: 0 auto; }
         .module-section { display: none; }
         .module-section.active { display: block; }
-        .transaction-item { transition: all 0.2s ease; }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-200">
     <div class="mobile-container min-h-screen bg-slate-950">
-        <!-- Header -->
         <div class="bg-slate-900 border-b border-slate-700 px-4 py-4 sticky top-0 z-50">
             <div class="flex items-center justify-between">
                 <div>
@@ -25,19 +23,19 @@
                 </div>
                 <div class="bg-emerald-900 text-emerald-400 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
                     <i class="fas fa-circle text-xs"></i>
-                    <span>อนไลน์</span>
+                    <span>ออนไลน์</span>
                 </div>
             </div>
         </div>
 
         <div class="px-4 pt-3 bg-slate-950 border-b border-slate-700">
             <div class="flex gap-2">
-                <button id="nav-lalamove" class="flex-1 py-2.5 text-sm font-medium bg-emerald-600 text-white rounded-xl">Lalamove</button>
-                <button id="nav-personal-finance" class="flex-1 py-2.5 text-sm font-medium bg-slate-700 text-slate-300 rounded-xl">Personal Finance</button>
+                <button class="flex-1 py-2.5 text-sm font-medium bg-emerald-600 text-white rounded-xl" onclick="switchModule('lalamove')">Lalamove</button>
+                <button class="flex-1 py-2.5 text-sm font-medium bg-slate-700 text-slate-300 rounded-xl" onclick="switchModule('personal-finance')">Personal Finance</button>
             </div>
         </div>
 
-        <div id="module-lalamove" class="module-section active px-4 pt-4 pb-20">
+        <div id="module-lalamove" class="module-section active px-4 pt-4 pb-24">
             <!-- Check-in Card -->
             <div class="mb-4 bg-slate-900 border border-slate-700 rounded-2xl p-4">
                 <div class="flex items-center justify-between">
@@ -46,10 +44,10 @@
                         <div id="checkin-status" class="text-sm font-medium">ยังไม่ได้เช็คอิน</div>
                     </div>
                     <div class="flex gap-2">
-                        <button id="btn-checkin" onclick="doCheckIn()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                        <button id="btn-checkin" onclick="doCheckIn()" class="px-4 py-2 bg-emerald-600 active:bg-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-1.5">
                             <i class="fas fa-play text-xs"></i> <span>เช็คอิน</span>
                         </button>
-                        <button id="btn-checkout" onclick="doCheckOut()" class="px-4 py-2 bg-slate-700 hover:bg-slate-600 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+                        <button id="btn-checkout" onclick="doCheckOut()" class="px-4 py-2 bg-slate-700 active:bg-slate-600 rounded-xl text-xs font-semibold flex items-center gap-1.5">
                             <i class="fas fa-stop text-xs"></i> <span>เช็คเฮาท์</span>
                         </button>
                     </div>
@@ -58,9 +56,7 @@
             </div>
 
             <div class="mb-4">
-                <div class="flex items-center justify-between mb-2 px-1">
-                    <h2 class="text-lg font-semibold">ภาพรวมวันนี้</h2>
-                </div>
+                <h2 class="text-lg font-semibold mb-2 px-1">ภาพรวมวันนี้</h2>
                 <div class="grid grid-cols-2 gap-3 mb-3">
                     <div class="bg-slate-900 border border-emerald-700 p-4 rounded-2xl">
                         <div class="text-sm text-emerald-400 mb-1">รายได้จริง</div>
@@ -79,11 +75,11 @@
 
             <div class="mb-4">
                 <div class="grid grid-cols-2 gap-3">
-                    <button onclick="showIncomeModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1">
+                    <button onclick="showIncomeModal()" class="bg-emerald-600 active:bg-emerald-800 text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1">
                         <i class="fas fa-plus-circle text-xl"></i>
                         <span class="font-semibold text-sm">บันทึกงานใหม่</span>
                     </button>
-                    <button onclick="showExpenseModal()" class="bg-red-600 hover:bg-red-700 text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1">
+                    <button onclick="showExpenseModal()" class="bg-red-600 active:bg-red-800 text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1">
                         <i class="fas fa-minus-circle text-xl"></i>
                         <span class="font-semibold text-sm">ค่าใช้จ่าย</span>
                     </button>
@@ -93,18 +89,13 @@
             <div>
                 <div class="flex items-center justify-between mb-2 px-1">
                     <h3 class="text-sm font-medium text-slate-400">รายการวันนี้</h3>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs text-slate-500" id="transaction-count">0 รายการ</span>
-                        <button onclick="exportCSV()" class="text-xs px-3 py-1 bg-slate-700 hover:bg-slate-600 rounded-lg flex items-center gap-1">
-                            <i class="fas fa-download text-xs"></i> <span>Export CSV</span>
-                        </button>
-                    </div>
+                    <span class="text-xs text-slate-500" id="transaction-count">0 รายการ</span>
                 </div>
                 <div id="transactions-list" class="space-y-2.5"></div>
             </div>
         </div>
 
-        <div id="module-personal-finance" class="module-section px-4 pt-8 pb-20 text-center">
+        <div id="module-personal-finance" class="module-section px-4 pt-8 pb-24 text-center">
             <i class="fas fa-wallet text-6xl text-slate-700 mb-4"></i>
             <h2 class="text-xl font-semibold mb-2">รายรับ-รายจ่ายส่วนตัว</h2>
             <p class="text-slate-400 text-sm">โมดูลนี้ยังอยู่ในการพัฒนา<br>จะเพิ่มเร็ว ๆ นี้</p>
@@ -128,9 +119,9 @@
         </div>
     </div>
 
-    <!-- Modals -->
-    <div id="income-modal" onclick="if (event.target.id === 'income-modal') this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
-        <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6" onclick="event.stopImmediatePropagation()">
+    <!-- Income Modal -->
+    <div id="income-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
+        <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold">บันทึกงานใหม่</h3>
                 <button onclick="hideIncomeModal()" class="text-2xl text-slate-400">&times;</button>
@@ -160,14 +151,15 @@
                 </div>
             </div>
             <div class="flex gap-3 mt-6">
-                <button onclick="hideIncomeModal()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
-                <button onclick="saveIncome()" class="flex-1 py-3.5 bg-emerald-600 hover:bg-emerald-700 rounded-2xl font-semibold">บันทึกงาน</button>
+                <button onclick="hideIncomeModal()" class="flex-1 py-3.5 bg-slate-700 rounded-2xl font-semibold">ยกเลิก</button>
+                <button onclick="saveIncome()" class="flex-1 py-3.5 bg-emerald-600 rounded-2xl font-semibold">บันทึกงาน</button>
             </div>
         </div>
     </div>
 
-    <div id="expense-modal" onclick="if (event.target.id === 'expense-modal') this.classList.add('hidden')" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
-        <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6" onclick="event.stopImmediatePropagation()">
+    <!-- Expense Modal -->
+    <div id="expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
+        <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
             <div class="flex justify-between items-center mb-6">
                 <h3 class="text-xl font-bold">บันทึกค่าใช้จ่าย</h3>
                 <button onclick="hideExpenseModal()" class="text-2xl text-slate-400">&times;</button>
@@ -176,14 +168,14 @@
                 <div>
                     <label class="block text-sm text-slate-400 mb-2">หมวดหมู่</label>
                     <div class="grid grid-cols-3 gap-2">
-                        <button onclick="selectExpenseCategory(this, 'น้ำมัน')" class="expense-cat-btn px-3 py-2.5 text-sm rounded-xl border border-slate-600 bg-slate-800">น้ำมัน</button>
-                        <button onclick="selectExpenseCategory(this, 'อาหาร')" class="expense-cat-btn px-3 py-2.5 text-sm rounded-xl border border-slate-600 bg-slate-800">อาหาร</button>
-                        <button onclick="selectExpenseCategory(this, 'อื่นๆ')" class="expense-cat-btn px-3 py-2.5 text-sm rounded-xl border border-slate-600 bg-slate-800">อื่นๆ</button>
+                        <button onclick="selectCat(this,'น้ำมัน')" class="expense-cat-btn px-3 py-2.5 text-sm rounded-xl border border-slate-600 bg-slate-800">น้ำมัน</button>
+                        <button onclick="selectCat(this,'อาหาร')" class="expense-cat-btn px-3 py-2.5 text-sm rounded-xl border border-slate-600 bg-slate-800">อาหาร</button>
+                        <button onclick="selectCat(this,'อื่นๆ')" class="expense-cat-btn px-3 py-2.5 text-sm rounded-xl border border-slate-600 bg-slate-800">อื่นๆ</button>
                     </div>
                     <input type="hidden" id="expense-category">
                 </div>
                 <div>
-                    <label class="block text-sm text-slate-400 mb-1">จำนวนเงิน (บท)</label>
+                    <label class="block text-sm text-slate-400 mb-1">จำนวนเงิน (บาท)</label>
                     <input type="number" id="expense-amount" placeholder="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg">
                 </div>
                 <div>
@@ -192,128 +184,196 @@
                 </div>
             </div>
             <div class="flex gap-3 mt-6">
-                <button onclick="hideExpenseModal()" class="flex-1 py-3.5 bg-slate-700 hover:bg-slate-600 rounded-2xl font-semibold">ยกเลิก</button>
-                <button onclick="saveExpense()" class="flex-1 py-3.5 bg-red-600 hover:bg-red-700 rounded-2xl font-semibold">บันทึก</button>
+                <button onclick="hideExpenseModal()" class="flex-1 py-3.5 bg-slate-700 rounded-2xl font-semibold">ยกเลิก</button>
+                <button onclick="saveExpense()" class="flex-1 py-3.5 bg-red-600 rounded-2xl font-semibold">บันทึก</button>
             </div>
         </div>
     </div>
 
-    <script src="js/core/event-bus.js"></script>
     <script src="js/core/storage.js"></script>
-    <script src="js/core/router.js"></script>
-    <script src="js/core/app.js"></script>
     <script src="js/modules/lalamove/lalamove.js"></script>
-    <script src="js/modules/lalamove/lalamove-ui.js"></script>
 
     <script>
-        // Global fallback functions for maximum mobile compatibility
+        // ==================== CHECK-IN (Fully self-contained) ====================
         function doCheckIn() {
-            console.log('doCheckIn called');
-            if (window.LalamoveModule && LalamoveModule.checkIn) {
-                const success = LalamoveModule.checkIn();
-                if (success && window.LalamoveUI && LalamoveUI.updateCheckinUI) {
-                    LalamoveUI.updateCheckinUI();
+            try {
+                if (!window.LalamoveModule) {
+                    alert('ระบบยังไม่พร้อม ลองรีเฟรชหน้าใหม่');
+                    return;
                 }
-            } else {
-                alert('Module not ready yet. Please refresh the page.');
+
+                const success = LalamoveModule.checkIn();
+                if (success) {
+                    // Update UI immediately - no dependency on other modules
+                    const checkinData = LalamoveModule.getCheckinStatus();
+                    const statusEl = document.getElementById('checkin-status');
+                    const durationEl = document.getElementById('checkin-duration');
+
+                    if (statusEl && checkinData.start) {
+                        const startTime = new Date(checkinData.start).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                        statusEl.innerHTML = 'เริ่มงานเมื่อ <span class="font-semibold text-emerald-400">' + startTime + '</span>';
+                    }
+
+                    if (durationEl) {
+                        durationEl.classList.remove('hidden');
+                        durationEl.innerHTML = 'กำลังทำงาน...';
+                    }
+
+                    // Start live timer display
+                    startDurationTimer();
+                } else {
+                    alert('คุณเช็คอินอยู่แล้ว');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('เกิดข้อผิดพลาด: ' + err.message);
             }
         }
 
         function doCheckOut() {
-            if (window.LalamoveModule && LalamoveModule.checkOut) {
+            try {
+                if (!window.LalamoveModule) return;
+
                 const success = LalamoveModule.checkOut();
-                if (success && window.LalamoveUI && LalamoveUI.updateCheckinUI) {
-                    LalamoveUI.updateCheckinUI();
+                if (success) {
+                    const statusEl = document.getElementById('checkin-status');
+                    const durationEl = document.getElementById('checkin-duration');
+
+                    if (statusEl) statusEl.innerHTML = 'ยังไม่ได้เช็คอิน';
+                    if (durationEl) durationEl.classList.add('hidden');
+
+                    if (window.durationInterval) {
+                        clearInterval(window.durationInterval);
+                        window.durationInterval = null;
+                    }
                 }
+            } catch (err) {
+                console.error(err);
             }
         }
 
+        function startDurationTimer() {
+            if (window.durationInterval) clearInterval(window.durationInterval);
+
+            window.durationInterval = setInterval(function() {
+                try {
+                    const checkinData = LalamoveModule.getCheckinStatus();
+                    if (!checkinData.start || checkinData.end) {
+                        clearInterval(window.durationInterval);
+                        return;
+                    }
+
+                    const start = new Date(checkinData.start);
+                    const now = new Date();
+                    const diff = now - start;
+
+                    const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+                    const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+                    const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+
+                    const el = document.getElementById('checkin-duration');
+                    if (el) {
+                        el.innerHTML = 'ทำงานมาแล้ว <span class="font-mono">' + h + ':' + m + ':' + s + '</span>';
+                        el.classList.remove('hidden');
+                    }
+                } catch (e) {}
+            }, 1000);
+        }
+
+        // ==================== OTHER FUNCTIONS ====================
         function showIncomeModal() {
-            const modal = document.getElementById('income-modal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            }
+            document.getElementById('income-modal').classList.remove('hidden');
+            document.getElementById('income-modal').classList.add('flex');
+        }
+        function hideIncomeModal() {
+            document.getElementById('income-modal').classList.add('hidden');
+        }
+        function showExpenseModal() {
+            document.getElementById('expense-modal').classList.remove('hidden');
+            document.getElementById('expense-modal').classList.add('flex');
+        }
+        function hideExpenseModal() {
+            document.getElementById('expense-modal').classList.add('hidden');
         }
 
-        function hideIncomeModal() {
-            const modal = document.getElementById('income-modal');
-            if (modal) modal.classList.add('hidden');
+        function selectCat(btn, cat) {
+            document.getElementById('expense-category').value = cat;
+            document.querySelectorAll('.expense-cat-btn').forEach(b => {
+                b.classList.remove('bg-emerald-600', 'border-emerald-500');
+                b.classList.add('bg-slate-800');
+            });
+            btn.classList.add('bg-emerald-600', 'border-emerald-500');
+            btn.classList.remove('bg-slate-800');
         }
 
         function saveIncome() {
             if (!window.LalamoveModule) return;
-            const data = {
-                km: parseFloat(document.getElementById('income-km').value) || 0,
-                fare: parseFloat(document.getElementById('income-fare').value) || 0,
-                tip: parseFloat(document.getElementById('income-tip').value) || 0,
-                gp: parseFloat(document.getElementById('income-gp').value) || 0,
-                note: document.getElementById('income-note').value.trim()
-            };
-            if (data.fare <= 0 && data.tip <= 0) {
+            const fare = parseFloat(document.getElementById('income-fare').value) || 0;
+            const tip = parseFloat(document.getElementById('income-tip').value) || 0;
+            if (fare <= 0 && tip <= 0) {
                 alert('กรุณาระบุรายได้');
                 return;
             }
-            LalamoveModule.addIncome(data);
+            LalamoveModule.addIncome({
+                km: parseFloat(document.getElementById('income-km').value) || 0,
+                fare: fare,
+                tip: tip,
+                gp: parseFloat(document.getElementById('income-gp').value) || 0,
+                note: document.getElementById('income-note').value.trim()
+            });
             hideIncomeModal();
             document.getElementById('income-fare').value = '';
             document.getElementById('income-tip').value = '';
             document.getElementById('income-gp').value = '';
-        }
-
-        function showExpenseModal() {
-            const modal = document.getElementById('expense-modal');
-            if (modal) {
-                modal.classList.remove('hidden');
-                modal.classList.add('flex');
-            }
-        }
-
-        function hideExpenseModal() {
-            const modal = document.getElementById('expense-modal');
-            if (modal) modal.classList.add('hidden');
-        }
-
-        function selectExpenseCategory(btn, category) {
-            document.getElementById('expense-category').value = category;
-            document.querySelectorAll('.expense-cat-btn').forEach(b => b.classList.remove('active', 'bg-emerald-600', 'border-emerald-500'));
-            btn.classList.add('active', 'bg-emerald-600', 'border-emerald-500');
+            refreshSummary();
         }
 
         function saveExpense() {
             if (!window.LalamoveModule) return;
             const category = document.getElementById('expense-category').value;
             const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
-            const note = document.getElementById('expense-note').value.trim();
             if (!category) { alert('กรุณาเลือกหมวดหมู่'); return; }
             if (amount <= 0) { alert('กรุณาระบุจำนวนเงิน'); return; }
-            LalamoveModule.addExpense({ category, amount, note });
+            LalamoveModule.addExpense({
+                category: category,
+                amount: amount,
+                note: document.getElementById('expense-note').value.trim()
+            });
             hideExpenseModal();
             document.getElementById('expense-amount').value = '';
             document.getElementById('expense-note').value = '';
+            refreshSummary();
         }
 
-        function exportCSV() {
-            if (window.LalamoveModule && LalamoveModule.exportTodayCSV) {
-                LalamoveModule.exportTodayCSV();
-            }
+        function refreshSummary() {
+            if (!window.LalamoveModule) return;
+            const s = LalamoveModule.calculateTodaySummary();
+            document.getElementById('total-income').textContent = s.totalIncome.toLocaleString();
+            document.getElementById('total-expense').textContent = s.totalExpense.toLocaleString();
+            document.getElementById('real-net').textContent = s.net.toLocaleString();
+            document.getElementById('transaction-count').textContent = s.count + ' รายการ';
         }
 
-        function switchModule(module) {
-            if (module === 'lalamove') {
-                document.getElementById('module-lalamove').classList.add('active');
-                document.getElementById('module-personal-finance').classList.remove('active');
-            } else {
-                document.getElementById('module-lalamove').classList.remove('active');
-                document.getElementById('module-personal-finance').classList.add('active');
-            }
+        function switchModule(name) {
+            document.getElementById('module-lalamove').classList.toggle('active', name === 'lalamove');
+            document.getElementById('module-personal-finance').classList.toggle('active', name === 'personal-finance');
         }
 
-        // Make sure modules are ready
+        // Init on load
         window.addEventListener('load', function() {
-            console.log('Page loaded, modules should be ready');
-            if (window.LalamoveUI && LalamoveUI.init) {
-                // Already initialized in app.js
+            if (window.LalamoveModule) {
+                LalamoveModule.init();
+                refreshSummary();
+
+                // Restore check-in state if already checked in
+                const status = LalamoveModule.getCheckinStatus();
+                if (status.start && !status.end) {
+                    doCheckIn(); // This will just update UI since already checked in? Wait, no - better way:
+                    const statusEl = document.getElementById('checkin-status');
+                    const startTime = new Date(status.start).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+                    statusEl.innerHTML = 'เริ่มงานเมื่อ <span class="font-semibold text-emerald-400">' + startTime + '</span>';
+                    startDurationTimer();
+                }
             }
         });
     </script>
