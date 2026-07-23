@@ -2,516 +2,804 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>LalaDaily</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#09090b">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>LalaDaily Max</title>
+    
+    <!-- Dynamic PWA Manifest Placeholder -->
+    <link id="manifest-placeholder" rel="manifest" href="">
+
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        body { font-family: 'Inter', 'Noto Sans Thai', system-ui, sans-serif; }
-        .mobile-container { max-width: 480px; margin: 0 auto; }
-        .module-section { display: none; }
-        .module-section.active { display: block; }
-        .btn-active { transform: scale(0.96); }
-    </style>
-</head>
-<body class="bg-slate-950 text-slate-200">
-    <div class="mobile-container min-h-screen bg-slate-950 pb-20">
-
-        <!-- Header -->
-        <div class="bg-slate-900 border-b border-slate-700 px-4 py-4 sticky top-0 z-50">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-2xl font-bold text-emerald-400">LalaDaily</h1>
-                    <p class="text-sm text-slate-400">Lalamove Daily Tracker</p>
-                </div>
-                <div id="online-badge" class="bg-emerald-900 text-emerald-400 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                    <i class="fas fa-circle text-xs"></i>
-                    <span>ออนไลน์</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Tab Navigation -->
-        <div class="px-4 pt-3 bg-slate-950 border-b border-slate-700">
-            <div class="flex gap-2">
-                <button id="tab-lalamove" onclick="switchTab('lalamove')" class="flex-1 py-2.5 text-sm font-medium bg-emerald-600 text-white rounded-xl">Lalamove</button>
-                <button id="tab-personal" onclick="switchTab('personal')" class="flex-1 py-2.5 text-sm font-medium bg-slate-700 text-slate-300 rounded-xl">Personal</button>
-            </div>
-        </div>
-
-        <!-- ==================== LALAMOVE MODULE ==================== -->
-        <div id="module-lalamove" class="module-section active px-4 pt-4">
-
-            <!-- Check-in Card -->
-            <div class="mb-4 bg-slate-900 border border-slate-700 rounded-2xl p-4">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <div class="text-sm text-slate-400">สถานะงานวันนี้</div>
-                        <div id="checkin-status" class="text-base font-medium mt-0.5">ยังไม่ได้เช็คอิน</div>
-                    </div>
-                    <div class="flex gap-2">
-                        <button id="btn-checkin" onclick="handleCheckIn()" class="px-4 py-2.5 bg-emerald-600 active:bg-emerald-800 rounded-xl text-xs font-semibold flex items-center gap-1.5">
-                            <i class="fas fa-play text-xs"></i>
-                            <span>เช็คอิน</span>
-                        </button>
-                        <button id="btn-checkout" onclick="handleCheckOut()" class="px-4 py-2.5 bg-slate-700 active:bg-slate-600 rounded-xl text-xs font-semibold flex items-center gap-1.5">
-                            <i class="fas fa-stop text-xs"></i>
-                            <span>เช็คเอาท์</span>
-                        </button>
-                    </div>
-                </div>
-                <div id="checkin-duration" class="text-sm text-emerald-400 mt-3 hidden font-mono"></div>
-            </div>
-
-            <!-- Summary Cards -->
-            <div class="mb-4">
-                <h2 class="text-lg font-semibold mb-3 px-1">ภาพรวมวันนี้</h2>
-                <div class="grid grid-cols-2 gap-3 mb-3">
-                    <div class="bg-slate-900 border border-emerald-700/50 p-4 rounded-2xl">
-                        <div class="text-sm text-emerald-400 mb-1">รายได้จริง</div>
-                        <div class="text-2xl font-bold text-emerald-400" id="total-income">0</div>
-                    </div>
-                    <div class="bg-slate-900 border border-red-700/50 p-4 rounded-2xl">
-                        <div class="text-sm text-red-400 mb-1">ค่าใช้จ่าย</div>
-                        <div class="text-2xl font-bold text-red-400" id="total-expense">0</div>
-                    </div>
-                </div>
-                <div class="bg-emerald-900/20 border border-emerald-600/50 p-4 rounded-2xl">
-                    <div class="text-sm text-emerald-400 mb-1">กำไรสุทธิ</div>
-                    <div class="text-3xl font-bold text-emerald-400" id="real-net">0</div>
-                </div>
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="mb-5 grid grid-cols-2 gap-3">
-                <button onclick="openIncomeModal()" class="bg-emerald-600 active:bg-emerald-800 text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1">
-                    <i class="fas fa-plus-circle text-xl"></i>
-                    <span class="font-semibold text-sm">บันทึกงาน</span>
-                </button>
-                <button onclick="openExpenseModal()" class="bg-red-600 active:bg-red-800 text-white py-3.5 rounded-2xl flex flex-col items-center justify-center gap-1">
-                    <i class="fas fa-minus-circle text-xl"></i>
-                    <span class="font-semibold text-sm">ค่าใช้จ่าย</span>
-                </button>
-            </div>
-
-            <!-- Transactions -->
-            <div class="mb-4">
-                <div class="flex items-center justify-between mb-2 px-1">
-                    <h3 class="text-sm font-medium text-slate-400">รายการวันนี้</h3>
-                    <div class="flex items-center gap-2">
-                        <span class="text-xs text-slate-500" id="transaction-count">0 รายการ</span>
-                        <button onclick="resetCheckIn()" class="text-xs px-2 py-1 bg-slate-800 text-slate-400 rounded-lg">รีเซ็ตเช็คอิน</button>
-                    </div>
-                </div>
-                <div id="transactions-list" class="space-y-2.5"></div>
-            </div>
-        </div>
-
-        <!-- ==================== PERSONAL MODULE ==================== -->
-        <div id="module-personal" class="module-section px-4 pt-10 text-center">
-            <i class="fas fa-wallet text-6xl text-slate-700 mb-4"></i>
-            <h2 class="text-xl font-semibold mb-2">รายรับ-รายจ่ายส่วนตัว</h2>
-            <p class="text-slate-400 text-sm">โมดูลนี้กำลังพัฒนา<br>จะเพิ่มในเร็ว ๆ นี้</p>
-        </div>
-
-        <!-- Bottom Nav -->
-        <div class="fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-slate-900 border-t border-slate-700 px-4 py-2 z-50">
-            <div class="flex justify-around">
-                <button onclick="switchTab('lalamove')" class="flex flex-col items-center text-emerald-400 px-3 py-1">
-                    <i class="fas fa-car text-xl"></i>
-                    <span class="text-xs mt-0.5">Lalamove</span>
-                </button>
-                <button onclick="switchTab('personal')" class="flex flex-col items-center text-slate-400 px-3 py-1">
-                    <i class="fas fa-wallet text-xl"></i>
-                    <span class="text-xs mt-0.5">Personal</span>
-                </button>
-                <button class="flex flex-col items-center text-slate-400 px-3 py-1">
-                    <i class="fas fa-cog text-xl"></i>
-                    <span class="text-xs mt-0.5">ตั้งค่า</span>
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ==================== INCOME MODAL ==================== -->
-    <div id="income-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
-        <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold">บันทึกงานใหม่</h3>
-                <button onclick="closeIncomeModal()" class="text-2xl text-slate-400">&times;</button>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm text-slate-400 mb-1">ระยะทาง (กม.)</label>
-                    <input type="number" id="income-km" value="15" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg">
-                </div>
-                <div class="grid grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-sm text-slate-400 mb-1">รายได้จากแอพ</label>
-                        <input type="number" id="income-fare" placeholder="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg">
-                    </div>
-                    <div>
-                        <label class="block text-sm text-slate-400 mb-1">ทิป</label>
-                        <input type="number" id="income-tip" placeholder="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg">
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm text-slate-400 mb-1">ค่า GP (หัก)</label>
-                    <input type="number" id="income-gp" placeholder="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg">
-                </div>
-                <div>
-                    <label class="block text-sm text-slate-400 mb-1">หมายเหตุ</label>
-                    <input type="text" id="income-note" value="งานปกติ" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3">
-                </div>
-            </div>
-            <div class="flex gap-3 mt-6">
-                <button onclick="closeIncomeModal()" class="flex-1 py-3.5 bg-slate-700 rounded-2xl font-semibold">ยกเลิก</button>
-                <button onclick="saveIncome()" class="flex-1 py-3.5 bg-emerald-600 rounded-2xl font-semibold">บันทึก</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ==================== EXPENSE MODAL ==================== -->
-    <div id="expense-modal" class="hidden fixed inset-0 bg-black/70 z-[100] flex items-end">
-        <div class="w-full max-w-[480px] mx-auto bg-slate-900 rounded-t-3xl p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold">บันทึกค่าใช้จ่าย</h3>
-                <button onclick="closeExpenseModal()" class="text-2xl text-slate-400">&times;</button>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm text-slate-400 mb-2">หมวดหมู่</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        <button onclick="selectCategory(this, 'น้ำมัน')" class="expense-cat px-3 py-2.5 text-sm rounded-xl border border-slate-600 bg-slate-800">น้ำมัน</button>
-                        <button onclick="selectCategory(this, 'อาหาร')" class="expense-cat px-3 py-2.5 text-sm rounded-xl border border-slate-600 bg-slate-800">อาหาร</button>
-                        <button onclick="selectCategory(this, 'อื่นๆ')" class="expense-cat px-3 py-2.5 text-sm rounded-xl border border-slate-600 bg-slate-800">อื่นๆ</button>
-                    </div>
-                </div>
-                <div>
-                    <label class="block text-sm text-slate-400 mb-1">จำนวนเงิน (บาท)</label>
-                    <input type="number" id="expense-amount" placeholder="0" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3 text-lg">
-                </div>
-                <div>
-                    <label class="block text-sm text-slate-400 mb-1">หมายเหตุ</label>
-                    <input type="text" id="expense-note" class="w-full bg-slate-800 border border-slate-600 rounded-xl px-4 py-3">
-                </div>
-            </div>
-            <div class="flex gap-3 mt-6">
-                <button onclick="closeExpenseModal()" class="flex-1 py-3.5 bg-slate-700 rounded-2xl font-semibold">ยกเลิก</button>
-                <button onclick="saveExpense()" class="flex-1 py-3.5 bg-red-600 rounded-2xl font-semibold">บันทึก</button>
-            </div>
-        </div>
-    </div>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        // ======================================================
-        // LalaDaily - Single File Version (Fully Working)
-        // ======================================================
-
-        // ---------- Data ----------
-        let records = [];
-        let checkin = { start: null, end: null };
-        let selectedCategory = '';
-        let durationTimer = null;
-
-        // ---------- Storage ----------
-        function loadData() {
-            try {
-                const r = localStorage.getItem('lalamove_records');
-                const c = localStorage.getItem('lalamove_checkin');
-                if (r) records = JSON.parse(r);
-                if (c) checkin = JSON.parse(c);
-            } catch (e) {
-                console.error('Load error', e);
-                records = [];
-                checkin = { start: null, end: null };
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Noto Sans Thai"', 'sans-serif'] },
+                    colors: {
+                        app: { bg: '#09090b', card: '#18181b', border: '#27272a', text: '#a1a1aa', primary: '#10b981', secondary: '#3b82f6' }
+                    }
+                }
             }
         }
+    </script>
 
-        function saveData() {
-            try {
-                localStorage.setItem('lalamove_records', JSON.stringify(records));
-                localStorage.setItem('lalamove_checkin', JSON.stringify(checkin));
-            } catch (e) {
-                console.error('Save error', e);
-            }
-        }
+    <style>
+        body { background-color: #000; color: #f4f4f5; -webkit-tap-highlight-color: transparent; overscroll-behavior-y: none; }
+        ::-webkit-scrollbar { display: none; }
+        .glass-header { background: rgba(9, 9, 11, 0.75); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
+        .bottom-sheet { transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); transform: translateY(100%); }
+        .bottom-sheet.open { transform: translateY(0); }
+        .btn-press { transition: transform 0.1s; }
+        .btn-press:active { transform: scale(0.95); }
+        .tab-content { display: none; opacity: 0; transition: opacity 0.3s; }
+        .tab-content.active { display: block; opacity: 1; }
+        
+        /* Toast Animation */
+        @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .toast-enter { animation: slideDown 0.3s ease-out forwards; }
+    </style>
+</head>
+<body class="antialiased">
 
-        // ---------- Helpers ----------
-        function today() {
-            return new Date().toISOString().split('T')[0];
-        }
+    <!-- Toast Container -->
+    <div id="toast-container" class="fixed top-4 left-0 right-0 z-[100] flex flex-col items-center gap-2 pointer-events-none px-4"></div>
 
-        function nowTime() {
-            return new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-        }
+    <div class="max-w-[480px] mx-auto h-[100dvh] bg-app-bg relative flex flex-col shadow-2xl overflow-hidden border-x border-app-border/30">
+        
+        <!-- Header -->
+        <header class="glass-header sticky top-0 z-40 px-5 pt-6 pb-4 border-b border-app-border flex justify-between items-end">
+            <div>
+                <h1 id="header-title" class="text-2xl font-bold text-emerald-400 tracking-tight transition-colors">LalaDaily</h1>
+                <div class="flex items-center gap-2 mt-0.5">
+                    <p id="header-date" class="text-sm text-app-text"></p>
+                    <span id="cloud-status" class="text-[10px] bg-red-900/50 text-red-400 border border-red-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <i class="fas fa-circle text-[8px]"></i> ออฟไลน์
+                    </span>
+                </div>
+            </div>
+            <button onclick="exportCSV()" class="btn-press w-10 h-10 rounded-full bg-app-card border border-app-border flex items-center justify-center text-app-text hover:text-white shadow-lg">
+                <i class="fas fa-file-export"></i>
+            </button>
+        </header>
 
-        function getTodayRecords() {
-            return records.filter(r => r.date === today()).sort((a, b) => b.id - a.id);
-        }
-
-        // ---------- Check-in / Check-out ----------
-        function handleCheckIn() {
-            if (checkin.start && !checkin.end) {
-                alert('คุณเช็คอินอยู่แล้ว');
-                return;
-            }
-
-            checkin.start = new Date().toISOString();
-            checkin.end = null;
-            saveData();
-            updateCheckinUI();
-            startDurationTimer();
-        }
-
-        function handleCheckOut() {
-            if (!checkin.start) {
-                alert('ยังไม่ได้เช็คอิน');
-                return;
-            }
-
-            checkin.end = new Date().toISOString();
-            saveData();
-            updateCheckinUI();
-            stopDurationTimer();
-        }
-
-        function resetCheckIn() {
-            if (confirm('ต้องการรีเซ็ตสถานะเช็คอินใช่ไหม?')) {
-                checkin = { start: null, end: null };
-                saveData();
-                updateCheckinUI();
-                stopDurationTimer();
-            }
-        }
-
-        function updateCheckinUI() {
-            const statusEl = document.getElementById('checkin-status');
-            const durationEl = document.getElementById('checkin-duration');
-            const btnIn = document.getElementById('btn-checkin');
-            const btnOut = document.getElementById('btn-checkout');
-
-            if (!checkin.start) {
-                statusEl.innerHTML = 'ยังไม่ได้เช็คอิน';
-                durationEl.classList.add('hidden');
-                btnIn.classList.remove('opacity-50');
-                btnOut.classList.add('opacity-50');
-                return;
-            }
-
-            const startTime = new Date(checkin.start).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
-
-            if (checkin.end) {
-                statusEl.innerHTML = `เช็คเอาท์แล้ว (เริ่ม ${startTime})`;
-                durationEl.classList.add('hidden');
-                btnIn.classList.remove('opacity-50');
-                btnOut.classList.add('opacity-50');
-            } else {
-                statusEl.innerHTML = `เริ่มงานเมื่อ <span class="text-emerald-400 font-semibold">${startTime}</span>`;
-                durationEl.classList.remove('hidden');
-                btnIn.classList.add('opacity-50');
-                btnOut.classList.remove('opacity-50');
-            }
-        }
-
-        function startDurationTimer() {
-            stopDurationTimer();
-            durationTimer = setInterval(() => {
-                if (!checkin.start || checkin.end) return;
-
-                const diff = Date.now() - new Date(checkin.start).getTime();
-                const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
-                const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-                const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-
-                document.getElementById('checkin-duration').innerHTML =
-                    `ทำงานมาแล้ว <span class="font-mono text-emerald-300">${h}:${m}:${s}</span>`;
-            }, 1000);
-        }
-
-        function stopDurationTimer() {
-            if (durationTimer) {
-                clearInterval(durationTimer);
-                durationTimer = null;
-            }
-        }
-
-        // ---------- Income / Expense ----------
-        function openIncomeModal() {
-            document.getElementById('income-modal').classList.remove('hidden');
-            document.getElementById('income-modal').classList.add('flex');
-        }
-        function closeIncomeModal() {
-            document.getElementById('income-modal').classList.add('hidden');
-        }
-
-        function openExpenseModal() {
-            selectedCategory = '';
-            document.querySelectorAll('.expense-cat').forEach(b => {
-                b.classList.remove('bg-emerald-600', 'border-emerald-500');
-                b.classList.add('bg-slate-800');
-            });
-            document.getElementById('expense-modal').classList.remove('hidden');
-            document.getElementById('expense-modal').classList.add('flex');
-        }
-        function closeExpenseModal() {
-            document.getElementById('expense-modal').classList.add('hidden');
-        }
-
-        function selectCategory(btn, cat) {
-            selectedCategory = cat;
-            document.querySelectorAll('.expense-cat').forEach(b => {
-                b.classList.remove('bg-emerald-600', 'border-emerald-500');
-                b.classList.add('bg-slate-800');
-            });
-            btn.classList.add('bg-emerald-600', 'border-emerald-500');
-            btn.classList.remove('bg-slate-800');
-        }
-
-        function saveIncome() {
-            const fare = parseFloat(document.getElementById('income-fare').value) || 0;
-            const tip = parseFloat(document.getElementById('income-tip').value) || 0;
-            const gp = parseFloat(document.getElementById('income-gp').value) || 0;
-            const km = parseFloat(document.getElementById('income-km').value) || 0;
-            const note = document.getElementById('income-note').value.trim();
-
-            if (fare <= 0 && tip <= 0) {
-                alert('กรุณาระบุรายได้');
-                return;
-            }
-
-            records.push({
-                id: Date.now(),
-                date: today(),
-                time: nowTime(),
-                type: 'income',
-                fare, tip, gp, km,
-                amount: fare + tip - gp,
-                note
-            });
-
-            saveData();
-            closeIncomeModal();
-            document.getElementById('income-fare').value = '';
-            document.getElementById('income-tip').value = '';
-            document.getElementById('income-gp').value = '';
-            refreshUI();
-        }
-
-        function saveExpense() {
-            const amount = parseFloat(document.getElementById('expense-amount').value) || 0;
-            const note = document.getElementById('expense-note').value.trim();
-
-            if (!selectedCategory) {
-                alert('กรุณาเลือกหมวดหมู่');
-                return;
-            }
-            if (amount <= 0) {
-                alert('กรุณาระบุจำนวนเงิน');
-                return;
-            }
-
-            records.push({
-                id: Date.now(),
-                date: today(),
-                time: nowTime(),
-                type: 'expense',
-                category: selectedCategory,
-                amount,
-                note
-            });
-
-            saveData();
-            closeExpenseModal();
-            document.getElementById('expense-amount').value = '';
-            document.getElementById('expense-note').value = '';
-            refreshUI();
-        }
-
-        // ---------- UI Update ----------
-        function refreshUI() {
-            const todayList = getTodayRecords();
-            let income = 0, expense = 0;
-
-            todayList.forEach(r => {
-                if (r.type === 'income') income += r.amount;
-                else expense += r.amount;
-            });
-
-            document.getElementById('total-income').textContent = income.toLocaleString();
-            document.getElementById('total-expense').textContent = expense.toLocaleString();
-
-            const net = income - expense;
-            const netEl = document.getElementById('real-net');
-            netEl.textContent = net.toLocaleString();
-            netEl.style.color = net >= 0 ? '#34d399' : '#f87171';
-
-            document.getElementById('transaction-count').textContent = todayList.length + ' รายการ';
-
-            // Render list
-            const container = document.getElementById('transactions-list');
-            if (todayList.length === 0) {
-                container.innerHTML = '<div class="text-center py-8 text-slate-500 text-sm">ยังไม่มีรายการวันนี้</div>';
-                return;
-            }
-
-            container.innerHTML = todayList.map(r => {
-                const isIncome = r.type === 'income';
-                const icon = isIncome ? 'fa-arrow-up text-emerald-400' : 'fa-arrow-down text-red-400';
-                const color = isIncome ? 'text-emerald-400' : 'text-red-400';
-                const title = isIncome ? 'งานลาล่ามูฟ' : r.category;
-                const detail = isIncome
-                    ? `รายได้ ${r.fare} | ทิป ${r.tip} | GP ${r.gp}`
-                    : (r.note || '-');
-
-                return `
-                    <div class="flex items-center justify-between p-4 bg-slate-800 rounded-2xl border border-slate-700">
-                        <div class="flex items-center gap-3">
-                            <div class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-700">
-                                <i class="fas ${icon}"></i>
-                            </div>
-                            <div>
-                                <div class="font-medium">${title}</div>
-                                <div class="text-xs text-slate-400">${detail}</div>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <div class="font-semibold ${color}">${isIncome ? '+' : '-'}${r.amount.toLocaleString()}</div>
-                            <div class="text-xs text-slate-500">${r.time}</div>
+        <!-- Main Scrollable Content -->
+        <main class="flex-1 overflow-y-auto pb-28 px-5 pt-5 space-y-6">
+            
+            <!-- ================= 1. LALAMOVE TAB ================= -->
+            <div id="tab-lalamove" class="tab-content active space-y-6">
+                <!-- Check-in & Progress Widget -->
+                <div class="bg-app-card border border-app-border rounded-3xl p-5 shadow-lg relative overflow-hidden flex gap-4">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
+                    
+                    <!-- Progress Circle -->
+                    <div class="relative w-[88px] h-[88px] shrink-0">
+                        <svg class="w-full h-full transform -rotate-90">
+                            <circle cx="44" cy="44" r="38" stroke="currentColor" stroke-width="8" fill="transparent" class="text-app-border/50" />
+                            <circle id="progress-circle" cx="44" cy="44" r="38" stroke="currentColor" stroke-width="8" fill="transparent" stroke-dasharray="238.7" stroke-dashoffset="238.7" class="text-emerald-500 transition-all duration-1000 ease-out stroke-round" stroke-linecap="round" />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center">
+                            <span class="text-[10px] text-app-text mb-[-4px]">สำเร็จ</span>
+                            <span id="progress-text" class="text-lg font-bold text-white">0%</span>
                         </div>
                     </div>
-                `;
-            }).join('');
+
+                    <!-- Check-in Info -->
+                    <div class="flex-1 flex flex-col justify-center relative z-10">
+                        <div class="flex justify-between items-start mb-2">
+                            <div>
+                                <div class="text-[11px] text-app-text">สถานะกะทำงาน</div>
+                                <div id="checkin-status" class="text-base font-bold text-white mt-0.5 leading-tight">ออฟไลน์</div>
+                            </div>
+                            <div id="checkin-duration" class="text-[10px] font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-900 hidden"></div>
+                        </div>
+                        
+                        <div class="flex gap-2 mt-2">
+                            <button id="btn-checkin" onclick="handleCheckIn()" class="btn-press flex-1 py-2 bg-emerald-600 rounded-xl text-xs font-semibold text-white flex justify-center items-center gap-1.5 shadow-lg shadow-emerald-900/20">
+                                <i class="fas fa-play text-[10px]"></i> เริ่ม
+                            </button>
+                            <button id="btn-checkout" onclick="handleCheckOut()" class="btn-press flex-1 py-2 bg-app-border rounded-xl text-xs font-semibold text-white flex justify-center items-center gap-1.5 opacity-50 pointer-events-none">
+                                <i class="fas fa-stop text-[10px]"></i> จบ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Lalamove Summary -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-gradient-to-br from-emerald-900/40 to-app-card border border-emerald-800/50 p-4 rounded-3xl col-span-2 flex items-center justify-between">
+                        <div>
+                            <span class="text-xs text-app-text block mb-1">กำไรวันนี้ (บาท) <span id="target-display" class="text-emerald-500/70 text-[10px] ml-1">เป้า: 0</span></span>
+                            <span id="lala-net" class="text-4xl font-bold text-white">0</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl"><i class="fas fa-wallet"></i></div>
+                    </div>
+                    <div class="bg-app-card border border-emerald-900/30 p-3 rounded-2xl flex flex-col justify-center">
+                        <span class="text-[10px] text-app-text mb-1">รายรับแอป (สุทธิ)</span>
+                        <span id="lala-income" class="text-xl font-bold text-emerald-400">0</span>
+                    </div>
+                    <div class="bg-app-card border border-red-900/30 p-3 rounded-2xl flex flex-col justify-center">
+                        <span class="text-[10px] text-app-text mb-1">ค่าใช้จ่ายงาน</span>
+                        <span id="lala-expense" class="text-xl font-bold text-red-400">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= 2. PERSONAL TAB ================= -->
+            <div id="tab-personal" class="tab-content space-y-6">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-gradient-to-br from-blue-900/40 to-app-card border border-blue-800/50 p-4 rounded-3xl col-span-2 flex items-center justify-between">
+                        <div>
+                            <span class="text-xs text-app-text block mb-1">เงินเหลือส่วนตัว (บาท)</span>
+                            <span id="pers-net" class="text-4xl font-bold text-white">0</span>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 text-xl"><i class="fas fa-piggy-bank"></i></div>
+                    </div>
+                    <div class="bg-app-card border border-blue-900/30 p-3 rounded-2xl flex flex-col justify-center">
+                        <span class="text-[10px] text-app-text mb-1">รับส่วนตัว</span>
+                        <span id="pers-income" class="text-xl font-bold text-blue-400">0</span>
+                    </div>
+                    <div class="bg-app-card border border-red-900/30 p-3 rounded-2xl flex flex-col justify-center">
+                        <span class="text-[10px] text-app-text mb-1">จ่ายส่วนตัว</span>
+                        <span id="pers-expense" class="text-xl font-bold text-red-400">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= 3. ANALYTICS TAB ================= -->
+            <div id="tab-analytics" class="tab-content space-y-6">
+                <div class="bg-app-card border border-app-border rounded-3xl p-5 shadow-lg">
+                    <h3 class="text-sm font-semibold text-white mb-4">กราฟกำไร 7 วันล่าสุด (Lalamove)</h3>
+                    <div class="h-48 w-full relative">
+                        <canvas id="profitChart"></canvas>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-app-card border border-app-border rounded-2xl p-4">
+                        <div class="text-[10px] text-app-text mb-1">รอบวิ่งทั้งหมด (เดือนนี้)</div>
+                        <div id="stat-trips" class="text-xl font-bold text-white">0<span class="text-xs font-normal text-app-text ml-1">รอบ</span></div>
+                    </div>
+                    <div class="bg-app-card border border-app-border rounded-2xl p-4">
+                        <div class="text-[10px] text-app-text mb-1">ระยะทางรวม (เดือนนี้)</div>
+                        <div id="stat-km" class="text-xl font-bold text-white">0<span class="text-xs font-normal text-app-text ml-1">กม.</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= 4. SETTINGS TAB ================= -->
+            <div id="tab-settings" class="tab-content space-y-6">
+                <!-- Vehicle Tracker -->
+                <div class="bg-app-card border border-app-border rounded-3xl p-5 relative overflow-hidden">
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400"><i class="fas fa-wrench"></i></div>
+                        <div>
+                            <h3 class="text-sm font-semibold text-white">ประวัติรถ (สะสม)</h3>
+                            <p class="text-xs text-app-text">อัปเดตจากระยะทางที่วิ่ง</p>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="flex justify-between text-xs mb-1">
+                            <span class="text-app-text">ระยะทางสะสม</span>
+                            <span class="text-white font-medium"><span id="tracker-current">0</span> / <span id="tracker-limit">3000</span> กม.</span>
+                        </div>
+                        <div class="h-2 w-full bg-app-border rounded-full overflow-hidden">
+                            <div id="tracker-bar" class="h-full bg-orange-500 transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <p id="tracker-alert" class="text-[10px] text-app-text">ใกล้ถึงกำหนดเปลี่ยนถ่ายน้ำมันเครื่องแล้ว!</p>
+                </div>
+
+                <!-- Settings Form -->
+                <div class="space-y-4">
+                    <h3 class="text-sm font-semibold text-white px-1">ตั้งค่าแอป</h3>
+                    <div>
+                        <label class="block text-xs text-app-text mb-1 px-1">เป้าหมายกำไรรายวัน (บาท)</label>
+                        <input type="number" id="set-target" onchange="updateSettings()" class="w-full bg-app-card border border-app-border rounded-xl px-4 py-3 text-white focus:border-emerald-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-app-text mb-1 px-1">ระยะทางตั้งเตือนบำรุงรักษา (กม.)</label>
+                        <input type="number" id="set-maint" onchange="updateSettings()" class="w-full bg-app-card border border-app-border rounded-xl px-4 py-3 text-white focus:border-orange-500 outline-none">
+                    </div>
+                    <button onclick="resetMaintenance()" class="w-full py-3 bg-app-border text-white text-sm rounded-xl font-medium mt-2">รีเซ็ตระยะทางรถ (เริ่มนับ 0 ใหม่)</button>
+                </div>
+            </div>
+
+            <!-- ================= TRANSACTIONS LIST ================= -->
+            <div id="transactions-section">
+                <div class="flex items-center justify-between mb-3 px-1 mt-4">
+                    <h3 class="text-base font-semibold text-white">ประวัติรายการวันนี้</h3>
+                    <span id="transaction-count" class="text-xs bg-app-border text-app-text px-2 py-1 rounded-md">0 รายการ</span>
+                </div>
+                <div id="transactions-list" class="space-y-3 pb-8"></div>
+            </div>
+
+        </main>
+
+        <!-- ================= FAB (Floating Action Buttons) ================= -->
+        <div id="fab-container" class="fixed bottom-[90px] left-0 right-0 max-w-[480px] mx-auto px-5 z-30 flex gap-4 transition-transform duration-300">
+            <button onclick="openModal('income')" class="btn-press flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-3.5 rounded-[20px] shadow-lg shadow-emerald-900/30 font-semibold flex justify-center items-center gap-2 text-sm border border-emerald-400/20">
+                <i class="fas fa-plus-circle"></i> รับเงิน
+            </button>
+            <button onclick="openModal('expense')" class="btn-press flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-3.5 rounded-[20px] shadow-lg shadow-red-900/30 font-semibold flex justify-center items-center gap-2 text-sm border border-red-400/20">
+                <i class="fas fa-minus-circle"></i> จ่ายเงิน
+            </button>
+        </div>
+
+        <!-- ================= BOTTOM NAVIGATION ================= -->
+        <nav class="absolute bottom-0 left-0 right-0 glass-header border-t border-app-border pb-safe">
+            <div class="flex justify-around items-center px-1 py-2 max-w-sm mx-auto relative">
+                <!-- Active Indicator -->
+                <div id="nav-indicator" class="absolute w-1/4 h-full top-0 left-0 transition-transform duration-300 ease-out z-0 flex items-center justify-center pointer-events-none">
+                    <div id="nav-glow" class="w-12 h-1 bg-emerald-500/30 rounded-full blur-md absolute top-1"></div>
+                </div>
+
+                <button onclick="switchTab('lalamove')" class="nav-btn active relative z-10 flex-1 flex flex-col items-center gap-1 text-emerald-400 transition-colors py-1">
+                    <i class="fas fa-car-side text-lg"></i><span class="text-[9px] font-medium">Lalamove</span>
+                </button>
+                <button onclick="switchTab('personal')" class="nav-btn relative z-10 flex-1 flex flex-col items-center gap-1 text-app-text transition-colors py-1">
+                    <i class="fas fa-wallet text-lg"></i><span class="text-[9px] font-medium">ส่วนตัว</span>
+                </button>
+                <button onclick="switchTab('analytics')" class="nav-btn relative z-10 flex-1 flex flex-col items-center gap-1 text-app-text transition-colors py-1">
+                    <i class="fas fa-chart-pie text-lg"></i><span class="text-[9px] font-medium">สรุปผล</span>
+                </button>
+                <button onclick="switchTab('settings')" class="nav-btn relative z-10 flex-1 flex flex-col items-center gap-1 text-app-text transition-colors py-1">
+                    <i class="fas fa-cog text-lg"></i><span class="text-[9px] font-medium">ตั้งค่า</span>
+                </button>
+            </div>
+        </nav>
+
+        <!-- ================= MODALS ================= -->
+        <div id="modal-overlay" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 hidden transition-opacity opacity-0" onclick="closeAllModals()"></div>
+
+        <!-- Entry Form -->
+        <div id="entry-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-50 px-6 pt-3 pb-8">
+            <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-5"></div>
+            
+            <div class="flex justify-between items-center mb-5">
+                <h3 id="modal-title" class="text-xl font-bold text-white tracking-tight">บันทึก</h3>
+                <button onclick="closeAllModals()" class="w-8 h-8 flex items-center justify-center bg-app-border text-app-text rounded-full"><i class="fas fa-times text-sm"></i></button>
+            </div>
+
+            <div class="space-y-4 max-h-[65vh] overflow-y-auto pb-4 hide-scroll">
+                <div id="field-category" class="hidden">
+                    <label class="block text-xs font-medium text-app-text mb-2">หมวดหมู่</label>
+                    <div id="cat-grid" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <div>
+                    <label id="label-amount" class="block text-xs font-medium text-app-text mb-1">จำนวนเงิน (บาท)</label>
+                    <div class="relative">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-app-text text-sm">฿</span>
+                        <input type="number" id="input-amount" placeholder="0" class="w-full bg-[#09090b] border border-app-border rounded-2xl pl-9 pr-4 py-3.5 text-lg font-bold text-white focus:outline-none transition-colors" inputmode="decimal">
+                    </div>
+                </div>
+
+                <div id="field-lalamove-extras" class="hidden space-y-4">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-medium text-app-text mb-1">ทิป</label>
+                            <input type="number" id="input-tip" placeholder="0" class="w-full bg-[#09090b] border border-app-border rounded-2xl px-4 py-2.5 font-medium text-emerald-400 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-app-text mb-1">หัก GP</label>
+                            <input type="number" id="input-gp" placeholder="0" class="w-full bg-[#09090b] border border-app-border rounded-2xl px-4 py-2.5 font-medium text-red-400 focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-app-text mb-1">ระยะทาง (กม.)</label>
+                        <input type="number" id="input-km" placeholder="0" class="w-full bg-[#09090b] border border-app-border rounded-2xl px-4 py-2.5 font-medium text-white focus:outline-none">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-app-text mb-1">หมายเหตุ</label>
+                    <input type="text" id="input-note" placeholder="รายละเอียด..." class="w-full bg-[#09090b] border border-app-border rounded-2xl px-4 py-2.5 font-medium text-white focus:outline-none">
+                </div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-app-border">
+                <button onclick="saveRecord()" id="btn-save" class="btn-press w-full py-3.5 rounded-2xl font-bold text-white text-base shadow-lg">บันทึก</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FIREBASE MODULE & LOGIC -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Constants & Global State attached to Window for HTML calls
+        window.CATEGORIES = {
+            'lalamove-expense': ['น้ำมัน', 'อาหาร/น้ำ', 'ค่าจอดรถ', 'ซ่อมบำรุง', 'อื่นๆ'],
+            'personal-income': ['เงินเดือน', 'โบนัส', 'ขายของ', 'อื่นๆ'],
+            'personal-expense': ['อาหาร', 'ของใช้', 'เดินทาง', 'ช้อปปิ้ง', 'บิล', 'อื่นๆ']
+        };
+
+        const state = {
+            activeTab: 'lalamove',
+            modalType: '',
+            category: '',
+            records: [],
+            settings: { dailyTarget: 1000, maintLimit: 3000, totalKm: 0 },
+            checkin: { start: null, end: null },
+            timerInterval: null,
+            chartInstance: null
+        };
+
+        let db, auth, currentUser, appId;
+
+        // --- PWA Setup ---
+        const manifest = {
+            "name": "LalaDaily Max",
+            "short_name": "LalaDaily",
+            "display": "standalone",
+            "background_color": "#09090b",
+            "theme_color": "#09090b",
+            "icons": [{"src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2310b981'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white' font-family='sans-serif'>LD</text></svg>","sizes": "192x192","type": "image/svg+xml"}]
+        };
+        document.getElementById('manifest-placeholder').setAttribute('href', URL.createObjectURL(new Blob([JSON.stringify(manifest)], {type: 'application/json'})));
+
+        // --- Utils ---
+        const getToday = () => new Date().toISOString().split('T')[0];
+        const getTime = () => new Date().toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit' });
+        const formatMoney = (num) => Number(num).toLocaleString('th-TH', { minimumFractionDigits: 0 });
+        
+        window.showToast = (msg, isError = false) => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast-enter flex items-center gap-2 px-4 py-2 rounded-full shadow-lg ${isError ? 'bg-red-900/90 text-white' : 'bg-emerald-900/90 text-emerald-100'} border ${isError ? 'border-red-700' : 'border-emerald-700'} backdrop-blur-md text-sm font-medium`;
+            toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transform = 'translateY(-100%)';
+                toast.style.transition = 'all 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        };
+
+        // --- Firebase Init ---
+        const initFirebase = async () => {
+            // Environment context setup
+            let configObj = { projectId: "demo-lalamove-tracker" }; // Fallback
+            if (typeof __firebase_config !== 'undefined') configObj = JSON.parse(__firebase_config);
+            appId = typeof __app_id !== 'undefined' ? __app_id : 'lalamove-tracker-local';
+
+            try {
+                const app = initializeApp(configObj);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+
+                onAuthStateChanged(auth, (user) => {
+                    if (user) {
+                        currentUser = user;
+                        document.getElementById('cloud-status').innerHTML = '<i class="fas fa-circle text-[8px]"></i> ออนไลน์';
+                        document.getElementById('cloud-status').className = 'text-[10px] bg-emerald-900/50 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1';
+                        setupCloudListeners();
+                    }
+                });
+            } catch (e) {
+                console.error("Firebase Init Failed (Running Offline Mode):", e);
+                // Fallback to local storage logic here if strictly offline, but UI handles empty state fine
+            }
+        };
+
+        const setupCloudListeners = () => {
+            if (!currentUser) return;
+            const recordsRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'records');
+            onSnapshot(recordsRef, (snapshot) => {
+                state.records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                renderUI();
+            }, (err) => console.error("Listen Error", err));
+
+            const checkinRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'checkin');
+            onSnapshot(checkinRef, (snapshot) => {
+                if(!snapshot.empty) {
+                    const doc = snapshot.docs[0].data();
+                    state.checkin = { start: doc.start || null, end: doc.end || null };
+                    if(state.checkin.start && !state.checkin.end) startTimer();
+                    else stopTimer();
+                    renderUI();
+                }
+            });
+
+            const settingsRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'settings');
+            onSnapshot(settingsRef, (snapshot) => {
+                if(!snapshot.empty) {
+                    state.settings = { ...state.settings, ...snapshot.docs[0].data() };
+                    document.getElementById('set-target').value = state.settings.dailyTarget;
+                    document.getElementById('set-maint').value = state.settings.maintLimit;
+                    renderUI();
+                } else {
+                    document.getElementById('set-target').value = state.settings.dailyTarget;
+                    document.getElementById('set-maint').value = state.settings.maintLimit;
+                }
+            });
+        };
+
+        // --- Core Functions ---
+        window.handleCheckIn = async () => {
+            if(state.checkin.start || !currentUser) return;
+            const docRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'checkin'), 'current');
+            await setDoc(docRef, { start: new Date().toISOString(), end: null });
+            showToast("เริ่มกะทำงานแล้ว ขอให้ปังๆ!");
+        };
+
+        window.handleCheckOut = async () => {
+            if(!state.checkin.start || state.checkin.end || !currentUser) return;
+            const docRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'checkin'), 'current');
+            await setDoc(docRef, { start: state.checkin.start, end: new Date().toISOString() });
+            showToast("จบกะทำงาน พักผ่อนได้เลยครับ");
+        };
+
+        function startTimer() {
+            stopTimer();
+            const el = document.getElementById('checkin-duration');
+            el.classList.remove('hidden');
+            state.timerInterval = setInterval(() => {
+                if(!state.checkin.start) return;
+                const diff = Date.now() - new Date(state.checkin.start).getTime();
+                el.innerText = new Date(diff).toISOString().substr(11, 8); // format HH:MM:SS
+            }, 1000);
+        }
+        function stopTimer() {
+            if(state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
         }
 
-        // ---------- Tab Switch ----------
-        function switchTab(tab) {
-            document.getElementById('module-lalamove').classList.toggle('active', tab === 'lalamove');
-            document.getElementById('module-personal').classList.toggle('active', tab === 'personal');
+        window.updateSettings = async () => {
+            if(!currentUser) return;
+            const target = parseInt(document.getElementById('set-target').value) || 1000;
+            const maint = parseInt(document.getElementById('set-maint').value) || 3000;
+            const docRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'settings'), 'config');
+            await setDoc(docRef, { dailyTarget: target, maintLimit: maint, totalKm: state.settings.totalKm });
+            showToast("อัปเดตการตั้งค่าแล้ว");
+        };
 
-            document.getElementById('tab-lalamove').className =
-                tab === 'lalamove'
-                    ? 'flex-1 py-2.5 text-sm font-medium bg-emerald-600 text-white rounded-xl'
-                    : 'flex-1 py-2.5 text-sm font-medium bg-slate-700 text-slate-300 rounded-xl';
+        window.resetMaintenance = async () => {
+            if(!currentUser || !confirm("ยืนยันการรีเซ็ตระยะทางรถเป็น 0?")) return;
+            const docRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'settings'), 'config');
+            await setDoc(docRef, { ...state.settings, totalKm: 0 });
+            showToast("รีเซ็ตระยะทางเรียบร้อย");
+        };
 
-            document.getElementById('tab-personal').className =
-                tab === 'personal'
-                    ? 'flex-1 py-2.5 text-sm font-medium bg-emerald-600 text-white rounded-xl'
-                    : 'flex-1 py-2.5 text-sm font-medium bg-slate-700 text-slate-300 rounded-xl';
-        }
+        window.saveRecord = async () => {
+            if(!currentUser) return showToast("รอเชื่อมต่อระบบคลาวด์สักครู่", true);
+            
+            const isLala = state.activeTab === 'lalamove';
+            const isInc = state.modalType === 'income';
+            
+            const amount = parseFloat(document.getElementById('input-amount').value) || 0;
+            const tip = parseFloat(document.getElementById('input-tip').value) || 0;
+            const gp = parseFloat(document.getElementById('input-gp').value) || 0;
+            const km = parseFloat(document.getElementById('input-km').value) || 0;
+            const note = document.getElementById('input-note').value.trim();
 
-        // ---------- Init ----------
-        window.addEventListener('load', function () {
-            loadData();
-            updateCheckinUI();
-            refreshUI();
-
-            if (checkin.start && !checkin.end) {
-                startDurationTimer();
+            if (isLala && isInc) {
+                if (amount === 0 && tip === 0) return showToast('กรุณากรอกรายได้หรือทิป', true);
+            } else {
+                if (amount === 0) return showToast('กรุณากรอกจำนวนเงิน', true);
+                if (!state.category) return showToast('กรุณาเลือกหมวดหมู่', true);
             }
 
-            console.log('%c[LalaDaily] Ready - Single File Version', 'color:#10b981; font-weight:bold');
-        });
+            const record = {
+                module: state.activeTab,
+                type: state.modalType,
+                date: getToday(),
+                time: getTime(),
+                timestamp: Date.now(),
+                category: isLala && isInc ? 'Lalamove' : state.category,
+                note: note,
+                amount: amount,
+                tip: isLala ? tip : 0,
+                gp: isLala ? gp : 0,
+                km: isLala ? km : 0,
+                netAmount: (isLala && isInc) ? (amount + tip - gp) : amount
+            };
+
+            try {
+                const docRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'records'), Date.now().toString());
+                await setDoc(docRef, record);
+                
+                // Update maintenance KM
+                if(km > 0) {
+                    const setRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'settings'), 'config');
+                    await setDoc(setRef, { ...state.settings, totalKm: state.settings.totalKm + km });
+                }
+                
+                window.closeAllModals();
+                showToast("บันทึกข้อมูลสำเร็จ!");
+            } catch(e) {
+                console.error(e);
+                showToast("เกิดข้อผิดพลาดในการบันทึก", true);
+            }
+        };
+
+        window.deleteRecord = async (id, km) => {
+            if(!currentUser || !confirm('ยืนยันลบรายการนี้?')) return;
+            const docRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'records'), id);
+            await deleteDoc(docRef);
+            
+            // Revert KM
+            if(km > 0 && state.settings.totalKm >= km) {
+                const setRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'settings'), 'config');
+                await setDoc(setRef, { ...state.settings, totalKm: state.settings.totalKm - km });
+            }
+            showToast("ลบรายการแล้ว");
+        };
+
+        window.exportCSV = () => {
+            if(state.records.length === 0) return showToast("ไม่มีข้อมูล", true);
+            let csv = "\uFEFFวันที่,เวลา,โมดูล,ประเภท,หมวดหมู่,รายรับแอป,ทิป,หักGP,ยอดสุทธิ,ระยะทาง(กม.),หมายเหตุ\n";
+            state.records.forEach(r => {
+                const typeStr = r.type === 'income' ? 'รายรับ' : 'รายจ่าย';
+                const modStr = r.module === 'lalamove' ? 'Lalamove' : 'Personal';
+                const safeNote = `"${r.note.replace(/"/g, '""')}"`;
+                csv += `${r.date},${r.time},${modStr},${typeStr},${r.category},${r.amount},${r.tip},${r.gp},${r.type === 'income' ? r.netAmount : -r.netAmount},${r.km},${safeNote}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `LalaDaily_Export_${getToday()}.csv`;
+            link.click();
+            showToast("ดาวน์โหลดไฟล์ Excel/CSV แล้ว");
+        };
+
+        // --- UI Rendering ---
+        window.switchTab = (tab) => {
+            state.activeTab = tab;
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+
+            // Header color
+            const titleEl = document.getElementById('header-title');
+            if(tab === 'lalamove') titleEl.className = 'text-2xl font-bold text-emerald-400 tracking-tight';
+            else if(tab === 'personal') titleEl.className = 'text-2xl font-bold text-blue-400 tracking-tight';
+            else if(tab === 'analytics') titleEl.className = 'text-2xl font-bold text-purple-400 tracking-tight';
+            else titleEl.className = 'text-2xl font-bold text-gray-400 tracking-tight';
+
+            // Nav Indicator
+            const navBtns = document.querySelectorAll('.nav-btn');
+            const colors = ['text-emerald-400', 'text-blue-400', 'text-purple-400', 'text-gray-400'];
+            const glowColors = ['bg-emerald-500/30', 'bg-blue-500/30', 'bg-purple-500/30', 'bg-gray-500/30'];
+            
+            navBtns.forEach((btn, idx) => {
+                const t = ['lalamove', 'personal', 'analytics', 'settings'][idx];
+                btn.className = `nav-btn relative z-10 flex-1 flex flex-col items-center gap-1 transition-colors py-1 ${tab === t ? colors[idx] : 'text-app-text'}`;
+                if(tab === t) {
+                    document.getElementById('nav-indicator').style.transform = `translateX(${idx * 100}%)`;
+                    document.getElementById('nav-glow').className = `w-12 h-1 rounded-full blur-md absolute top-1 ${glowColors[idx]}`;
+                }
+            });
+
+            // Toggle FAB visibility
+            const fab = document.getElementById('fab-container');
+            const txSection = document.getElementById('transactions-section');
+            if(tab === 'analytics' || tab === 'settings') {
+                fab.style.transform = 'translateY(150%)';
+                txSection.style.display = 'none';
+                if(tab === 'analytics') renderChart();
+            } else {
+                fab.style.transform = 'translateY(0)';
+                txSection.style.display = 'block';
+            }
+            renderUI();
+        };
+
+        const renderUI = () => {
+            // Checkin Status
+            const sEl = document.getElementById('checkin-status'), dEl = document.getElementById('checkin-duration');
+            const bIn = document.getElementById('btn-checkin'), bOut = document.getElementById('btn-checkout');
+            if(!state.checkin.start) {
+                sEl.innerText = 'ออฟไลน์'; sEl.className = 'text-base font-bold text-app-text mt-0.5 leading-tight';
+                dEl.classList.add('hidden');
+                bIn.classList.remove('opacity-50', 'pointer-events-none'); bOut.classList.add('opacity-50', 'pointer-events-none');
+            } else if(!state.checkin.end) {
+                sEl.innerHTML = `วิ่งงาน <span class="text-[10px] font-normal text-app-text ml-1">(เริ่ม ${new Date(state.checkin.start).toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})})</span>`;
+                sEl.className = 'text-base font-bold text-emerald-400 mt-0.5 leading-tight';
+                bIn.classList.add('opacity-50', 'pointer-events-none'); bOut.classList.remove('opacity-50', 'pointer-events-none');
+            } else {
+                sEl.innerText = 'จบกะแล้ว'; sEl.className = 'text-base font-bold text-white mt-0.5 leading-tight';
+                dEl.classList.add('hidden');
+                bIn.classList.add('opacity-50', 'pointer-events-none'); bOut.classList.add('opacity-50', 'pointer-events-none');
+            }
+
+            // Calculations for Today
+            const todayRecs = state.records.filter(r => r.date === getToday() && r.module === state.activeTab).sort((a,b) => b.timestamp - a.timestamp);
+            let inc = 0, exp = 0;
+            todayRecs.forEach(r => { if(r.type === 'income') inc += r.netAmount; else exp += r.netAmount; });
+            const net = inc - exp;
+
+            if(state.activeTab === 'lalamove') {
+                document.getElementById('lala-income').innerText = formatMoney(inc);
+                document.getElementById('lala-expense').innerText = formatMoney(exp);
+                document.getElementById('lala-net').innerText = formatMoney(net);
+                document.getElementById('target-display').innerText = `เป้า: ${formatMoney(state.settings.dailyTarget)}`;
+                
+                // Progress Bar Math
+                const pct = Math.min(100, Math.max(0, (net / state.settings.dailyTarget) * 100)) || 0;
+                document.getElementById('progress-text').innerText = `${Math.floor(pct)}%`;
+                const circ = document.getElementById('progress-circle');
+                const offset = 238.7 - (pct / 100 * 238.7);
+                circ.style.strokeDashoffset = offset;
+                if(pct >= 100) { circ.classList.replace('text-emerald-500', 'text-yellow-400'); }
+                else { circ.classList.replace('text-yellow-400', 'text-emerald-500'); }
+            } else if(state.activeTab === 'personal') {
+                document.getElementById('pers-income').innerText = formatMoney(inc);
+                document.getElementById('pers-expense').innerText = formatMoney(exp);
+                document.getElementById('pers-net').innerText = formatMoney(net);
+            }
+
+            // Maintenance Tracker Logic
+            const limit = state.settings.maintLimit || 3000;
+            const current = state.settings.totalKm || 0;
+            document.getElementById('tracker-current').innerText = current.toLocaleString();
+            document.getElementById('tracker-limit').innerText = limit.toLocaleString();
+            const maintPct = Math.min(100, (current / limit) * 100);
+            document.getElementById('tracker-bar').style.width = `${maintPct}%`;
+            const alertText = document.getElementById('tracker-alert');
+            if(maintPct >= 100) { alertText.innerText = "🚨 ถึงกำหนดเปลี่ยนถ่ายน้ำมันเครื่องแล้ว!"; alertText.className = "text-[10px] font-bold text-red-400 mt-2"; document.getElementById('tracker-bar').className = "h-full bg-red-500 transition-all duration-500";}
+            else if(maintPct >= 80) { alertText.innerText = "⚠️ ใกล้ถึงกำหนดบำรุงรักษาแล้วเตรียมตัวเลย"; alertText.className = "text-[10px] text-orange-400 mt-2"; document.getElementById('tracker-bar').className = "h-full bg-orange-500 transition-all duration-500";}
+            else { alertText.innerText = "สภาพรถยังดีเยี่ยม ลุยต่อ!"; alertText.className = "text-[10px] text-emerald-400 mt-2"; document.getElementById('tracker-bar').className = "h-full bg-emerald-500 transition-all duration-500";}
+
+            // List Render
+            if(state.activeTab === 'lalamove' || state.activeTab === 'personal') {
+                document.getElementById('transaction-count').innerText = `${todayRecs.length} รายการ`;
+                const listEl = document.getElementById('transactions-list');
+                if(todayRecs.length === 0) {
+                    listEl.innerHTML = `<div class="text-center py-6 border border-app-border/50 border-dashed rounded-2xl"><i class="fas fa-file-invoice text-2xl text-app-border mb-2"></i><p class="text-app-text text-xs">ยังไม่มีรายการวันนี้</p></div>`;
+                } else {
+                    listEl.innerHTML = todayRecs.map(r => {
+                        const isInc = r.type === 'income';
+                        const color = isInc ? (state.activeTab==='lalamove'?'text-emerald-400':'text-blue-400') : 'text-red-400';
+                        const bgClass = isInc ? (state.activeTab==='lalamove'?'bg-emerald-950/30':'bg-blue-950/30') : 'bg-red-950/30';
+                        const icon = isInc ? 'fa-arrow-turn-up' : 'fa-arrow-turn-down';
+                        const detail = (r.module === 'lalamove' && isInc) ? `แอป ฿${r.amount} ${r.tip>0?`| ทิป ฿${r.tip}`:''} ${r.gp>0?`| GP -฿${r.gp}`:''}` : (r.note || '-');
+                        
+                        return `
+                        <div class="group flex items-center justify-between p-3.5 bg-app-card rounded-2xl border border-app-border relative overflow-hidden">
+                            <div class="flex items-center gap-3">
+                                <div class="w-9 h-9 rounded-xl flex items-center justify-center ${bgClass} ${color}"><i class="fas ${icon} text-sm"></i></div>
+                                <div>
+                                    <div class="font-semibold text-gray-200 text-sm leading-none mb-1">${r.category}</div>
+                                    <div class="text-[10px] text-app-text w-36 truncate">${detail}</div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="font-bold ${color} text-sm">${isInc?'+':'-'}${formatMoney(r.netAmount)}</div>
+                                <div class="text-[9px] text-app-text mt-0.5">${r.time}</div>
+                            </div>
+                            <button onclick="deleteRecord('${r.id}', ${r.km})" class="absolute right-0 top-0 bottom-0 w-12 bg-red-600 flex items-center justify-center text-white transform translate-x-full group-hover:translate-x-0 transition-transform shadow-l">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </div>`;
+                    }).join('');
+                }
+            }
+        };
+
+        const renderChart = () => {
+            if(state.chartInstance) state.chartInstance.destroy();
+            const ctx = document.getElementById('profitChart').getContext('2d');
+            
+            // Get last 7 days logic
+            const dates = Array.from({length: 7}, (_, i) => {
+                const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d.toISOString().split('T')[0];
+            });
+            const lalaRecs = state.records.filter(r => r.module === 'lalamove');
+            const data = dates.map(d => {
+                const dayRecs = lalaRecs.filter(r => r.date === d);
+                let inc=0, exp=0;
+                dayRecs.forEach(r => { if(r.type==='income') inc+=r.netAmount; else exp+=r.netAmount; });
+                return inc - exp;
+            });
+            const labels = dates.map(d => {
+                const obj = new Date(d);
+                return `${obj.getDate()}/${obj.getMonth()+1}`;
+            });
+
+            // Update simple stats
+            const monthPrefix = getToday().substr(0,7);
+            const monthRecs = lalaRecs.filter(r => r.date.startsWith(monthPrefix));
+            const trips = monthRecs.filter(r => r.type==='income').length;
+            const kms = monthRecs.reduce((sum, r) => sum + (Number(r.km)||0), 0);
+            document.getElementById('stat-trips').innerHTML = `${trips}<span class="text-[10px] font-normal text-app-text ml-1">งาน</span>`;
+            document.getElementById('stat-km').innerHTML = `${kms}<span class="text-[10px] font-normal text-app-text ml-1">กม.</span>`;
+
+            Chart.defaults.color = '#a1a1aa';
+            Chart.defaults.font.family = "'Noto Sans Thai', sans-serif";
+            state.chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'กำไร (บาท)',
+                        data: data,
+                        backgroundColor: data.map(v => v >= 0 ? '#10b981' : '#f87171'),
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: '#27272a' }, border: { display: false } },
+                        x: { grid: { display: false }, border: { display: false } }
+                    }
+                }
+            });
+        };
+
+        // --- Modals Form UI ---
+        window.openModal = (type) => {
+            state.modalType = type; state.category = '';
+            const isLala = state.activeTab === 'lalamove';
+            const tc = type==='income' ? 'text-emerald-400' : 'text-red-400';
+            const bc = type==='income' ? 'bg-emerald-600' : 'bg-red-600';
+            
+            document.getElementById('modal-title').className = `text-xl font-bold ${tc} tracking-tight`;
+            document.getElementById('modal-title').innerText = type==='income'?'บันทึกรับเงิน':'บันทึกรายจ่าย';
+            document.getElementById('btn-save').className = `btn-press w-full py-3.5 rounded-2xl font-bold text-white text-base shadow-lg ${bc}`;
+            
+            ['amount','tip','gp','km','note'].forEach(id => document.getElementById(`input-${id}`).value = '');
+
+            if(isLala && type === 'income') {
+                document.getElementById('label-amount').innerText = 'รายได้จากแอป (บาท)';
+                document.getElementById('field-lalamove-extras').classList.remove('hidden');
+                document.getElementById('field-category').classList.add('hidden');
+                document.getElementById('input-note').value = 'วิ่งงาน';
+            } else {
+                document.getElementById('label-amount').innerText = 'จำนวนเงิน (บาท)';
+                document.getElementById('field-lalamove-extras').classList.add('hidden');
+                document.getElementById('field-category').classList.remove('hidden');
+                const cats = window.CATEGORIES[isLala ? 'lalamove-expense' : `personal-${type}`];
+                document.getElementById('cat-grid').innerHTML = cats.map(c => 
+                    `<button onclick="selectCat(this, '${c}')" class="cat-btn px-3 py-1.5 rounded-lg border border-app-border text-xs text-app-text font-medium">${c}</button>`
+                ).join('');
+            }
+            
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('modal-overlay').classList.add('opacity-100');
+                document.getElementById('entry-modal').classList.add('open');
+            }, 10);
+        };
+
+        window.selectCat = (btn, cat) => {
+            state.category = cat;
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('bg-app-border','text-white','border-gray-400'));
+            btn.classList.add('bg-app-border','text-white','border-gray-400');
+            document.getElementById('input-amount').focus();
+        };
+
+        window.closeAllModals = () => {
+            document.getElementById('entry-modal').classList.remove('open');
+            document.getElementById('modal-overlay').classList.remove('opacity-100');
+            setTimeout(() => document.getElementById('modal-overlay').classList.add('hidden'), 300);
+        };
+
+        // --- Init App ---
+        document.getElementById('header-date').innerText = new Date().toLocaleDateString('th-TH', { weekday: 'long', month: 'long', day: 'numeric' });
+        initFirebase(); // Trigger Cloud Connection
     </script>
 </body>
 </html>
+
+
