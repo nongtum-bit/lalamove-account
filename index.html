@@ -8,9 +8,6 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <title>LalaDaily Max</title>
     
-    <!-- Dynamic PWA Manifest Placeholder -->
-    <link id="manifest-placeholder" rel="manifest" href="">
-
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- FontAwesome -->
@@ -44,7 +41,6 @@
         .tab-content { display: none; opacity: 0; transition: opacity 0.3s; }
         .tab-content.active { display: block; opacity: 1; }
         
-        /* Toast Animation */
         @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         .toast-enter { animation: slideDown 0.3s ease-out forwards; }
     </style>
@@ -62,8 +58,8 @@
                 <h1 id="header-title" class="text-2xl font-bold text-emerald-400 tracking-tight transition-colors">LalaDaily</h1>
                 <div class="flex items-center gap-2 mt-0.5">
                     <p id="header-date" class="text-sm text-app-text"></p>
-                    <span id="cloud-status" class="text-[10px] bg-red-900/50 text-red-400 border border-red-800 px-2 py-0.5 rounded-full flex items-center gap-1">
-                        <i class="fas fa-circle text-[8px]"></i> ออฟไลน์
+                    <span class="text-[10px] bg-blue-900/50 text-blue-400 border border-blue-800 px-2 py-0.5 rounded-full flex items-center gap-1">
+                        <i class="fas fa-save text-[8px]"></i> บันทึกในเครื่อง
                     </span>
                 </div>
             </div>
@@ -211,6 +207,8 @@
                         <input type="number" id="set-maint" onchange="updateSettings()" class="w-full bg-app-card border border-app-border rounded-xl px-4 py-3 text-white focus:border-orange-500 outline-none">
                     </div>
                     <button onclick="resetMaintenance()" class="w-full py-3 bg-app-border text-white text-sm rounded-xl font-medium mt-2">รีเซ็ตระยะทางรถ (เริ่มนับ 0 ใหม่)</button>
+                    
+                    <button onclick="clearAllData()" class="w-full py-3 bg-red-900/30 text-red-400 border border-red-900/50 text-sm rounded-xl font-medium mt-4">ล้างข้อมูลทั้งหมดในเครื่อง</button>
                 </div>
             </div>
 
@@ -314,20 +312,15 @@
 
     </div>
 
-    <!-- FIREBASE MODULE & LOGIC -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
-        // Constants & Global State attached to Window for HTML calls
-        window.CATEGORIES = {
+    <!-- LOGIC (Local Storage Version) -->
+    <script>
+        const CATEGORIES = {
             'lalamove-expense': ['น้ำมัน', 'อาหาร/น้ำ', 'ค่าจอดรถ', 'ซ่อมบำรุง', 'อื่นๆ'],
             'personal-income': ['เงินเดือน', 'โบนัส', 'ขายของ', 'อื่นๆ'],
             'personal-expense': ['อาหาร', 'ของใช้', 'เดินทาง', 'ช้อปปิ้ง', 'บิล', 'อื่นๆ']
         };
 
-        const state = {
+        let state = {
             activeTab: 'lalamove',
             modalType: '',
             category: '',
@@ -337,19 +330,6 @@
             timerInterval: null,
             chartInstance: null
         };
-
-        let db, auth, currentUser, appId;
-
-        // --- PWA Setup ---
-        const manifest = {
-            "name": "LalaDaily Max",
-            "short_name": "LalaDaily",
-            "display": "standalone",
-            "background_color": "#09090b",
-            "theme_color": "#09090b",
-            "icons": [{"src": "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%2310b981'/><text x='50' y='65' font-size='50' text-anchor='middle' fill='white' font-family='sans-serif'>LD</text></svg>","sizes": "192x192","type": "image/svg+xml"}]
-        };
-        document.getElementById('manifest-placeholder').setAttribute('href', URL.createObjectURL(new Blob([JSON.stringify(manifest)], {type: 'application/json'})));
 
         // --- Utils ---
         const getToday = () => new Date().toISOString().split('T')[0];
@@ -370,83 +350,57 @@
             }, 3000);
         };
 
-        // --- Firebase Init ---
-        const initFirebase = async () => {
-            // Environment context setup
-            let configObj = { projectId: "demo-lalamove-tracker" }; // Fallback
-            if (typeof __firebase_config !== 'undefined') configObj = JSON.parse(__firebase_config);
-            appId = typeof __app_id !== 'undefined' ? __app_id : 'lalamove-tracker-local';
-
+        // --- Local Storage Data Flow ---
+        function loadData() {
             try {
-                const app = initializeApp(configObj);
-                auth = getAuth(app);
-                db = getFirestore(app);
-
-                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                    await signInWithCustomToken(auth, __initial_auth_token);
-                } else {
-                    await signInAnonymously(auth);
-                }
-
-                onAuthStateChanged(auth, (user) => {
-                    if (user) {
-                        currentUser = user;
-                        document.getElementById('cloud-status').innerHTML = '<i class="fas fa-circle text-[8px]"></i> ออนไลน์';
-                        document.getElementById('cloud-status').className = 'text-[10px] bg-emerald-900/50 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded-full flex items-center gap-1';
-                        setupCloudListeners();
-                    }
-                });
-            } catch (e) {
-                console.error("Firebase Init Failed (Running Offline Mode):", e);
-                // Fallback to local storage logic here if strictly offline, but UI handles empty state fine
-            }
-        };
-
-        const setupCloudListeners = () => {
-            if (!currentUser) return;
-            const recordsRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'records');
-            onSnapshot(recordsRef, (snapshot) => {
-                state.records = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                const loadedRecords = localStorage.getItem('ld_max_records');
+                if(loadedRecords) state.records = JSON.parse(loadedRecords);
+                
+                const loadedSettings = localStorage.getItem('ld_max_settings');
+                if(loadedSettings) state.settings = { ...state.settings, ...JSON.parse(loadedSettings) };
+                
+                const loadedCheckin = localStorage.getItem('ld_max_checkin');
+                if(loadedCheckin) state.checkin = JSON.parse(loadedCheckin);
+                
+                document.getElementById('set-target').value = state.settings.dailyTarget;
+                document.getElementById('set-maint').value = state.settings.maintLimit;
+                
+                if(state.checkin.start && !state.checkin.end) startTimer();
                 renderUI();
-            }, (err) => console.error("Listen Error", err));
+            } catch(e) {
+                console.error("Load error", e);
+            }
+        }
 
-            const checkinRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'checkin');
-            onSnapshot(checkinRef, (snapshot) => {
-                if(!snapshot.empty) {
-                    const doc = snapshot.docs[0].data();
-                    state.checkin = { start: doc.start || null, end: doc.end || null };
-                    if(state.checkin.start && !state.checkin.end) startTimer();
-                    else stopTimer();
-                    renderUI();
-                }
-            });
+        function saveData() {
+            localStorage.setItem('ld_max_records', JSON.stringify(state.records));
+            localStorage.setItem('ld_max_settings', JSON.stringify(state.settings));
+            localStorage.setItem('ld_max_checkin', JSON.stringify(state.checkin));
+        }
 
-            const settingsRef = collection(db, 'artifacts', appId, 'users', currentUser.uid, 'settings');
-            onSnapshot(settingsRef, (snapshot) => {
-                if(!snapshot.empty) {
-                    state.settings = { ...state.settings, ...snapshot.docs[0].data() };
-                    document.getElementById('set-target').value = state.settings.dailyTarget;
-                    document.getElementById('set-maint').value = state.settings.maintLimit;
-                    renderUI();
-                } else {
-                    document.getElementById('set-target').value = state.settings.dailyTarget;
-                    document.getElementById('set-maint').value = state.settings.maintLimit;
-                }
-            });
-        };
+        window.clearAllData = () => {
+            if(confirm("แน่ใจหรือไม่ว่าต้องการลบข้อมูลทั้งหมด? (กู้คืนไม่ได้นะ)")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
 
         // --- Core Functions ---
-        window.handleCheckIn = async () => {
-            if(state.checkin.start || !currentUser) return;
-            const docRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'checkin'), 'current');
-            await setDoc(docRef, { start: new Date().toISOString(), end: null });
+        window.handleCheckIn = () => {
+            if(state.checkin.start) return;
+            state.checkin = { start: new Date().toISOString(), end: null };
+            saveData();
+            startTimer();
+            renderUI();
             showToast("เริ่มกะทำงานแล้ว ขอให้ปังๆ!");
         };
 
-        window.handleCheckOut = async () => {
-            if(!state.checkin.start || state.checkin.end || !currentUser) return;
-            const docRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'checkin'), 'current');
-            await setDoc(docRef, { start: state.checkin.start, end: new Date().toISOString() });
+        window.handleCheckOut = () => {
+            if(!state.checkin.start || state.checkin.end) return;
+            state.checkin.end = new Date().toISOString();
+            saveData();
+            stopTimer();
+            renderUI();
             showToast("จบกะทำงาน พักผ่อนได้เลยครับ");
         };
 
@@ -457,32 +411,30 @@
             state.timerInterval = setInterval(() => {
                 if(!state.checkin.start) return;
                 const diff = Date.now() - new Date(state.checkin.start).getTime();
-                el.innerText = new Date(diff).toISOString().substr(11, 8); // format HH:MM:SS
+                el.innerText = new Date(diff).toISOString().substr(11, 8);
             }, 1000);
         }
         function stopTimer() {
             if(state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; }
         }
 
-        window.updateSettings = async () => {
-            if(!currentUser) return;
-            const target = parseInt(document.getElementById('set-target').value) || 1000;
-            const maint = parseInt(document.getElementById('set-maint').value) || 3000;
-            const docRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'settings'), 'config');
-            await setDoc(docRef, { dailyTarget: target, maintLimit: maint, totalKm: state.settings.totalKm });
+        window.updateSettings = () => {
+            state.settings.dailyTarget = parseInt(document.getElementById('set-target').value) || 1000;
+            state.settings.maintLimit = parseInt(document.getElementById('set-maint').value) || 3000;
+            saveData();
             showToast("อัปเดตการตั้งค่าแล้ว");
+            renderUI();
         };
 
-        window.resetMaintenance = async () => {
-            if(!currentUser || !confirm("ยืนยันการรีเซ็ตระยะทางรถเป็น 0?")) return;
-            const docRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'settings'), 'config');
-            await setDoc(docRef, { ...state.settings, totalKm: 0 });
+        window.resetMaintenance = () => {
+            if(!confirm("ยืนยันการรีเซ็ตระยะทางรถเป็น 0?")) return;
+            state.settings.totalKm = 0;
+            saveData();
             showToast("รีเซ็ตระยะทางเรียบร้อย");
+            renderUI();
         };
 
-        window.saveRecord = async () => {
-            if(!currentUser) return showToast("รอเชื่อมต่อระบบคลาวด์สักครู่", true);
-            
+        window.saveRecord = () => {
             const isLala = state.activeTab === 'lalamove';
             const isInc = state.modalType === 'income';
             
@@ -500,6 +452,7 @@
             }
 
             const record = {
+                id: Date.now().toString(),
                 module: state.activeTab,
                 type: state.modalType,
                 date: getToday(),
@@ -514,39 +467,26 @@
                 netAmount: (isLala && isInc) ? (amount + tip - gp) : amount
             };
 
-            try {
-                const docRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'records'), Date.now().toString());
-                await setDoc(docRef, record);
-                
-                // Update maintenance KM
-                if(km > 0) {
-                    const setRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'settings'), 'config');
-                    await setDoc(setRef, { ...state.settings, totalKm: state.settings.totalKm + km });
-                }
-                
-                window.closeAllModals();
-                showToast("บันทึกข้อมูลสำเร็จ!");
-            } catch(e) {
-                console.error(e);
-                showToast("เกิดข้อผิดพลาดในการบันทึก", true);
-            }
+            state.records.push(record);
+            if(km > 0) state.settings.totalKm += km;
+            
+            saveData();
+            window.closeAllModals();
+            showToast("บันทึกข้อมูลสำเร็จ!");
+            renderUI();
         };
 
-        window.deleteRecord = async (id, km) => {
-            if(!currentUser || !confirm('ยืนยันลบรายการนี้?')) return;
-            const docRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'records'), id);
-            await deleteDoc(docRef);
-            
-            // Revert KM
-            if(km > 0 && state.settings.totalKm >= km) {
-                const setRef = doc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'settings'), 'config');
-                await setDoc(setRef, { ...state.settings, totalKm: state.settings.totalKm - km });
-            }
+        window.deleteRecord = (id, km) => {
+            if(!confirm('ยืนยันลบรายการนี้?')) return;
+            state.records = state.records.filter(r => r.id !== id);
+            if(km > 0 && state.settings.totalKm >= km) state.settings.totalKm -= km;
+            saveData();
             showToast("ลบรายการแล้ว");
+            renderUI();
         };
 
         window.exportCSV = () => {
-            if(state.records.length === 0) return showToast("ไม่มีข้อมูล", true);
+            if(state.records.length === 0) return showToast("ไม่มีข้อมูลให้ส่งออก", true);
             let csv = "\uFEFFวันที่,เวลา,โมดูล,ประเภท,หมวดหมู่,รายรับแอป,ทิป,หักGP,ยอดสุทธิ,ระยะทาง(กม.),หมายเหตุ\n";
             state.records.forEach(r => {
                 const typeStr = r.type === 'income' ? 'รายรับ' : 'รายจ่าย';
@@ -559,7 +499,7 @@
             link.href = URL.createObjectURL(blob);
             link.download = `LalaDaily_Export_${getToday()}.csv`;
             link.click();
-            showToast("ดาวน์โหลดไฟล์ Excel/CSV แล้ว");
+            showToast("ดาวน์โหลดไฟล์ Excel แล้ว");
         };
 
         // --- UI Rendering ---
@@ -568,14 +508,12 @@
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             document.getElementById(`tab-${tab}`).classList.add('active');
 
-            // Header color
             const titleEl = document.getElementById('header-title');
             if(tab === 'lalamove') titleEl.className = 'text-2xl font-bold text-emerald-400 tracking-tight';
             else if(tab === 'personal') titleEl.className = 'text-2xl font-bold text-blue-400 tracking-tight';
             else if(tab === 'analytics') titleEl.className = 'text-2xl font-bold text-purple-400 tracking-tight';
             else titleEl.className = 'text-2xl font-bold text-gray-400 tracking-tight';
 
-            // Nav Indicator
             const navBtns = document.querySelectorAll('.nav-btn');
             const colors = ['text-emerald-400', 'text-blue-400', 'text-purple-400', 'text-gray-400'];
             const glowColors = ['bg-emerald-500/30', 'bg-blue-500/30', 'bg-purple-500/30', 'bg-gray-500/30'];
@@ -589,13 +527,12 @@
                 }
             });
 
-            // Toggle FAB visibility
             const fab = document.getElementById('fab-container');
             const txSection = document.getElementById('transactions-section');
             if(tab === 'analytics' || tab === 'settings') {
                 fab.style.transform = 'translateY(150%)';
                 txSection.style.display = 'none';
-                if(tab === 'analytics') renderChart();
+                if(tab === 'analytics') setTimeout(renderChart, 50); // small delay to ensure element is visible for Chart.js
             } else {
                 fab.style.transform = 'translateY(0)';
                 txSection.style.display = 'block';
@@ -604,7 +541,7 @@
         };
 
         const renderUI = () => {
-            // Checkin Status
+            // Checkin UI
             const sEl = document.getElementById('checkin-status'), dEl = document.getElementById('checkin-duration');
             const bIn = document.getElementById('btn-checkin'), bOut = document.getElementById('btn-checkout');
             if(!state.checkin.start) {
@@ -621,7 +558,7 @@
                 bIn.classList.add('opacity-50', 'pointer-events-none'); bOut.classList.add('opacity-50', 'pointer-events-none');
             }
 
-            // Calculations for Today
+            // Dashboard Logic
             const todayRecs = state.records.filter(r => r.date === getToday() && r.module === state.activeTab).sort((a,b) => b.timestamp - a.timestamp);
             let inc = 0, exp = 0;
             todayRecs.forEach(r => { if(r.type === 'income') inc += r.netAmount; else exp += r.netAmount; });
@@ -633,21 +570,20 @@
                 document.getElementById('lala-net').innerText = formatMoney(net);
                 document.getElementById('target-display').innerText = `เป้า: ${formatMoney(state.settings.dailyTarget)}`;
                 
-                // Progress Bar Math
-                const pct = Math.min(100, Math.max(0, (net / state.settings.dailyTarget) * 100)) || 0;
+                const pct = Math.min(100, Math.max(0, (net / (state.settings.dailyTarget || 1)) * 100)) || 0;
                 document.getElementById('progress-text').innerText = `${Math.floor(pct)}%`;
                 const circ = document.getElementById('progress-circle');
                 const offset = 238.7 - (pct / 100 * 238.7);
                 circ.style.strokeDashoffset = offset;
-                if(pct >= 100) { circ.classList.replace('text-emerald-500', 'text-yellow-400'); }
-                else { circ.classList.replace('text-yellow-400', 'text-emerald-500'); }
+                if(pct >= 100) circ.classList.replace('text-emerald-500', 'text-yellow-400');
+                else circ.classList.replace('text-yellow-400', 'text-emerald-500');
             } else if(state.activeTab === 'personal') {
                 document.getElementById('pers-income').innerText = formatMoney(inc);
                 document.getElementById('pers-expense').innerText = formatMoney(exp);
                 document.getElementById('pers-net').innerText = formatMoney(net);
             }
 
-            // Maintenance Tracker Logic
+            // Tracker UI
             const limit = state.settings.maintLimit || 3000;
             const current = state.settings.totalKm || 0;
             document.getElementById('tracker-current').innerText = current.toLocaleString();
@@ -659,7 +595,7 @@
             else if(maintPct >= 80) { alertText.innerText = "⚠️ ใกล้ถึงกำหนดบำรุงรักษาแล้วเตรียมตัวเลย"; alertText.className = "text-[10px] text-orange-400 mt-2"; document.getElementById('tracker-bar').className = "h-full bg-orange-500 transition-all duration-500";}
             else { alertText.innerText = "สภาพรถยังดีเยี่ยม ลุยต่อ!"; alertText.className = "text-[10px] text-emerald-400 mt-2"; document.getElementById('tracker-bar').className = "h-full bg-emerald-500 transition-all duration-500";}
 
-            // List Render
+            // Transactions List
             if(state.activeTab === 'lalamove' || state.activeTab === 'personal') {
                 document.getElementById('transaction-count').innerText = `${todayRecs.length} รายการ`;
                 const listEl = document.getElementById('transactions-list');
@@ -699,7 +635,6 @@
             if(state.chartInstance) state.chartInstance.destroy();
             const ctx = document.getElementById('profitChart').getContext('2d');
             
-            // Get last 7 days logic
             const dates = Array.from({length: 7}, (_, i) => {
                 const d = new Date(); d.setDate(d.getDate() - (6 - i)); return d.toISOString().split('T')[0];
             });
@@ -715,7 +650,6 @@
                 return `${obj.getDate()}/${obj.getMonth()+1}`;
             });
 
-            // Update simple stats
             const monthPrefix = getToday().substr(0,7);
             const monthRecs = lalaRecs.filter(r => r.date.startsWith(monthPrefix));
             const trips = monthRecs.filter(r => r.type==='income').length;
@@ -769,7 +703,7 @@
                 document.getElementById('label-amount').innerText = 'จำนวนเงิน (บาท)';
                 document.getElementById('field-lalamove-extras').classList.add('hidden');
                 document.getElementById('field-category').classList.remove('hidden');
-                const cats = window.CATEGORIES[isLala ? 'lalamove-expense' : `personal-${type}`];
+                const cats = CATEGORIES[isLala ? 'lalamove-expense' : `personal-${type}`];
                 document.getElementById('cat-grid').innerHTML = cats.map(c => 
                     `<button onclick="selectCat(this, '${c}')" class="cat-btn px-3 py-1.5 rounded-lg border border-app-border text-xs text-app-text font-medium">${c}</button>`
                 ).join('');
@@ -795,9 +729,9 @@
             setTimeout(() => document.getElementById('modal-overlay').classList.add('hidden'), 300);
         };
 
-        // --- Init App ---
+        // --- Start App ---
         document.getElementById('header-date').innerText = new Date().toLocaleDateString('th-TH', { weekday: 'long', month: 'long', day: 'numeric' });
-        initFirebase(); // Trigger Cloud Connection
+        loadData(); // Load local storage
     </script>
 </body>
 </html>
