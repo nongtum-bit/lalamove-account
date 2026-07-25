@@ -386,7 +386,7 @@
                         <input type="number" step="any" id="input-adjust-amount" placeholder="0" class="w-full bg-[#09090b] border border-app-border rounded-xl pl-9 pr-4 py-3 text-xl font-bold text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 outline-none transition-all" inputmode="decimal">
                     </div>
                     <div class="text-[10px] text-app-text/70 leading-relaxed bg-emerald-950/20 p-2 rounded-lg border border-emerald-900/30">
-                        <i class="fas fa-lightbulb text-emerald-500"></i> หากยอดในแอปไม่ตรงกับความจริง สามารถกรอกยอดจริงที่นี่ได้เลย ระบบจะสร้างรายการ <b>"ปรับปรุงยอด"</b> ให้ส่วนต่างตรงกันอัตโนมัติ (ไม่กระทบกำไรรายวัน)
+                        <i class="fas fa-lightbulb text-emerald-500"></i> หากยอดในแอปไม่ตรงกับความจริง สามารถกรอกยอดจริงที่นี่ได้เลย ระบบจะสร้างรายการ <b>"ปรับปรุงยอด"</b> ให้ส่วนต่างตรงกันอัตโนมัติ
                     </div>
                 </div>
 
@@ -545,8 +545,8 @@
             TRANSFER_IN: 'รับเงินจาก Lalamove',
             TOPUP_TO_LALA: 'โอนไปเติมเครดิต Lalamove',
             TOPUP_FROM_PERS: 'เติมเครดิตจากส่วนตัว',
-            ADJUST_CREDIT: 'ปรับปรุงยอด (เครดิตแอป)', // 🎯 NEW
-            ADJUST_PERS: 'ปรับปรุงยอด (เงินส่วนตัว)'   // 🎯 NEW
+            ADJUST_CREDIT: 'ปรับปรุงยอด (เครดิตแอป)',
+            ADJUST_PERS: 'ปรับปรุงยอด (เงินส่วนตัว)'
         };
 
         const CATEGORIES = {
@@ -561,7 +561,7 @@
             settings: { dailyTarget: 1000, maintLimit: 3000, totalKm: 0, defaultFuelPrice: 35.5, defaultFuelRate: 15.0 },
             checkin: { start: null, end: null }, timerInterval: null, analytics: { range: '7', module: 'lalamove' },
             lalaIncomeType: 'trip', lastPct: 0, todayNet: 0,
-            adjustingWallet: null // 🎯 For sync balance
+            adjustingWallet: null
         };
         
         let currentTollPayer = 'customer'; let currentPaymentMethod = 'credit'; let currentTransferAction = 'withdraw';
@@ -605,23 +605,16 @@
         };
 
         window.showConfirm = (title, message, iconStr, colorTheme, callback) => {
-            document.getElementById('confirm-title').innerText = title;
-            document.getElementById('confirm-message').innerText = message;
-            
+            document.getElementById('confirm-title').innerText = title; document.getElementById('confirm-message').innerText = message;
             const iconEl = document.getElementById('confirm-icon');
             iconEl.className = `w-12 h-12 rounded-full flex items-center justify-center text-xl mx-auto mb-4 ${colorTheme === 'red' ? 'bg-red-500/20 text-red-500' : 'bg-orange-500/20 text-orange-500'}`;
             iconEl.innerHTML = `<i class="fas ${iconStr}"></i>`;
-            
             const btnConfirm = document.getElementById('confirm-btn-action');
             btnConfirm.className = `flex-1 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-transform text-white ${colorTheme === 'red' ? 'bg-red-600 shadow-red-900/40' : 'bg-orange-600 shadow-orange-900/40'}`;
             btnConfirm.innerText = "ยืนยัน";
-            
             confirmCallback = callback;
-            
-            const modal = document.getElementById('confirm-modal');
-            const box = document.getElementById('confirm-modal-box');
-            modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.add('opacity-100'); box.classList.remove('scale-95'); box.classList.add('scale-100'); }, 10);
+            const modal = document.getElementById('confirm-modal'); const box = document.getElementById('confirm-modal-box');
+            modal.classList.remove('hidden'); setTimeout(() => { modal.classList.add('opacity-100'); box.classList.remove('scale-95'); box.classList.add('scale-100'); }, 10);
         };
 
         window.closeConfirmModal = () => {
@@ -634,16 +627,13 @@
 
         function loadData() {
             try {
-                const r = localStorage.getItem('ld_max_records_v18'); if(r) state.records = JSON.parse(r);
-                const s = localStorage.getItem('ld_max_settings_v18'); if(s) state.settings = { ...state.settings, ...JSON.parse(s) };
-                const c = localStorage.getItem('ld_max_checkin_v18'); if(c) state.checkin = JSON.parse(c);
-                
+                const r = localStorage.getItem('ld_max_records_v19'); if(r) state.records = JSON.parse(r);
+                const s = localStorage.getItem('ld_max_settings_v19'); if(s) state.settings = { ...state.settings, ...JSON.parse(s) };
+                const c = localStorage.getItem('ld_max_checkin_v19'); if(c) state.checkin = JSON.parse(c);
                 document.getElementById('set-target').value = state.settings.dailyTarget; document.getElementById('set-maint').value = state.settings.maintLimit;
                 document.getElementById('set-fuel-price').value = state.settings.defaultFuelPrice; document.getElementById('set-fuel-rate').value = state.settings.defaultFuelRate;
-                
                 const d = new Date(); d.setDate(d.getDate() - 6);
                 document.getElementById('range-start').value = formatDateISO(d); document.getElementById('range-end').value = getToday();
-
                 if(state.checkin.start && !state.checkin.end) startTimer();
                 renderUI();
             } catch(e) {}
@@ -651,9 +641,9 @@
 
         function saveData() {
             try {
-                localStorage.setItem('ld_max_records_v18', JSON.stringify(state.records));
-                localStorage.setItem('ld_max_settings_v18', JSON.stringify(state.settings));
-                localStorage.setItem('ld_max_checkin_v18', JSON.stringify(state.checkin));
+                localStorage.setItem('ld_max_records_v19', JSON.stringify(state.records));
+                localStorage.setItem('ld_max_settings_v19', JSON.stringify(state.settings));
+                localStorage.setItem('ld_max_checkin_v19', JSON.stringify(state.checkin));
             } catch(e) { showToast("หน่วยความจำเครื่องเต็ม!", true); }
         }
 
@@ -665,17 +655,12 @@
         const updateTimerUI = () => {
             const el = document.getElementById('checkin-duration'); const stEl = document.getElementById('checkin-status'); const wEl = document.getElementById('checkin-wage');
             if(!state.checkin.start || state.checkin.end) { if(wEl) wEl.classList.add('hidden'); return; }
-
             const diff = Date.now() - new Date(state.checkin.start).getTime();
             const h = Math.floor(diff / 3600000).toString().padStart(2, '0'); const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0'); const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
             el.innerText = `${h}:${m}:${s}`; 
-            
             if(stEl && !stEl.innerHTML.includes('animate-pulse-slow')) { const sDt = new Date(state.checkin.start); stEl.innerHTML = `<span class="animate-pulse-slow">🟢 วิ่งงาน</span> <span class="text-[10px] font-normal text-emerald-500/70 ml-1">(เริ่ม ${sDt.getHours().toString().padStart(2,'0')}:${sDt.getMinutes().toString().padStart(2,'0')})</span>`; }
-
             const diffHours = diff / 3600000;
-            if(wEl && state.todayNet > 0 && diffHours > 0.05) { 
-                const wagePerHour = (state.todayNet / diffHours).toFixed(0); wEl.innerHTML = `<i class="fas fa-bolt text-yellow-400/80"></i> ค่าแรงเฉลี่ย ฿${formatMoney(wagePerHour)}/ชม.`; wEl.classList.remove('hidden');
-            } else if (wEl) { wEl.classList.add('hidden'); }
+            if(wEl && state.todayNet > 0 && diffHours > 0.05) { const wagePerHour = (state.todayNet / diffHours).toFixed(0); wEl.innerHTML = `<i class="fas fa-bolt text-yellow-400/80"></i> ค่าแรงเฉลี่ย ฿${formatMoney(wagePerHour)}/ชม.`; wEl.classList.remove('hidden'); } else if (wEl) { wEl.classList.add('hidden'); }
         };
 
         function startTimer() { stopTimer(); document.getElementById('checkin-duration').classList.remove('hidden'); updateTimerUI(); state.timerInterval = setInterval(updateTimerUI, 1000); }
@@ -713,62 +698,33 @@
         };
         window.resetMaintenance = () => { showConfirm('รีเซ็ตระยะทาง', 'เริ่มนับระยะทางสะสมใหม่ตั้งแต่ 0 หรือไม่?', 'fa-undo', 'orange', () => { state.settings.totalKm = 0; saveData(); showToast("รีเซ็ตเรียบร้อย"); renderUI(); }); };
 
-        // 🎯 NEW: ระบบปรับปรุงยอด (Sync Balance)
         window.openAdjustModal = (walletType) => {
-            state.adjustingWallet = walletType;
-            const w = calcWallets();
-            const currVal = walletType === 'credit' ? w.credit : w.personal;
-            
+            state.adjustingWallet = walletType; const w = calcWallets(); const currVal = walletType === 'credit' ? w.credit : w.personal;
             document.getElementById('adjust-wallet-label').innerHTML = walletType === 'credit' ? '<i class="fas fa-mobile-screen text-blue-400"></i> ปรับปรุงยอดเครดิตแอป' : '<i class="fas fa-wallet text-purple-400"></i> ปรับปรุงยอดเงินส่วนตัว';
             document.getElementById('adjust-current-hint').innerText = `ยอดในแอปตอนนี้: ${formatMoney(currVal)} ฿`;
             document.getElementById('input-adjust-amount').value = '';
-            
-            document.getElementById('modal-overlay').classList.remove('hidden');
-            setTimeout(() => { document.getElementById('modal-overlay').classList.add('opacity-100'); document.getElementById('adjust-modal').classList.add('open'); }, 10);
+            document.getElementById('modal-overlay').classList.remove('hidden'); setTimeout(() => { document.getElementById('modal-overlay').classList.add('opacity-100'); document.getElementById('adjust-modal').classList.add('open'); }, 10);
         };
 
         window.saveAdjustBalance = () => {
             const actualAmt = parseFloat(document.getElementById('input-adjust-amount').value);
             if(isNaN(actualAmt)) return showToast('กรุณากรอกยอดเงิน', true);
-
-            const w = calcWallets();
-            const currAmt = state.adjustingWallet === 'credit' ? w.credit : w.personal;
-            const diff = actualAmt - currAmt;
-
-            if (diff === 0) {
-                closeAllModals(); return showToast('ยอดตรงกันอยู่แล้ว');
-            }
-
-            const isInc = diff > 0;
-            const absDiff = Math.abs(diff);
-            const timestamp = Date.now();
-
+            const w = calcWallets(); const currAmt = state.adjustingWallet === 'credit' ? w.credit : w.personal; const diff = actualAmt - currAmt;
+            if (diff === 0) { closeAllModals(); return showToast('ยอดตรงกันอยู่แล้ว'); }
+            const isInc = diff > 0; const absDiff = Math.abs(diff); const timestamp = Date.now();
             const recordData = {
-                id: generateId(),
-                module: state.adjustingWallet === 'credit' ? 'lalamove' : 'personal',
-                type: isInc ? 'income' : 'expense',
-                category: state.adjustingWallet === 'credit' ? SYS_CATS.ADJUST_CREDIT : SYS_CATS.ADJUST_PERS,
-                note: `ปรับยอดยกมา (ยอดแอป: ${formatMoney(currAmt)}, ยอดจริง: ${formatMoney(actualAmt)})`,
-                amount: absDiff, netAmount: absDiff, paymentMethod: 'none',
-                date: getToday(), time: getTime(), timestamp: timestamp
+                id: generateId(), module: state.adjustingWallet === 'credit' ? 'lalamove' : 'personal', type: isInc ? 'income' : 'expense',
+                category: state.adjustingWallet === 'credit' ? SYS_CATS.ADJUST_CREDIT : SYS_CATS.ADJUST_PERS, note: `ปรับยอดยกมา (จาก ${formatMoney(currAmt)} เป็น ${formatMoney(actualAmt)})`,
+                amount: absDiff, netAmount: absDiff, paymentMethod: 'none', date: getToday(), time: getTime(), timestamp: timestamp
             };
-
-            state.records.push(recordData);
-            saveData(); closeAllModals(); renderUI();
-            if(state.activeTab === 'analytics') renderChartAndHistory();
+            state.records.push(recordData); saveData(); closeAllModals(); renderUI(); if(state.activeTab === 'analytics') renderChartAndHistory();
             showToast('อัปเดตยอดเงินสำเร็จ! 🔄'); hapticSuccess();
         };
 
         window.setPaymentMethod = (method) => {
-            currentPaymentMethod = method;
-            const btnCredit = document.getElementById('btn-pay-credit'), btnCash = document.getElementById('btn-pay-cash');
-            if(method === 'credit') {
-                btnCredit.className = "flex-1 h-full rounded-lg text-[11px] font-medium bg-emerald-900/60 text-emerald-400 shadow-sm transition-colors flex items-center justify-center gap-1";
-                btnCash.className = "flex-1 h-full rounded-lg text-[11px] font-medium text-app-text transition-colors flex items-center justify-center gap-1";
-            } else {
-                btnCash.className = "flex-1 h-full rounded-lg text-[11px] font-medium bg-emerald-900/60 text-emerald-400 shadow-sm transition-colors flex items-center justify-center gap-1";
-                btnCredit.className = "flex-1 h-full rounded-lg text-[11px] font-medium text-app-text transition-colors flex items-center justify-center gap-1";
-            }
+            currentPaymentMethod = method; const btnCredit = document.getElementById('btn-pay-credit'), btnCash = document.getElementById('btn-pay-cash');
+            if(method === 'credit') { btnCredit.className = "flex-1 h-full rounded-lg text-[11px] font-medium bg-emerald-900/60 text-emerald-400 shadow-sm transition-colors flex items-center justify-center gap-1"; btnCash.className = "flex-1 h-full rounded-lg text-[11px] font-medium text-app-text transition-colors flex items-center justify-center gap-1"; } 
+            else { btnCash.className = "flex-1 h-full rounded-lg text-[11px] font-medium bg-emerald-900/60 text-emerald-400 shadow-sm transition-colors flex items-center justify-center gap-1"; btnCredit.className = "flex-1 h-full rounded-lg text-[11px] font-medium text-app-text transition-colors flex items-center justify-center gap-1"; }
         };
 
         window.toggleTollState = () => {
@@ -783,12 +739,9 @@
         };
 
         window.setLalaIncomeType = (type) => {
-            state.lalaIncomeType = type;
-            const btnTrip = document.getElementById('btn-lala-type-trip'); const btnMission = document.getElementById('btn-lala-type-mission');
+            state.lalaIncomeType = type; const btnTrip = document.getElementById('btn-lala-type-trip'); const btnMission = document.getElementById('btn-lala-type-mission');
             const fieldExtras = document.getElementById('field-lalamove-extras'); const fieldTipGp = document.getElementById('field-tip-gp'); const fieldCat = document.getElementById('field-category');
-            const activeTripClass = "flex-1 h-full rounded-lg text-[11px] font-bold bg-emerald-900/60 text-emerald-400 shadow-sm transition-colors flex items-center justify-center gap-1.5";
-            const inactiveClass = "flex-1 h-full rounded-lg text-[11px] font-bold text-app-text transition-colors flex items-center justify-center gap-1.5 hover:text-white";
-            const activeMissionClass = "flex-1 h-full rounded-lg text-[11px] font-bold bg-amber-900/60 text-amber-400 shadow-sm transition-colors flex items-center justify-center gap-1.5";
+            const activeTripClass = "flex-1 h-full rounded-lg text-[11px] font-bold bg-emerald-900/60 text-emerald-400 shadow-sm transition-colors flex items-center justify-center gap-1.5"; const inactiveClass = "flex-1 h-full rounded-lg text-[11px] font-bold text-app-text transition-colors flex items-center justify-center gap-1.5 hover:text-white"; const activeMissionClass = "flex-1 h-full rounded-lg text-[11px] font-bold bg-amber-900/60 text-amber-400 shadow-sm transition-colors flex items-center justify-center gap-1.5";
 
             if(type === 'trip') {
                 btnTrip.className = activeTripClass; btnMission.className = inactiveClass; document.getElementById('label-amount').innerText = 'รายได้จากแอป (ค่ารอบ)';
@@ -796,7 +749,7 @@
             } else {
                 btnMission.className = activeMissionClass; btnTrip.className = inactiveClass; document.getElementById('label-amount').innerText = 'จำนวนเงินโบนัส/สติ๊กเกอร์ (บาท)';
                 fieldExtras.classList.add('hidden'); fieldTipGp.classList.add('hidden'); fieldCat.classList.remove('hidden');
-                const cats = CATEGORIES['lalamove-income-mission'].filter(c => c !== SYS_CATS.ADJUST_CREDIT); // Hide adjust from manual entry
+                const cats = CATEGORIES['lalamove-income-mission'].filter(c => c !== SYS_CATS.ADJUST_CREDIT); 
                 document.getElementById('cat-grid').innerHTML = cats.map(c => `<button onclick="selectCat(this, '${c}')" class="cat-btn px-4 py-2 rounded-xl border border-app-border text-xs text-app-text font-medium transition-colors">${c}</button>`).join('');
                 if (!state.category || !cats.includes(state.category)) state.category = cats[0];
                 setTimeout(() => { const btns = document.querySelectorAll('#cat-grid .cat-btn'); btns.forEach(b => { if(b.innerText === state.category) selectCat(b, state.category); }); }, 10);
@@ -804,18 +757,14 @@
         };
 
         window.calcPreview = () => {
-            if(state.activeTab !== 'lalamove' || state.modalType !== 'income') return;
-            if(state.lalaIncomeType === 'mission') return; 
-            
+            if(state.activeTab !== 'lalamove' || state.modalType !== 'income') return; if(state.lalaIncomeType === 'mission') return; 
             const amt = parseFloat(document.getElementById('input-amount').value) || 0; const tip = parseFloat(document.getElementById('input-tip').value) || 0; const gp = parseFloat(document.getElementById('input-gp').value) || 0;
             const km = parseFloat(document.getElementById('input-km').value) || 0; const rate = parseFloat(document.getElementById('input-dash-rate').value) || state.settings.defaultFuelRate || 1;
             const price = parseFloat(document.getElementById('input-fuel-price').value) || state.settings.defaultFuelPrice || 0; const tollFee = parseFloat(document.getElementById('input-toll-fee').value) || 0;
             const tripTollCost = (tollFee > 0 && currentTollPayer === 'driver') ? tollFee : 0;
-            
             const gross = amt + tip - gp; const liters = (km > 0 && rate > 0) ? (km / rate) : 0; const fuelCost = liters * price; const costPerKm = (rate > 0) ? (price / rate) : 0; const net = gross - fuelCost - tripTollCost;
 
             document.getElementById('prev-income').innerText = `${formatMoney(gross)} ฿`; document.getElementById('prev-calc-liters').innerText = `${liters.toFixed(1)} ลิตร`; document.getElementById('prev-cost-per-km').innerText = `${costPerKm.toFixed(2)} ฿/กม.`; document.getElementById('prev-fuel').innerText = `-${formatMoney(fuelCost)} ฿`;
-            
             const tollRow = document.getElementById('prev-toll-row');
             if(tollFee > 0) {
                 tollRow.classList.remove('hidden'); tollRow.classList.add('flex');
@@ -869,7 +818,6 @@
 
         window.viewRecord = (id) => {
             const r = state.records.find(x => x.id === id); if(!r) return; state.viewId = id;
-
             const isInc = r.type === 'income'; const color = isInc ? (r.module==='lalamove'?'text-emerald-400':'text-purple-400') : 'text-red-400'; const sign = isInc ? '+' : '-';
             let payIcon = '';
             if(r.module === 'lalamove' && isInc) {
@@ -898,8 +846,7 @@
                 `;
             } else { html += `<div class="flex justify-between"><span class="text-app-text">ยอดเงิน</span> <span class="text-white font-medium">${formatMoney(r.amount)} ฿</span></div>`; }
             html += `<div class="flex justify-between pt-3 mt-3 border-t border-app-border/50"><span class="text-app-text">หมายเหตุ</span> <span class="text-white text-right break-words max-w-[60%]">${r.note || '-'}</span></div></div>`;
-            document.getElementById('detail-content').innerHTML = html;
-            document.getElementById('modal-overlay').classList.remove('hidden'); setTimeout(() => { document.getElementById('modal-overlay').classList.add('opacity-100'); document.getElementById('detail-modal').classList.add('open'); }, 10);
+            document.getElementById('detail-content').innerHTML = html; document.getElementById('modal-overlay').classList.remove('hidden'); setTimeout(() => { document.getElementById('modal-overlay').classList.add('opacity-100'); document.getElementById('detail-modal').classList.add('open'); }, 10);
         };
 
         window.openEditForm = () => {
@@ -915,7 +862,6 @@
 
             if(isLala && r.type === 'income') {
                 document.getElementById('field-lala-income-type').classList.remove('hidden'); document.getElementById('field-payment-method').classList.remove('hidden'); setPaymentMethod(r.paymentMethod || 'credit');
-
                 if(CATEGORIES['lalamove-income-mission'].includes(r.category) || r.category === 'รายได้ภารกิจ/โบนัส' || r.category === 'รายได้ภารกิจ') {
                     state.category = (r.category === 'รายได้ภารกิจ/โบนัส') ? 'รายได้ภารกิจ' : r.category; setLalaIncomeType('mission');
                 } else {
@@ -929,10 +875,17 @@
             document.getElementById('detail-modal').classList.remove('open'); setTimeout(() => { document.getElementById('entry-modal').classList.add('open'); }, 300);
         };
 
+        window.confirmDelete = () => {
+            const delId = state.viewId || state.editId; if(!delId) return;
+            showConfirm('ยืนยันการลบ', 'คุณแน่ใจหรือไม่ที่จะลบรายการนี้?', 'fa-trash-alt', 'red', () => {
+                const r = state.records.find(x => x.id === delId); if(r && r.km > 0 && state.settings.totalKm >= r.km) state.settings.totalKm -= r.km;
+                state.records = state.records.filter(x => x.id !== delId); state.viewId = null; state.editId = null; saveData(); closeAllModals(); showToast("ลบรายการแล้ว"); renderUI(); if(state.activeTab === 'analytics') renderChartAndHistory();
+            });
+        };
+
         window.openModal = (type) => {
             state.editId = null; state.viewId = null; state.modalType = type; state.category = '';
             const isLala = state.activeTab === 'lalamove'; const tc = type==='income' ? 'text-emerald-400' : 'text-red-400'; const bc = type==='income' ? 'bg-emerald-600 shadow-[0_4px_14px_rgba(16,185,129,0.3)]' : 'bg-red-600 shadow-[0_4px_14px_rgba(220,38,38,0.3)]';
-            
             document.getElementById('modal-title').className = `text-xl font-bold ${tc} tracking-tight`; document.getElementById('modal-title').innerText = type==='income'?'บันทึกรับเงิน':'บันทึกรายจ่าย';
             document.getElementById('btn-save').className = `btn-press w-full py-4 rounded-2xl font-bold text-white text-base transition-all ${bc}`;
             document.getElementById('input-date').value = getToday(); document.getElementById('input-time').value = getTime();
@@ -949,16 +902,11 @@
             document.getElementById('modal-overlay').classList.remove('hidden'); setTimeout(() => { document.getElementById('modal-overlay').classList.add('opacity-100'); document.getElementById('entry-modal').classList.add('open'); }, 10);
         };
 
-        window.openTransferModal = () => {
-            document.getElementById('input-transfer-amount').value = ''; setTransferAction('withdraw'); 
-            document.getElementById('modal-overlay').classList.remove('hidden'); setTimeout(() => { document.getElementById('modal-overlay').classList.add('opacity-100'); document.getElementById('transfer-modal').classList.add('open'); }, 10);
-        };
+        window.openTransferModal = () => { document.getElementById('input-transfer-amount').value = ''; setTransferAction('withdraw'); document.getElementById('modal-overlay').classList.remove('hidden'); setTimeout(() => { document.getElementById('modal-overlay').classList.add('opacity-100'); document.getElementById('transfer-modal').classList.add('open'); }, 10); };
 
         window.setTransferAction = (action) => {
-            currentTransferAction = action;
-            const btnW = document.getElementById('btn-trans-withdraw'); const btnT = document.getElementById('btn-trans-topup');
+            currentTransferAction = action; const btnW = document.getElementById('btn-trans-withdraw'); const btnT = document.getElementById('btn-trans-topup');
             const hint = document.getElementById('transfer-balance-hint'); const btnConfirm = document.getElementById('btn-confirm-transfer'); const w = calcWallets();
-            
             if (action === 'withdraw') {
                 btnW.className = "flex-1 rounded-lg text-[11px] font-bold bg-blue-600 text-white shadow-sm transition-all flex items-center justify-center gap-1.5"; btnT.className = "flex-1 rounded-lg text-[11px] font-bold text-app-text transition-all hover:text-white flex items-center justify-center gap-1.5";
                 hint.innerText = `เหลือถอนได้: ฿${formatMoney(w.credit)}`; hint.className = `text-[10px] font-medium px-2 py-0.5 rounded border ${w.credit > 0 ? 'text-blue-400 bg-blue-950/40 border-blue-900/50' : 'text-red-400 bg-red-950/40 border-red-900/50'}`;
@@ -973,18 +921,15 @@
         window.handleTransferClick = () => {
             const amt = parseFloat(document.getElementById('input-transfer-amount').value) || 0; if(amt <= 0) return showToast('กรุณากรอกจำนวนเงิน', true);
             const action = currentTransferAction; const wallets = calcWallets();
-
             if (action === 'withdraw' && amt > wallets.credit) return showToast('เครดิตแอปมีไม่พอให้ถอน!', true);
             if (action === 'topup' && amt > wallets.personal && wallets.personal >= 0) {
-                showConfirm('ยอดเงินอาจติดลบ', `บัญชีส่วนตัวคุณมีแค่ ${formatMoney(wallets.personal)} ฿ ต้องการทำรายการต่อจนยอดติดลบหรือไม่?`, 'fa-exclamation-circle', 'orange', () => { executeTransferAction(action, amt); });
-                return;
+                showConfirm('ยอดเงินอาจติดลบ', `บัญชีส่วนตัวคุณมีแค่ ${formatMoney(wallets.personal)} ฿ ต้องการทำรายการต่อจนยอดติดลบหรือไม่?`, 'fa-exclamation-circle', 'orange', () => { executeTransferAction(action, amt); }); return;
             }
             executeTransferAction(action, amt);
         };
 
         window.executeTransferAction = (action, amt) => {
             const timestamp = Date.now(); const dateStr = getToday(); const timeStr = getTime(); const tId = generateId();
-
             if (action === 'withdraw') {
                 state.records.push({ id: tId + '_out', module: 'lalamove', type: 'expense', category: SYS_CATS.TRANSFER_OUT, note: 'ถอนเงินแอปเข้าบัญชี', amount: amt, netAmount: amt, paymentMethod: 'credit', date: dateStr, time: timeStr, timestamp: timestamp });
                 state.records.push({ id: tId + '_in', module: 'personal', type: 'income', category: SYS_CATS.TRANSFER_IN, note: 'ถอนจากแอป Lalamove', amount: amt, netAmount: amt, paymentMethod: 'cash', date: dateStr, time: timeStr, timestamp: timestamp + 1 });
@@ -992,9 +937,7 @@
                 state.records.push({ id: tId + '_out', module: 'personal', type: 'expense', category: SYS_CATS.TOPUP_TO_LALA, note: 'โอนไปเติมแอป Lalamove', amount: amt, netAmount: amt, paymentMethod: 'none', date: dateStr, time: timeStr, timestamp: timestamp });
                 state.records.push({ id: tId + '_in', module: 'lalamove', type: 'income', category: SYS_CATS.TOPUP_FROM_PERS, note: 'เติมเครดิตจากส่วนตัว', amount: amt, netAmount: amt, paymentMethod: 'credit', date: dateStr, time: timeStr, timestamp: timestamp + 1 });
             }
-
-            saveData(); document.getElementById('transfer-modal').classList.remove('open'); setTimeout(() => { closeAllModals(); }, 300); renderUI(); if(state.activeTab === 'analytics') renderChartAndHistory();
-            showToast('บันทึกทำรายการสำเร็จ! 💸'); hapticSuccess();
+            saveData(); document.getElementById('transfer-modal').classList.remove('open'); setTimeout(() => { closeAllModals(); }, 300); renderUI(); if(state.activeTab === 'analytics') renderChartAndHistory(); showToast('บันทึกทำรายการสำเร็จ! 💸'); hapticSuccess();
         };
 
         window.selectCat = (btn, cat) => { state.category = cat; document.querySelectorAll('.cat-btn').forEach(b => b.className = 'cat-btn px-4 py-2 rounded-xl border border-app-border text-xs text-app-text font-medium transition-colors'); btn.className = 'cat-btn px-4 py-2 rounded-xl border bg-app-border text-white border-gray-400 text-xs font-medium shadow-inner transition-colors'; };
@@ -1030,10 +973,7 @@
         const renderBreakdownList = (dataObj, total, containerId, isIncome) => {
             const container = document.getElementById(containerId); if(total <= 0 || Object.keys(dataObj).length === 0) { container.innerHTML = `<p class="text-xs text-app-text text-center py-4 bg-app-card/30 rounded-xl border border-app-border/40 border-dashed">ไม่มีข้อมูล</p>`; return; }
             const colorClass = isIncome ? 'text-emerald-400' : 'text-red-400'; const bgClass = isIncome ? 'bg-emerald-500' : 'bg-red-500'; const sortedKeys = Object.keys(dataObj).sort((a,b) => dataObj[b] - dataObj[a]); let html = '';
-            sortedKeys.forEach(k => {
-                const val = dataObj[k]; if(val <= 0) return; const pct = ((val / total) * 100).toFixed(1);
-                html += `<div class="mb-3"><div class="flex justify-between text-[11px] mb-1"><span class="text-gray-300 font-medium">${k}</span><span class="font-bold ${colorClass}">${formatMoney(val)} ฿ <span class="text-[9px] text-app-text ml-1 font-normal">(${pct}%)</span></span></div><div class="h-1.5 w-full bg-[#09090b] rounded-full overflow-hidden border border-app-border/50"><div class="h-full ${bgClass} rounded-full" style="width: ${pct}%"></div></div></div>`;
-            });
+            sortedKeys.forEach(k => { const val = dataObj[k]; if(val <= 0) return; const pct = ((val / total) * 100).toFixed(1); html += `<div class="mb-3"><div class="flex justify-between text-[11px] mb-1"><span class="text-gray-300 font-medium">${k}</span><span class="font-bold ${colorClass}">${formatMoney(val)} ฿ <span class="text-[9px] text-app-text ml-1 font-normal">(${pct}%)</span></span></div><div class="h-1.5 w-full bg-[#09090b] rounded-full overflow-hidden border border-app-border/50"><div class="h-full ${bgClass} rounded-full" style="width: ${pct}%"></div></div></div>`; });
             container.innerHTML = html;
         };
 
@@ -1041,7 +981,6 @@
             let startDt = new Date(); let endDt = new Date();
             if(state.analytics.range === '7') { startDt.setDate(endDt.getDate() - 6); } else if(state.analytics.range === '30') { startDt.setDate(endDt.getDate() - 29); } else if(state.analytics.range === 'custom') { const s = document.getElementById('range-start').value; const e = document.getElementById('range-end').value; if(s && e) { startDt = new Date(s); endDt = new Date(e); } }
             if(startDt > endDt) { const temp = startDt; startDt = endDt; endDt = temp; }
-            
             let datesArr = []; let curr = new Date(startDt); while(curr <= endDt) { datesArr.push(formatDateISO(curr)); curr.setDate(curr.getDate() + 1); }
 
             const modRecs = state.records.filter(r => r.module === state.analytics.module);
@@ -1054,9 +993,7 @@
                 if(state.analytics.module === 'lalamove') {
                     let grossInc=0, tripFuel=0, expOther=0;
                     dayRecs.forEach(r => { 
-                        // 🎯 Ignore ADJUST balances for Daily Net Profit calculations
-                        if(r.category === SYS_CATS.ADJUST_CREDIT) return; 
-
+                        if(r.category === SYS_CATS.ADJUST_CREDIT) return; // 🎯 Keep Lalamove Daily Net unpolluted by manual adjustment
                         if(r.type==='income') { 
                             if(r.category === 'วิ่งงานปกติ') { grossInc+=(r.amount+r.tip-r.gp); tripFuel+=(r.tripFuelCost||0); expOther+=(r.tripTollCost||0); totalRangeTrips++; totalRangeKm+=(Number(r.km)||0); } 
                             else if (r.category !== SYS_CATS.TOPUP_FROM_PERS) { grossInc += r.amount; }
@@ -1066,7 +1003,7 @@
                 } else {
                     let pInc=0, pExp=0;
                     dayRecs.forEach(r => { 
-                        if(r.category === SYS_CATS.ADJUST_PERS) return; // 🎯 Ignore adjust
+                        // 🎯 ปลดล็อก: ให้นับรวม "ปรับปรุงยอด (เงินส่วนตัว)" ในการคำนวณ Net ของกราฟ
                         if(r.type==='income') { pInc+=r.amount; totalPersInc+=r.amount; } else { pExp+=r.amount; totalPersExp+=r.amount; }
                     });
                     const dayNet = pInc - pExp; totalRangeNet += dayNet; return dayNet;
@@ -1074,21 +1011,14 @@
             });
 
             filteredRecs.forEach(r => {
-                // 🎯 Skip ADJUST categories from pie charts breakdown
-                if(r.category === SYS_CATS.ADJUST_CREDIT || r.category === SYS_CATS.ADJUST_PERS) return;
-
                 if(state.analytics.module === 'lalamove') {
+                    if(r.category === SYS_CATS.ADJUST_CREDIT) return; // Ignore Lalamove adjust from breakdown
                     if(r.type === 'income') {
-                        if(r.category === 'วิ่งงานปกติ') {
-                            const inc = r.amount + (r.tip||0); totalIncBreakdown += inc; catInc['ค่ารอบแอป + ทิป'] = (catInc['ค่ารอบแอป + ทิป'] || 0) + inc;
-                            if(r.gp > 0) { totalExpBreakdown += r.gp; catExp['หัก GP (แอปลดเงิน)'] = (catExp['หัก GP (แอปลดเงิน)'] || 0) + r.gp; }
-                            if(r.tripFuelCost > 0) { totalExpBreakdown += r.tripFuelCost; catExp['ค่าน้ำมัน (ต้นทุนวิ่ง)'] = (catExp['ค่าน้ำมัน (ต้นทุนวิ่ง)'] || 0) + r.tripFuelCost; }
-                            if(r.tripTollCost > 0) { totalExpBreakdown += r.tripTollCost; catExp['ค่าทางด่วน (จ่ายเอง)'] = (catExp['ค่าทางด่วน (จ่ายเอง)'] || 0) + r.tripTollCost; }
-                        } else if (r.category !== SYS_CATS.TOPUP_FROM_PERS) { totalIncBreakdown += r.amount; catInc[r.category] = (catInc[r.category] || 0) + r.amount; }
+                        if(r.category === 'วิ่งงานปกติ') { const inc = r.amount + (r.tip||0); totalIncBreakdown += inc; catInc['ค่ารอบแอป + ทิป'] = (catInc['ค่ารอบแอป + ทิป'] || 0) + inc; if(r.gp > 0) { totalExpBreakdown += r.gp; catExp['หัก GP (แอปลดเงิน)'] = (catExp['หัก GP (แอปลดเงิน)'] || 0) + r.gp; } if(r.tripFuelCost > 0) { totalExpBreakdown += r.tripFuelCost; catExp['ค่าน้ำมัน (ต้นทุนวิ่ง)'] = (catExp['ค่าน้ำมัน (ต้นทุนวิ่ง)'] || 0) + r.tripFuelCost; } if(r.tripTollCost > 0) { totalExpBreakdown += r.tripTollCost; catExp['ค่าทางด่วน (จ่ายเอง)'] = (catExp['ค่าทางด่วน (จ่ายเอง)'] || 0) + r.tripTollCost; } } else if (r.category !== SYS_CATS.TOPUP_FROM_PERS) { totalIncBreakdown += r.amount; catInc[r.category] = (catInc[r.category] || 0) + r.amount; }
                     } else if(!['เติมน้ำมัน (จ่ายจริง)', SYS_CATS.TRANSFER_OUT].includes(r.category)) { totalExpBreakdown += r.amount; catExp[r.category] = (catExp[r.category] || 0) + r.amount; }
                 } else {
-                    if(r.type === 'income') { totalIncBreakdown += r.amount; catInc[r.category] = (catInc[r.category] || 0) + r.amount; } 
-                    else { totalExpBreakdown += r.amount; catExp[r.category] = (catExp[r.category] || 0) + r.amount; }
+                    // 🎯 ปลดล็อกให้ "ปรับปรุงยอด" เข้าไปโชว์ในสัดส่วน (Pie Chart) ด้วย
+                    if(r.type === 'income') { totalIncBreakdown += r.amount; catInc[r.category] = (catInc[r.category] || 0) + r.amount; } else { totalExpBreakdown += r.amount; catExp[r.category] = (catExp[r.category] || 0) + r.amount; }
                 }
             });
 
@@ -1112,28 +1042,29 @@
             const listEl = document.getElementById('history-list');
             if(filteredRecs.length === 0) { 
                 listEl.innerHTML = `<div class="flex flex-col items-center justify-center py-12 border border-app-border/40 border-dashed rounded-3xl bg-app-card/30"><div class="w-14 h-14 bg-gray-800 rounded-full flex items-center justify-center mb-3"><i class="fas fa-folder-open text-2xl text-gray-400"></i></div><h4 class="text-sm font-bold text-white mb-1">ไม่พบประวัติ</h4><p class="text-[10px] text-app-text text-center">ไม่มีรายการถูกบันทึกในช่วงเวลานี้</p></div>`; 
-            } 
-            else {
+            } else {
                 const grouped = filteredRecs.sort((a,b) => b.timestamp - a.timestamp).reduce((acc, r) => { if(!acc[r.date]) acc[r.date] = []; acc[r.date].push(r); return acc; }, {});
                 let html = '';
                 for(const [date, records] of Object.entries(grouped)) {
                     const dStr = new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
                     let dayNet = 0; 
                     records.forEach(r => {
-                        // Exclude Adjustments from Daily Net logic
-                        if (r.category === SYS_CATS.ADJUST_CREDIT || r.category === SYS_CATS.ADJUST_PERS) return;
-
                         if(state.analytics.module === 'lalamove') {
-                            if(r.type === 'income') { 
-                                if (r.category === 'วิ่งงานปกติ') { dayNet += (r.amount+(r.tip||0)-(r.gp||0) - (r.tripFuelCost||0) - (r.tripTollCost||0)); } 
-                                else if (r.category !== SYS_CATS.TOPUP_FROM_PERS) { dayNet += r.amount; }
-                            } else if(!['เติมน้ำมัน (จ่ายจริง)', SYS_CATS.TRANSFER_OUT].includes(r.category)) { dayNet -= r.amount; }
-                        } else { if(r.type === 'income') { dayNet += r.amount; } else { dayNet -= r.amount; } }
+                            if (r.category === SYS_CATS.ADJUST_CREDIT) return; // 🎯 Ignore only for lalamove daily summary
+                            if(r.type === 'income') { if (r.category === 'วิ่งงานปกติ') { dayNet += (r.amount+(r.tip||0)-(r.gp||0) - (r.tripFuelCost||0) - (r.tripTollCost||0)); } else if (r.category !== SYS_CATS.TOPUP_FROM_PERS) { dayNet += r.amount; } }
+                            else if(!['เติมน้ำมัน (จ่ายจริง)', SYS_CATS.TRANSFER_OUT].includes(r.category)) { dayNet -= r.amount; }
+                        } else {
+                            // 🎯 ปลดล็อกให้นับ Adjustments ส่วนตัว
+                            if(r.type === 'income') { dayNet += r.amount; } else { dayNet -= r.amount; } 
+                        }
                     });
 
                     const dNetColor = state.analytics.module === 'lalamove' ? 'emerald' : 'purple';
                     html += `<div class="mb-5"><div class="flex justify-between items-end mb-3"><h4 class="text-sm font-bold text-white">${dStr}</h4><span class="text-[11px] font-semibold ${dayNet>=0?`text-${dNetColor}-400 bg-${dNetColor}-950/40 border-${dNetColor}-900/50`:'text-red-400 bg-red-950/40 border-red-900/50'} px-2 py-0.5 rounded-full border">${dayNet>=0?'+':''}${formatMoney(dayNet)} ฿</span></div><div class="space-y-2.5">`;
                     html += records.map((r, i) => {
+                        // Skip rendering Adjust Credit in Lalamove history if wanted, but fine to show so user knows it happened
+                        if(r.category === SYS_CATS.ADJUST_CREDIT && state.analytics.module === 'lalamove') return '';
+
                         const isInc = r.type === 'income'; let color = 'text-red-400';
                         if(isInc) color = r.module === 'lalamove' ? 'text-emerald-400' : 'text-purple-400';
                         let detail = r.note || '-'; let payIcon = '';
@@ -1162,7 +1093,7 @@
                 let grossInc = 0, tripFuel = 0, expOther = 0, todayTrips = 0, todayKm = 0, todayLiters = 0;
 
                 todayRecs.forEach(r => { 
-                    if(r.category === SYS_CATS.ADJUST_CREDIT) return; // 🎯 Skip adjust logic in Daily Net
+                    if(r.category === SYS_CATS.ADJUST_CREDIT) return; 
                     if(r.type === 'income') { 
                         if(r.category === 'วิ่งงานปกติ') { grossInc += (r.amount + r.tip - r.gp); tripFuel += (r.tripFuelCost || 0); expOther += (r.tripTollCost || 0); todayTrips++; todayKm += (r.km || 0); todayLiters += (r.fuelLiters || 0); } 
                         else if (r.category !== SYS_CATS.TOPUP_FROM_PERS) { grossInc += r.amount; }
@@ -1179,15 +1110,16 @@
                 const pct = Math.min(100, Math.max(0, (net / (state.settings.dailyTarget || 1)) * 100)) || 0; document.getElementById('progress-text').innerText = `${Math.floor(pct)}%`; const circ = document.getElementById('progress-circle'); circ.style.strokeDashoffset = 238.7 - (pct / 100 * 238.7);
                 if(pct >= 100) { circ.classList.replace('text-emerald-500', 'text-yellow-400'); if(state.lastPct < 100 && typeof confetti !== 'undefined') { confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 }, zIndex: 9999 }); hapticSuccess(); } } else circ.classList.replace('text-yellow-400', 'text-emerald-500'); state.lastPct = pct;
 
-                document.getElementById('transaction-count').innerText = `${todayRecs.length} รายการ`; const listEl = document.getElementById('transactions-list');
-                if(todayRecs.length === 0) { listEl.innerHTML = `<div class="flex flex-col items-center justify-center py-10 px-4 border border-emerald-900/30 border-dashed rounded-3xl bg-emerald-950/10 mt-2"><div class="w-14 h-14 bg-emerald-900/40 rounded-full flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(16,185,129,0.2)]"><i class="fas fa-car text-2xl text-emerald-400"></i></div><h4 class="text-sm font-bold text-white mb-1">พร้อมลุยหรือยัง?</h4><p class="text-[10px] text-app-text text-center leading-relaxed">ยังไม่มีรายการวันนี้ กด <b class="text-emerald-400">"รับเงิน"</b> ด้านล่าง<br>เพื่อบันทึกงานแรกของคุณได้เลย! 🚀</p></div>`; } 
+                document.getElementById('transaction-count').innerText = `${todayRecs.filter(x => x.category !== SYS_CATS.ADJUST_CREDIT).length} รายการ`; const listEl = document.getElementById('transactions-list');
+                if(todayRecs.filter(x => x.category !== SYS_CATS.ADJUST_CREDIT).length === 0) { listEl.innerHTML = `<div class="flex flex-col items-center justify-center py-10 px-4 border border-emerald-900/30 border-dashed rounded-3xl bg-emerald-950/10 mt-2"><div class="w-14 h-14 bg-emerald-900/40 rounded-full flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(16,185,129,0.2)]"><i class="fas fa-car text-2xl text-emerald-400"></i></div><h4 class="text-sm font-bold text-white mb-1">พร้อมลุยหรือยัง?</h4><p class="text-[10px] text-app-text text-center leading-relaxed">ยังไม่มีรายการวันนี้ กด <b class="text-emerald-400">"รับเงิน"</b> ด้านล่าง<br>เพื่อบันทึกงานแรกของคุณได้เลย! 🚀</p></div>`; } 
                 else {
                     listEl.innerHTML = todayRecs.map((r, i) => {
+                        if(r.category === SYS_CATS.ADJUST_CREDIT) return ''; // Hide adjust in daily feed
                         const isInc = r.type === 'income'; const color = isInc ? 'text-emerald-400' : 'text-red-400';
                         let detail = r.note || '-'; let payIcon = '';
                         if(isInc && r.category === 'วิ่งงานปกติ') { detail = `แอป ฿${r.amount}`; if(r.tripFuelCost>0) detail += ` | น้ำมัน -฿${formatMoney(r.tripFuelCost)}`; if(r.tripTollCost>0) detail += ` | ทางด่วน -฿${formatMoney(r.tripTollCost)}`; payIcon = r.paymentMethod === 'cash' ? ' <i class="fas fa-money-bill-wave text-emerald-500/70 ml-1"></i>' : ' <i class="fas fa-mobile-screen text-blue-400/70 ml-1"></i>'; } 
                         else if (isInc && r.category === 'รายได้ภารกิจ') { payIcon = r.paymentMethod === 'cash' ? ' <i class="fas fa-money-bill-wave text-emerald-500/70 ml-1"></i>' : ' <i class="fas fa-mobile-screen text-blue-400/70 ml-1"></i>'; } 
-                        else if (r.category === SYS_CATS.TRANSFER_OUT || r.category === SYS_CATS.TOPUP_FROM_PERS || r.category === SYS_CATS.ADJUST_CREDIT) { detail = r.note; }
+                        else if (r.category === SYS_CATS.TRANSFER_OUT || r.category === SYS_CATS.TOPUP_FROM_PERS) { detail = r.note; }
                         
                         return `<div onclick="viewRecord('${r.id}')" class="stagger-item animate-fade-in-up flex items-center justify-between p-3.5 bg-app-card rounded-2xl border border-app-border active:scale-95 transition-all cursor-pointer hover:border-gray-600 shadow-sm" style="animation-delay: ${i * 0.05}s"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full flex items-center justify-center bg-app-border/30 ${color}"><i class="fas ${isInc?'fa-arrow-turn-up':'fa-arrow-turn-down'} text-sm"></i></div><div><div class="font-semibold text-gray-200 text-[13px] mb-0.5">${r.category}${payIcon}</div><div class="text-[10px] text-app-text truncate w-40">${detail}</div></div></div><div class="text-right"><div class="font-bold ${color} text-sm">${isInc?'+':'-'}${formatMoney(r.netAmount)}</div><div class="text-[9px] text-app-text mt-1">${r.time}</div></div></div>`;
                     }).join('');
@@ -1197,7 +1129,7 @@
                 
                 let todayPInc = 0, todayPExp = 0;
                 todayRecs.forEach(r => { 
-                    if(r.category === SYS_CATS.ADJUST_PERS) return; // Skip logic
+                    // 🎯 ปลดล็อก: รวมการปรับยอด เข้าในสรุปรับเข้า/จ่ายออกของวันนี้
                     r.type === 'income' ? todayPInc+=r.amount : todayPExp+=r.amount; 
                 });
                 
