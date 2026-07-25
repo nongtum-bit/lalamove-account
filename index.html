@@ -132,7 +132,7 @@
                             <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl relative z-10 shadow-inner"><i class="fas fa-wallet"></i></div>
                         </div>
 
-                        <!-- 🎯 NEW UI: กระเป๋าเครดิตแอป vs เงินส่วนตัว แบบการ์ดเชื่อมกัน -->
+                        <!-- 🎯 UI: กระเป๋าเครดิตแอป vs เงินส่วนตัว -->
                         <div class="flex items-center gap-1 relative z-10 pt-4 border-t border-emerald-800/30 mt-4">
                             <!-- กล่องเครดิตแอป -->
                             <div class="flex-1 bg-[#09090b] rounded-2xl p-3 border border-blue-900/50 flex flex-col shadow-inner relative overflow-hidden">
@@ -342,8 +342,22 @@
             </div>
         </nav>
 
-        <!-- ================= OVERLAY ================= -->
+        <!-- ================= OVERLAY & CUSTOM CONFIRM MODAL ================= -->
         <div id="modal-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden transition-opacity opacity-0" onclick="closeAllModals()"></div>
+        
+        <!-- 🎯 NEW: CUSTOM CONFIRM MODAL (แก้บัคปุ่มลบไม่ได้) -->
+        <div id="confirm-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity">
+            <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="closeConfirmModal()"></div>
+            <div class="bg-app-card border border-app-border rounded-3xl p-6 relative z-10 w-[85%] max-w-[320px] shadow-2xl transform scale-95 transition-transform" id="confirm-modal-box">
+                <div id="confirm-icon" class="w-12 h-12 rounded-full bg-red-500/20 text-red-500 flex items-center justify-center text-xl mx-auto mb-4"><i class="fas fa-exclamation-triangle"></i></div>
+                <h3 id="confirm-title" class="text-lg font-bold text-white text-center mb-2">ยืนยัน</h3>
+                <p id="confirm-message" class="text-xs text-app-text text-center mb-6">คุณแน่ใจหรือไม่ที่จะทำรายการนี้?</p>
+                <div class="flex gap-3">
+                    <button onclick="closeConfirmModal()" class="flex-1 py-3 bg-[#121214] text-app-text rounded-xl font-medium border border-app-border active:scale-95 transition-transform">ยกเลิก</button>
+                    <button id="confirm-btn-action" onclick="executeConfirm()" class="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold shadow-lg shadow-red-900/40 active:scale-95 transition-transform">ยืนยัน</button>
+                </div>
+            </div>
+        </div>
 
         <!-- ================= DETAIL MODAL ================= -->
         <div id="detail-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[60] px-6 pt-3 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
@@ -457,7 +471,7 @@
             </div>
         </div>
 
-        <!-- ================= 🎯 NEW: TRANSFER MODAL (ปุ่มกดแบบ Segmented) ================= -->
+        <!-- ================= 🎯 NEW: TRANSFER MODAL ================= -->
         <div id="transfer-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[80] px-6 pt-3 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
             <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-4"></div>
             <div class="flex justify-between items-center mb-5">
@@ -469,7 +483,6 @@
                 <div class="bg-[#121214] p-4 rounded-2xl border border-app-border/60 shadow-inner">
                     <label class="block text-xs font-medium text-app-text mb-2">เลือกทำรายการ</label>
                     
-                    <!-- 🎯 เปลี่ยน Dropdown เป็นปุ่มสลับ (Toggle Buttons) -->
                     <div class="flex bg-[#09090b] rounded-xl border border-app-border p-1 mb-4 h-[50px]">
                         <button id="btn-trans-withdraw" onclick="setTransferAction('withdraw')" class="flex-1 rounded-lg text-[11px] font-bold bg-blue-600 text-white shadow-sm transition-all flex items-center justify-center gap-1.5"><i class="fas fa-arrow-down"></i> ถอนเงินแอป</button>
                         <button id="btn-trans-topup" onclick="setTransferAction('topup')" class="flex-1 rounded-lg text-[11px] font-bold text-app-text transition-all hover:text-white flex items-center justify-center gap-1.5"><i class="fas fa-arrow-up"></i> เติมเครดิตแอป</button>
@@ -489,7 +502,7 @@
                     เมื่อรับงานเงินสด/โอน ระบบจะหัก GP จากแอป และเอาเงินเข้ากระเป๋าส่วนตัวให้อัตโนมัติอยู่แล้ว
                 </div>
 
-                <button id="btn-confirm-transfer" onclick="saveTransfer()" class="btn-press w-full py-4 rounded-2xl font-bold text-white text-base shadow-[0_4px_14px_rgba(37,99,235,0.3)] bg-blue-600 transition-all mt-4">ยืนยันถอนเงิน</button>
+                <button id="btn-confirm-transfer" onclick="handleTransferClick()" class="btn-press w-full py-4 rounded-2xl font-bold text-white text-base shadow-[0_4px_14px_rgba(37,99,235,0.3)] bg-blue-600 transition-all mt-4">ยืนยันถอนเงิน</button>
             </div>
         </div>
 
@@ -497,7 +510,6 @@
 
     <!-- LOGIC -->
     <script>
-        // System Constants
         const SYS_CATS = { 
             TRANSFER_OUT: 'ถอนเงินเข้าบัญชีส่วนตัว', 
             TRANSFER_IN: 'รับเงินจาก Lalamove',
@@ -513,28 +525,21 @@
         };
 
         let state = {
-            activeTab: 'lalamove',
-            modalType: '', category: '', viewId: null, editId: null, 
-            records: [],
+            activeTab: 'lalamove', modalType: '', category: '', viewId: null, editId: null, records: [],
             settings: { dailyTarget: 1000, maintLimit: 3000, totalKm: 0, defaultFuelPrice: 35.5, defaultFuelRate: 15.0 },
-            checkin: { start: null, end: null },
-            timerInterval: null,
-            analytics: { range: '7', module: 'lalamove' },
-            lalaIncomeType: 'trip',
-            lastPct: 0, todayNet: 0
+            checkin: { start: null, end: null }, timerInterval: null, analytics: { range: '7', module: 'lalamove' },
+            lalaIncomeType: 'trip', lastPct: 0, todayNet: 0
         };
         
-        let currentTollPayer = 'customer'; let currentPaymentMethod = 'credit';
-        let currentTransferAction = 'withdraw'; // 🎯 Track segment button state
+        let currentTollPayer = 'customer'; let currentPaymentMethod = 'credit'; let currentTransferAction = 'withdraw';
+        let confirmCallback = null; // สำหรับ Custom Confirm Modal
 
         // Helpers
         const haptic = (ms = 50) => { if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(ms); };
         const hapticSuccess = () => { if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([30, 50, 30]); };
         const generateId = () => (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substring(2);
 
-        document.addEventListener('click', (e) => {
-            if (e.target.closest('.btn-press') || e.target.closest('.nav-btn')) haptic();
-        });
+        document.addEventListener('click', (e) => { if (e.target.closest('.btn-press') || e.target.closest('.nav-btn')) haptic(); });
 
         const formatDateISO = (d) => { const offset = d.getTimezoneOffset() * 60000; return new Date(d.getTime() - offset).toISOString().split('T')[0]; };
         const getToday = () => formatDateISO(new Date());
@@ -567,11 +572,49 @@
             setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-100%)'; toast.style.transition = 'all 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 3000);
         };
 
+        // 🎯 NEW: ระบบ Custom Confirm เพื่อแก้ปัญหาติด Blocked จากเบราว์เซอร์
+        window.showConfirm = (title, message, iconStr, colorTheme, callback) => {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = message;
+            
+            const iconEl = document.getElementById('confirm-icon');
+            iconEl.className = `w-12 h-12 rounded-full flex items-center justify-center text-xl mx-auto mb-4 ${colorTheme === 'red' ? 'bg-red-500/20 text-red-500' : 'bg-orange-500/20 text-orange-500'}`;
+            iconEl.innerHTML = `<i class="fas ${iconStr}"></i>`;
+            
+            const btnConfirm = document.getElementById('confirm-btn-action');
+            btnConfirm.className = `flex-1 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-transform text-white ${colorTheme === 'red' ? 'bg-red-600 shadow-red-900/40' : 'bg-orange-600 shadow-orange-900/40'}`;
+            btnConfirm.innerText = "ยืนยัน";
+            
+            confirmCallback = callback;
+            
+            const modal = document.getElementById('confirm-modal');
+            const box = document.getElementById('confirm-modal-box');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.add('opacity-100');
+                box.classList.remove('scale-95'); box.classList.add('scale-100');
+            }, 10);
+        };
+
+        window.closeConfirmModal = () => {
+            const modal = document.getElementById('confirm-modal');
+            const box = document.getElementById('confirm-modal-box');
+            modal.classList.remove('opacity-100');
+            box.classList.remove('scale-100'); box.classList.add('scale-95');
+            setTimeout(() => modal.classList.add('hidden'), 300);
+            confirmCallback = null;
+        };
+
+        window.executeConfirm = () => {
+            if(confirmCallback) confirmCallback();
+            closeConfirmModal();
+        };
+
         function loadData() {
             try {
-                const r = localStorage.getItem('ld_max_records_v16'); if(r) state.records = JSON.parse(r);
-                const s = localStorage.getItem('ld_max_settings_v16'); if(s) state.settings = { ...state.settings, ...JSON.parse(s) };
-                const c = localStorage.getItem('ld_max_checkin_v16'); if(c) state.checkin = JSON.parse(c);
+                const r = localStorage.getItem('ld_max_records_v17'); if(r) state.records = JSON.parse(r);
+                const s = localStorage.getItem('ld_max_settings_v17'); if(s) state.settings = { ...state.settings, ...JSON.parse(s) };
+                const c = localStorage.getItem('ld_max_checkin_v17'); if(c) state.checkin = JSON.parse(c);
                 
                 document.getElementById('set-target').value = state.settings.dailyTarget;
                 document.getElementById('set-maint').value = state.settings.maintLimit;
@@ -589,16 +632,17 @@
 
         function saveData() {
             try {
-                localStorage.setItem('ld_max_records_v16', JSON.stringify(state.records));
-                localStorage.setItem('ld_max_settings_v16', JSON.stringify(state.settings));
-                localStorage.setItem('ld_max_checkin_v16', JSON.stringify(state.checkin));
-            } catch(e) {
-                console.error("Storage Full!", e);
-                showToast("หน่วยความจำเครื่องเต็ม! แนะนำให้สำรองและล้างข้อมูลเก่า", true);
-            }
+                localStorage.setItem('ld_max_records_v17', JSON.stringify(state.records));
+                localStorage.setItem('ld_max_settings_v17', JSON.stringify(state.settings));
+                localStorage.setItem('ld_max_checkin_v17', JSON.stringify(state.checkin));
+            } catch(e) { showToast("หน่วยความจำเครื่องเต็ม!", true); }
         }
 
-        window.clearAllData = () => { if(confirm("ลบข้อมูลทั้งหมด? (กู้ไม่ได้นะ)")) { localStorage.clear(); location.reload(); } }
+        window.clearAllData = () => { 
+            showConfirm('ล้างข้อมูลทั้งหมด', 'ลบข้อมูลทั้งหมดในเครื่อง? (กู้คืนไม่ได้)', 'fa-exclamation-triangle', 'red', () => {
+                localStorage.clear(); location.reload();
+            });
+        };
         
         window.handleCheckIn = () => { 
             if(state.checkin.start && !state.checkin.end) return; 
@@ -637,17 +681,10 @@
                 const wagePerHour = (state.todayNet / diffHours).toFixed(0);
                 wEl.innerHTML = `<i class="fas fa-bolt text-yellow-400/80"></i> ค่าแรงเฉลี่ย ฿${formatMoney(wagePerHour)}/ชม.`;
                 wEl.classList.remove('hidden');
-            } else if (wEl) {
-                wEl.classList.add('hidden');
-            }
+            } else if (wEl) { wEl.classList.add('hidden'); }
         };
 
-        function startTimer() { 
-            stopTimer(); 
-            document.getElementById('checkin-duration').classList.remove('hidden');
-            updateTimerUI(); 
-            state.timerInterval = setInterval(updateTimerUI, 1000); 
-        }
+        function startTimer() { stopTimer(); document.getElementById('checkin-duration').classList.remove('hidden'); updateTimerUI(); state.timerInterval = setInterval(updateTimerUI, 1000); }
         function stopTimer() { if(state.timerInterval) { clearInterval(state.timerInterval); state.timerInterval = null; } }
 
         window.calcWallets = () => {
@@ -656,33 +693,20 @@
                 if (r.module === 'lalamove') {
                     if (r.type === 'income') {
                         if (r.category === SYS_CATS.TOPUP_FROM_PERS) {
-                            credit += r.amount; // รับเงินเติมแอป
+                            credit += r.amount; 
                         } else if (r.category === 'วิ่งงานปกติ') {
-                            const gross = (r.amount || 0) + (r.tip || 0);
-                            const gp = (r.gp || 0);
-                            const tollDriver = (r.tripTollCost || 0);
-                            
-                            if (r.paymentMethod === 'cash') {
-                                personal += gross; // เงินสดเข้ากระเป๋าส่วนตัวเลย
-                                credit -= gp;      // แอปหัก GP
-                            } else {
-                                credit += (gross - gp);
-                            }
-                            personal -= tollDriver; // จ่ายค่าทางด่วนจากเงินส่วนตัว
+                            const gross = (r.amount || 0) + (r.tip || 0); const gp = (r.gp || 0); const tollDriver = (r.tripTollCost || 0);
+                            if (r.paymentMethod === 'cash') { personal += gross; credit -= gp; } else { credit += (gross - gp); }
+                            personal -= tollDriver; 
                         } else {
-                            if (r.paymentMethod === 'cash') personal += r.amount;
-                            else credit += r.amount;
+                            if (r.paymentMethod === 'cash') personal += r.amount; else credit += r.amount;
                         }
-                    } else { // expense
-                        if (r.category === SYS_CATS.TRANSFER_OUT) {
-                            credit -= r.amount;
-                        } else {
-                            personal -= r.amount; // ค่าข้าว/น้ำมัน หักจากกระเป๋าส่วนตัว
-                        }
+                    } else { 
+                        if (r.category === SYS_CATS.TRANSFER_OUT) { credit -= r.amount; } 
+                        else { personal -= r.amount; }
                     }
                 } else if (r.module === 'personal') {
-                    if (r.type === 'income') personal += r.amount;
-                    else personal -= r.amount;
+                    if (r.type === 'income') personal += r.amount; else personal -= r.amount;
                 }
             });
             return { credit, personal };
@@ -695,7 +719,11 @@
             state.settings.defaultFuelRate = parseFloat(document.getElementById('set-fuel-rate').value) || 15.0; 
             saveData(); showToast("บันทึกตั้งค่าแล้ว"); renderUI(); 
         };
-        window.resetMaintenance = () => { if(!confirm("รีเซ็ตระยะทางรถเป็น 0?")) return; state.settings.totalKm = 0; saveData(); showToast("รีเซ็ตเรียบร้อย"); renderUI(); };
+        window.resetMaintenance = () => { 
+            showConfirm('รีเซ็ตระยะทาง', 'เริ่มนับระยะทางสะสมใหม่ตั้งแต่ 0 หรือไม่?', 'fa-undo', 'orange', () => {
+                state.settings.totalKm = 0; saveData(); showToast("รีเซ็ตเรียบร้อย"); renderUI();
+            });
+        };
 
         window.setPaymentMethod = (method) => {
             currentPaymentMethod = method;
@@ -742,19 +770,13 @@
             const activeMissionClass = "flex-1 h-full rounded-lg text-[11px] font-bold bg-amber-900/60 text-amber-400 shadow-sm transition-colors flex items-center justify-center gap-1.5";
 
             if(type === 'trip') {
-                btnTrip.className = activeTripClass;
-                btnMission.className = inactiveClass;
+                btnTrip.className = activeTripClass; btnMission.className = inactiveClass;
                 document.getElementById('label-amount').innerText = 'รายได้จากแอป (ค่ารอบ)';
-                fieldExtras.classList.remove('hidden');
-                fieldTipGp.classList.remove('hidden');
-                fieldCat.classList.add('hidden');
+                fieldExtras.classList.remove('hidden'); fieldTipGp.classList.remove('hidden'); fieldCat.classList.add('hidden');
             } else {
-                btnMission.className = activeMissionClass;
-                btnTrip.className = inactiveClass;
+                btnMission.className = activeMissionClass; btnTrip.className = inactiveClass;
                 document.getElementById('label-amount').innerText = 'จำนวนเงินโบนัส/สติ๊กเกอร์ (บาท)';
-                fieldExtras.classList.add('hidden');
-                fieldTipGp.classList.add('hidden');
-                fieldCat.classList.remove('hidden');
+                fieldExtras.classList.add('hidden'); fieldTipGp.classList.add('hidden'); fieldCat.classList.remove('hidden');
                 
                 const cats = CATEGORIES['lalamove-income-mission'];
                 document.getElementById('cat-grid').innerHTML = cats.map(c => `<button onclick="selectCat(this, '${c}')" class="cat-btn px-4 py-2 rounded-xl border border-app-border text-xs text-app-text font-medium transition-colors">${c}</button>`).join('');
@@ -824,24 +846,19 @@
 
             if (isLala && isInc) {
                 if(state.lalaIncomeType === 'trip') {
-                    tip = parseFloat(document.getElementById('input-tip').value) || 0;
-                    gp = parseFloat(document.getElementById('input-gp').value) || 0;
-                    km = parseFloat(document.getElementById('input-km').value) || 0;
-                    dashRate = parseFloat(document.getElementById('input-dash-rate').value) || state.settings.defaultFuelRate;
+                    tip = parseFloat(document.getElementById('input-tip').value) || 0; gp = parseFloat(document.getElementById('input-gp').value) || 0;
+                    km = parseFloat(document.getElementById('input-km').value) || 0; dashRate = parseFloat(document.getElementById('input-dash-rate').value) || state.settings.defaultFuelRate;
                     fuelPrice = parseFloat(document.getElementById('input-fuel-price').value) || state.settings.defaultFuelPrice;
                     tollFee = parseFloat(document.getElementById('input-toll-fee').value) || 0;
-                    tollPayer = tollFee > 0 ? currentTollPayer : 'customer';
-                    tripTollCost = (tollPayer === 'driver') ? tollFee : 0;
+                    tollPayer = tollFee > 0 ? currentTollPayer : 'customer'; tripTollCost = (tollPayer === 'driver') ? tollFee : 0;
 
                     if (amount === 0 && tip === 0) return showToast('กรุณากรอกรายรับ', true);
                     if (km > 0 && dashRate > 0) { liters = (km / dashRate); tripFuelCost = liters * fuelPrice; costPerKm = fuelPrice / dashRate; }
-                    finalCategory = 'วิ่งงานปกติ';
-                    finalNet = amount + tip - gp - tripFuelCost - tripTollCost;
+                    finalCategory = 'วิ่งงานปกติ'; finalNet = amount + tip - gp - tripFuelCost - tripTollCost;
                 } else {
                     if (amount === 0) return showToast('กรุณากรอกยอด', true);
                     if (!state.category) return showToast('กรุณาเลือกหมวดหมู่', true);
-                    finalCategory = state.category;
-                    finalNet = amount;
+                    finalCategory = state.category; finalNet = amount;
                 }
             } else {
                 if (amount === 0) return showToast('กรุณากรอกจำนวนเงิน', true);
@@ -852,14 +869,9 @@
             if(isNaN(timestamp)) timestamp = Date.now();
 
             const recordData = {
-                module: state.activeTab, type: state.modalType,
-                category: finalCategory,
-                note: note, amount: amount, tip: tip, gp: gp, km: km,
-                dashRate: dashRate, fuelPrice: fuelPrice, fuelLiters: liters, costPerKm: costPerKm,
-                tripFuelCost: tripFuelCost, tollFee: tollFee, tollPayer: tollPayer, tripTollCost: tripTollCost,
-                paymentMethod: (isLala && isInc) ? currentPaymentMethod : 'none',
-                netAmount: finalNet,
-                date: inputDate, time: inputTime, timestamp: timestamp
+                module: state.activeTab, type: state.modalType, category: finalCategory, note: note, amount: amount, tip: tip, gp: gp, km: km,
+                dashRate: dashRate, fuelPrice: fuelPrice, fuelLiters: liters, costPerKm: costPerKm, tripFuelCost: tripFuelCost, tollFee: tollFee, tollPayer: tollPayer, tripTollCost: tripTollCost,
+                paymentMethod: (isLala && isInc) ? currentPaymentMethod : 'none', netAmount: finalNet, date: inputDate, time: inputTime, timestamp: timestamp
             };
 
             if (state.editId) {
@@ -954,15 +966,12 @@
                     setLalaIncomeType('mission');
                 } else {
                     setLalaIncomeType('trip');
-                    document.getElementById('input-tip').value = r.tip || '';
-                    document.getElementById('input-gp').value = r.gp || '';
+                    document.getElementById('input-tip').value = r.tip || ''; document.getElementById('input-gp').value = r.gp || '';
                     document.getElementById('input-km').value = r.km || '';
                     document.getElementById('input-dash-rate').value = r.dashRate || state.settings.defaultFuelRate;
                     document.getElementById('input-fuel-price').value = r.fuelPrice || state.settings.defaultFuelPrice;
                     document.getElementById('input-toll-fee').value = r.tollFee || '';
-                    setTollPayer(r.tollPayer || 'customer');
-                    toggleTollState();
-                    calcPreview();
+                    setTollPayer(r.tollPayer || 'customer'); toggleTollState(); calcPreview();
                 }
             } else {
                 document.getElementById('label-amount').innerText = 'จำนวนเงิน (บาท)';
@@ -976,13 +985,17 @@
 
         window.confirmDelete = () => {
             const delId = state.viewId || state.editId;
-            if(!delId || !confirm('คุณแน่ใจหรือไม่ที่จะลบรายการนี้?')) return;
-            const r = state.records.find(x => x.id === delId);
-            if(r && r.km > 0 && state.settings.totalKm >= r.km) state.settings.totalKm -= r.km;
+            if(!delId) return;
             
-            state.records = state.records.filter(x => x.id !== delId);
-            state.viewId = null; state.editId = null; saveData(); closeAllModals(); showToast("ลบรายการแล้ว"); renderUI();
-            if(state.activeTab === 'analytics') renderChartAndHistory();
+            showConfirm('ยืนยันการลบ', 'คุณแน่ใจหรือไม่ที่จะลบรายการนี้?', 'fa-trash-alt', 'red', () => {
+                const r = state.records.find(x => x.id === delId);
+                if(r && r.km > 0 && state.settings.totalKm >= r.km) state.settings.totalKm -= r.km;
+                
+                state.records = state.records.filter(x => x.id !== delId);
+                state.viewId = null; state.editId = null; 
+                saveData(); closeAllModals(); showToast("ลบรายการแล้ว"); renderUI();
+                if(state.activeTab === 'analytics') renderChartAndHistory();
+            });
         };
 
         window.openModal = (type) => {
@@ -1026,10 +1039,9 @@
             setTimeout(() => { document.getElementById('modal-overlay').classList.add('opacity-100'); document.getElementById('entry-modal').classList.add('open'); }, 10);
         };
 
-        // 🎯 NEW: ระบบ Transfer & Validation แบบ Toggle Buttons
         window.openTransferModal = () => {
             document.getElementById('input-transfer-amount').value = '';
-            setTransferAction('withdraw'); // Default to withdraw
+            setTransferAction('withdraw'); 
             
             document.getElementById('modal-overlay').classList.remove('hidden');
             setTimeout(() => { 
@@ -1065,23 +1077,25 @@
             }
         };
 
-        window.saveTransfer = () => {
+        window.handleTransferClick = () => {
             const amt = parseFloat(document.getElementById('input-transfer-amount').value) || 0;
             if(amt <= 0) return showToast('กรุณากรอกจำนวนเงิน', true);
 
             const action = currentTransferAction;
             const wallets = calcWallets();
 
-            // Check Balances!
             if (action === 'withdraw' && amt > wallets.credit) return showToast('เครดิตแอปมีไม่พอให้ถอน!', true);
             if (action === 'topup' && amt > wallets.personal && wallets.personal >= 0) {
-                if(!confirm(`บัญชีส่วนตัวคุณมียอดแค่ ${formatMoney(wallets.personal)} ฿ ต้องการทำรายการต่อจนยอดติดลบหรือไม่?`)) return;
+                showConfirm('ยอดเงินอาจติดลบ', `บัญชีส่วนตัวคุณมีแค่ ${formatMoney(wallets.personal)} ฿ ต้องการทำรายการต่อจนยอดติดลบหรือไม่?`, 'fa-exclamation-circle', 'orange', () => {
+                    executeTransferAction(action, amt);
+                });
+                return;
             }
+            executeTransferAction(action, amt);
+        };
 
-            const timestamp = Date.now();
-            const dateStr = getToday();
-            const timeStr = getTime();
-            const tId = generateId();
+        window.executeTransferAction = (action, amt) => {
+            const timestamp = Date.now(); const dateStr = getToday(); const timeStr = getTime(); const tId = generateId();
 
             if (action === 'withdraw') {
                 state.records.push({ id: tId + '_out', module: 'lalamove', type: 'expense', category: SYS_CATS.TRANSFER_OUT, note: 'ถอนเงินแอปเข้าบัญชี', amount: amt, netAmount: amt, paymentMethod: 'credit', date: dateStr, time: timeStr, timestamp: timestamp });
@@ -1091,13 +1105,10 @@
                 state.records.push({ id: tId + '_in', module: 'lalamove', type: 'income', category: SYS_CATS.TOPUP_FROM_PERS, note: 'เติมเครดิตจากส่วนตัว', amount: amt, netAmount: amt, paymentMethod: 'credit', date: dateStr, time: timeStr, timestamp: timestamp + 1 });
             }
 
-            saveData(); 
-            document.getElementById('transfer-modal').classList.remove('open');
-            setTimeout(() => { closeAllModals(); }, 300);
-            renderUI(); 
+            saveData(); document.getElementById('transfer-modal').classList.remove('open');
+            setTimeout(() => { closeAllModals(); }, 300); renderUI(); 
             if(state.activeTab === 'analytics') renderChartAndHistory();
-            showToast('บันทึกทำรายการสำเร็จ! 💸');
-            hapticSuccess();
+            showToast('บันทึกทำรายการสำเร็จ! 💸'); hapticSuccess();
         };
 
         window.selectCat = (btn, cat) => {
@@ -1275,19 +1286,15 @@
                     if(r.type === 'income') {
                         if(r.category === 'วิ่งงานปกติ') {
                             const inc = r.amount + (r.tip||0);
-                            totalIncBreakdown += inc;
-                            catInc['ค่ารอบแอป + ทิป'] = (catInc['ค่ารอบแอป + ทิป'] || 0) + inc;
-
+                            totalIncBreakdown += inc; catInc['ค่ารอบแอป + ทิป'] = (catInc['ค่ารอบแอป + ทิป'] || 0) + inc;
                             if(r.gp > 0) { totalExpBreakdown += r.gp; catExp['หัก GP (แอปลดเงิน)'] = (catExp['หัก GP (แอปลดเงิน)'] || 0) + r.gp; }
                             if(r.tripFuelCost > 0) { totalExpBreakdown += r.tripFuelCost; catExp['ค่าน้ำมัน (ต้นทุนวิ่ง)'] = (catExp['ค่าน้ำมัน (ต้นทุนวิ่ง)'] || 0) + r.tripFuelCost; }
                             if(r.tripTollCost > 0) { totalExpBreakdown += r.tripTollCost; catExp['ค่าทางด่วน (จ่ายเอง)'] = (catExp['ค่าทางด่วน (จ่ายเอง)'] || 0) + r.tripTollCost; }
                         } else if (r.category !== SYS_CATS.TOPUP_FROM_PERS) {
-                            totalIncBreakdown += r.amount;
-                            catInc[r.category] = (catInc[r.category] || 0) + r.amount;
+                            totalIncBreakdown += r.amount; catInc[r.category] = (catInc[r.category] || 0) + r.amount;
                         }
                     } else if(!['เติมน้ำมัน (จ่ายจริง)', SYS_CATS.TRANSFER_OUT].includes(r.category)) {
-                        totalExpBreakdown += r.amount;
-                        catExp[r.category] = (catExp[r.category] || 0) + r.amount;
+                        totalExpBreakdown += r.amount; catExp[r.category] = (catExp[r.category] || 0) + r.amount;
                     }
                 } else {
                     if(r.type === 'income') {
@@ -1355,8 +1362,7 @@
                             }
                             else if(!['เติมน้ำมัน (จ่ายจริง)', SYS_CATS.TRANSFER_OUT].includes(r.category)) { dayNet -= r.amount; }
                         } else {
-                            if(r.type === 'income') { dayNet += r.amount; }
-                            else { dayNet -= r.amount; }
+                            if(r.type === 'income') { dayNet += r.amount; } else { dayNet -= r.amount; }
                         }
                     });
 
@@ -1364,8 +1370,7 @@
 
                     html += `<div class="mb-5"><div class="flex justify-between items-end mb-3"><h4 class="text-sm font-bold text-white">${dStr}</h4><span class="text-[11px] font-semibold ${dayNet>=0?`text-${dNetColor}-400 bg-${dNetColor}-950/40 border-${dNetColor}-900/50`:'text-red-400 bg-red-950/40 border-red-900/50'} px-2 py-0.5 rounded-full border">${dayNet>=0?'+':''}${formatMoney(dayNet)} ฿</span></div><div class="space-y-2.5">`;
                     html += records.map((r, i) => {
-                        const isInc = r.type === 'income'; 
-                        let color = 'text-red-400';
+                        const isInc = r.type === 'income'; let color = 'text-red-400';
                         if(isInc) color = r.module === 'lalamove' ? 'text-emerald-400' : 'text-purple-400';
 
                         let detail = r.note || '-'; let payIcon = '';
@@ -1400,11 +1405,8 @@
         };
 
         const renderUI = () => {
-            const sEl = document.getElementById('checkin-status');
-            const dEl = document.getElementById('checkin-duration');
-            const bIn = document.getElementById('btn-checkin');
-            const bOut = document.getElementById('btn-checkout');
-            const wEl = document.getElementById('checkin-wage');
+            const sEl = document.getElementById('checkin-status'); const dEl = document.getElementById('checkin-duration');
+            const bIn = document.getElementById('btn-checkin'); const bOut = document.getElementById('btn-checkout'); const wEl = document.getElementById('checkin-wage');
             
             if(!state.checkin.start) {
                 if(sEl) { sEl.innerText = 'ออฟไลน์'; sEl.className = 'text-base font-bold text-app-text mt-0.5 leading-tight'; }
@@ -1420,21 +1422,15 @@
                 }
                 if(bIn) { bIn.classList.add('opacity-50', 'pointer-events-none'); }
                 if(bOut) { bOut.classList.remove('opacity-50', 'pointer-events-none'); }
-                if(dEl) { 
-                    dEl.classList.remove('hidden'); 
-                    dEl.className = 'text-[10px] font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-900 transition-all animate-pulse-slow';
-                    updateTimerUI();
-                }
+                if(dEl) { dEl.classList.remove('hidden'); dEl.className = 'text-[10px] font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-900 transition-all animate-pulse-slow'; updateTimerUI(); }
             } else {
                 if(sEl) { 
-                    const sDt = new Date(state.checkin.start);
-                    const eDt = new Date(state.checkin.end);
+                    const sDt = new Date(state.checkin.start); const eDt = new Date(state.checkin.end);
                     sEl.innerHTML = `จบกะแล้ว <span class="text-[10px] font-normal text-gray-500 ml-1">(${sDt.getHours().toString().padStart(2,'0')}:${sDt.getMinutes().toString().padStart(2,'0')} - ${eDt.getHours().toString().padStart(2,'0')}:${eDt.getMinutes().toString().padStart(2,'0')})</span>`; 
                     sEl.className = 'text-base font-bold text-white mt-0.5 leading-tight'; 
                 }
                 if(dEl) { 
-                    dEl.classList.remove('hidden');
-                    const diff = new Date(state.checkin.end) - new Date(state.checkin.start);
+                    dEl.classList.remove('hidden'); const diff = new Date(state.checkin.end) - new Date(state.checkin.start);
                     dEl.innerText = `รวมเวลา ${Math.floor(diff / 3600000)}ชม. ${Math.floor((diff % 3600000) / 60000)}น.`; 
                     dEl.className = 'text-[10px] font-medium text-gray-400 bg-gray-800 px-2 py-0.5 rounded-md border border-gray-600 transition-all';
                 }
@@ -1444,7 +1440,6 @@
             }
 
             const todayRecs = state.records.filter(r => r.date === getToday() && r.module === state.activeTab).sort((a,b) => b.timestamp - a.timestamp);
-            
             const wallets = calcWallets();
             
             if(state.activeTab === 'lalamove') {
@@ -1455,19 +1450,13 @@
                         if(r.category === 'วิ่งงานปกติ') {
                             grossInc += (r.amount + r.tip - r.gp); tripFuel += (r.tripFuelCost || 0); expOther += (r.tripTollCost || 0); 
                             todayTrips++; todayKm += (r.km || 0); todayLiters += (r.fuelLiters || 0); 
-                        } else if (r.category !== SYS_CATS.TOPUP_FROM_PERS) {
-                            grossInc += r.amount;
-                        }
-                    } 
-                    else { 
-                        if(!['เติมน้ำมัน (จ่ายจริง)', SYS_CATS.TRANSFER_OUT].includes(r.category)) {
-                            expOther += r.amount; 
-                        }
+                        } else if (r.category !== SYS_CATS.TOPUP_FROM_PERS) { grossInc += r.amount; }
+                    } else { 
+                        if(!['เติมน้ำมัน (จ่ายจริง)', SYS_CATS.TRANSFER_OUT].includes(r.category)) { expOther += r.amount; }
                     }
                 });
                 
-                const net = grossInc - tripFuel - expOther;
-                state.todayNet = net;
+                const net = grossInc - tripFuel - expOther; state.todayNet = net;
 
                 if(document.getElementById('lala-credit-today')) {
                     document.getElementById('lala-credit-today').innerText = formatMoney(wallets.credit) + ' ฿';
@@ -1485,16 +1474,11 @@
                 
                 const pct = Math.min(100, Math.max(0, (net / (state.settings.dailyTarget || 1)) * 100)) || 0;
                 document.getElementById('progress-text').innerText = `${Math.floor(pct)}%`;
-                const circ = document.getElementById('progress-circle');
-                circ.style.strokeDashoffset = 238.7 - (pct / 100 * 238.7);
+                const circ = document.getElementById('progress-circle'); circ.style.strokeDashoffset = 238.7 - (pct / 100 * 238.7);
                 if(pct >= 100) {
                     circ.classList.replace('text-emerald-500', 'text-yellow-400');
-                    if(state.lastPct < 100 && typeof confetti !== 'undefined') {
-                        confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 }, zIndex: 9999 });
-                        hapticSuccess();
-                    }
-                }
-                else circ.classList.replace('text-yellow-400', 'text-emerald-500');
+                    if(state.lastPct < 100 && typeof confetti !== 'undefined') { confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 }, zIndex: 9999 }); hapticSuccess(); }
+                } else circ.classList.replace('text-yellow-400', 'text-emerald-500');
                 state.lastPct = pct;
 
                 document.getElementById('transaction-count').innerText = `${todayRecs.length} รายการ`;
@@ -1520,9 +1504,7 @@
                             payIcon = r.paymentMethod === 'cash' ? ' <i class="fas fa-money-bill-wave text-emerald-500/70 ml-1"></i>' : ' <i class="fas fa-mobile-screen text-blue-400/70 ml-1"></i>';
                         } else if (isInc && r.category === 'รายได้ภารกิจ') {
                             payIcon = r.paymentMethod === 'cash' ? ' <i class="fas fa-money-bill-wave text-emerald-500/70 ml-1"></i>' : ' <i class="fas fa-mobile-screen text-blue-400/70 ml-1"></i>';
-                        } else if (r.category === SYS_CATS.TRANSFER_OUT || r.category === SYS_CATS.TOPUP_FROM_PERS) {
-                            detail = r.note;
-                        }
+                        } else if (r.category === SYS_CATS.TRANSFER_OUT || r.category === SYS_CATS.TOPUP_FROM_PERS) { detail = r.note; }
                         
                         return `<div onclick="viewRecord('${r.id}')" class="stagger-item animate-fade-in-up flex items-center justify-between p-3.5 bg-app-card rounded-2xl border border-app-border active:scale-95 transition-all cursor-pointer hover:border-gray-600 shadow-sm" style="animation-delay: ${i * 0.05}s">
                             <div class="flex items-center gap-3">
@@ -1544,7 +1526,6 @@
                 
                 document.getElementById('pers-income-today').innerText = formatMoney(todayPInc);
                 document.getElementById('pers-expense-today').innerText = formatMoney(todayPExp);
-
                 document.getElementById('transaction-count-pers').innerText = `${todayRecs.length} รายการ`;
                 const listElPers = document.getElementById('transactions-list-pers');
                 
