@@ -77,7 +77,7 @@
         </header>
 
         <!-- Main Content -->
-        <main id="main-content" class="flex-1 overflow-y-auto px-5 pt-5 space-y-6 pb-[140px]">
+        <main id="main-content" class="flex-1 overflow-y-auto px-5 pt-5 pb-[140px] space-y-6">
             
             <!-- ================= 1. LALAMOVE TAB ================= -->
             <div id="tab-lalamove" class="tab-content active space-y-4">
@@ -132,15 +132,20 @@
 
                         <!-- กระเป๋าเงินสด vs เครดิตแอป -->
                         <div class="flex gap-2 relative z-10 pt-4 border-t border-emerald-800/30">
-                            <div class="flex-1 bg-black/40 rounded-xl p-2.5 border border-emerald-900/40 flex justify-between items-center shadow-inner">
-                                <span class="text-[10px] text-app-text flex items-center gap-1"><i class="fas fa-money-bill-wave text-emerald-500/80"></i> รับเงินสด</span>
-                                <span id="lala-cash-today" class="text-xs font-bold text-emerald-400">0 ฿</span>
+                            <div class="flex-1 bg-black/40 rounded-xl p-2.5 border border-emerald-900/40 flex flex-col shadow-inner">
+                                <span class="text-[10px] text-app-text flex items-center gap-1 mb-1"><i class="fas fa-money-bill-wave text-emerald-500/80"></i> เงินสดในมือ</span>
+                                <span id="lala-cash-today" class="text-sm font-bold text-emerald-400">0 ฿</span>
                             </div>
-                            <div class="flex-1 bg-black/40 rounded-xl p-2.5 border border-blue-900/30 flex justify-between items-center shadow-inner">
-                                <span class="text-[10px] text-app-text flex items-center gap-1"><i class="fas fa-mobile-screen text-blue-400/80"></i> เข้าแอป</span>
-                                <span id="lala-credit-today" class="text-xs font-bold text-blue-400">0 ฿</span>
+                            <div class="flex-1 bg-black/40 rounded-xl p-2.5 border border-blue-900/30 flex flex-col shadow-inner">
+                                <span class="text-[10px] text-app-text flex items-center gap-1 mb-1"><i class="fas fa-mobile-screen text-blue-400/80"></i> เงินในแอป</span>
+                                <span id="lala-credit-today" class="text-sm font-bold text-blue-400">0 ฿</span>
                             </div>
                         </div>
+                        
+                        <!-- 🎯 NEW: ปุ่มย้ายเงิน Lalamove สู่ Personal -->
+                        <button onclick="openTransferModal()" class="btn-press relative z-10 mt-3 w-full py-2.5 bg-blue-900/20 text-blue-400 text-xs font-bold rounded-xl border border-blue-800/50 flex items-center justify-center gap-2 transition-colors active:bg-blue-900/40">
+                            <i class="fas fa-exchange-alt"></i> ถอน / ย้ายเงินไปบัญชีส่วนตัว
+                        </button>
                     </div>
 
                     <!-- Quick Stats -->
@@ -208,7 +213,7 @@
             </div>
 
             <!-- ================= 3. ANALYTICS & HISTORY ================= -->
-            <div id="tab-analytics" class="tab-content space-y-4">
+            <div id="tab-analytics" class="tab-content space-y-4 pb-20">
                 <div class="bg-[#121214] p-1 rounded-xl border border-app-border flex shadow-sm mb-2">
                     <button id="btn-ana-mod-lala" onclick="setAnalyticsModule('lalamove')" class="flex-1 py-2 text-xs font-bold bg-app-border text-emerald-400 shadow-sm rounded-lg transition-colors flex items-center justify-center gap-1"><i class="fas fa-car-side"></i> Lalamove</button>
                     <button id="btn-ana-mod-pers" onclick="setAnalyticsModule('personal')" class="flex-1 py-2 text-xs font-bold text-app-text rounded-lg transition-colors flex items-center justify-center gap-1"><i class="fas fa-wallet"></i> ส่วนตัว</button>
@@ -242,7 +247,6 @@
                     <div class="bg-app-card border border-app-border rounded-2xl p-3 flex flex-col justify-center"><span class="text-[10px] text-app-text mb-1"><i class="fas fa-arrow-turn-down text-red-500/70 mr-1"></i> จ่ายรวม</span><span id="stat-pers-exp" class="text-lg font-bold text-red-400">0</span></div>
                 </div>
 
-                <!-- หมวดหมู่ใช้จ่าย/รับ (Breakdown) -->
                 <div class="mt-6 border-t border-app-border/50 pt-5">
                     <div class="flex items-center gap-2 mb-4 px-1">
                         <i class="fas fa-chart-pie text-app-text"></i>
@@ -268,7 +272,7 @@
             </div>
 
             <!-- ================= 4. SETTINGS TAB ================= -->
-            <div id="tab-settings" class="tab-content space-y-6">
+            <div id="tab-settings" class="tab-content space-y-6 pb-20">
                 <div class="bg-app-card border border-app-border rounded-3xl p-5 relative overflow-hidden shadow-lg">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400"><i class="fas fa-wrench"></i></div>
@@ -356,12 +360,11 @@
 
             <div class="space-y-4 max-h-[68vh] overflow-y-auto pb-4 hide-scroll pr-1">
                 
-                <!-- 🎯 Segmented Control ภารกิจ vs วิ่งงาน -->
-                <div id="field-lala-income-type" class="hidden bg-[#09090b] rounded-xl border border-app-border p-1 mb-2 h-12 flex items-center shadow-inner">
-                    <button id="btn-lala-type-trip" onclick="setLalaIncomeType('trip')" class="flex-1 h-full text-[11px] font-bold bg-emerald-900/60 text-emerald-400 rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5">
+                <div id="field-lala-income-type" class="hidden flex gap-2.5 mb-2">
+                    <button id="btn-lala-type-trip" onclick="setLalaIncomeType('trip')" class="flex-1 py-3 bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-900/40 font-bold flex justify-center items-center gap-2 text-sm border border-emerald-500/30 transition-all duration-300">
                         <i class="fas fa-car-side"></i> วิ่งงานปกติ
                     </button>
-                    <button id="btn-lala-type-mission" onclick="setLalaIncomeType('mission')" class="flex-1 h-full text-[11px] font-bold text-app-text rounded-lg transition-colors flex items-center justify-center gap-1.5 hover:text-white">
+                    <button id="btn-lala-type-mission" onclick="setLalaIncomeType('mission')" class="flex-1 py-3 bg-[#121214] text-app-text rounded-2xl border border-app-border font-bold flex justify-center items-center gap-2 text-sm transition-all duration-300 hover:text-white">
                         <i class="fas fa-star"></i> โบนัส/ภารกิจ
                     </button>
                 </div>
@@ -444,13 +447,45 @@
             </div>
         </div>
 
+        <!-- ================= 🎯 NEW: TRANSFER MODAL (ย้ายเงิน) ================= -->
+        <div id="transfer-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[80] px-6 pt-3 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+            <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-4"></div>
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-xl font-bold text-blue-400 tracking-tight">ย้ายเงิน Lalamove ➔ ส่วนตัว</h3>
+                <button onclick="closeAllModals()" class="w-8 h-8 flex items-center justify-center bg-app-border text-app-text rounded-full hover:bg-gray-700"><i class="fas fa-times text-sm"></i></button>
+            </div>
+
+            <div class="space-y-4">
+                <div class="bg-[#121214] p-4 rounded-2xl border border-blue-900/30 shadow-inner">
+                    <label class="block text-xs font-medium text-app-text mb-2">หักเงินจาก (ต้นทาง)</label>
+                    <div class="flex bg-[#09090b] rounded-xl border border-app-border p-1 h-[48px] items-center mb-4">
+                        <button id="btn-trans-src-credit" onclick="setTransferSource('credit')" class="flex-1 h-full rounded-lg text-[11px] font-bold bg-blue-900/60 text-blue-400 shadow-sm transition-colors flex items-center justify-center gap-1.5"><i class="fas fa-mobile-screen"></i> เงินในแอป</button>
+                        <button id="btn-trans-src-cash" onclick="setTransferSource('cash')" class="flex-1 h-full rounded-lg text-[11px] font-bold text-app-text transition-colors flex items-center justify-center gap-1.5"><i class="fas fa-money-bill-wave"></i> เงินสดในมือ</button>
+                    </div>
+
+                    <label class="block text-xs font-medium text-app-text mb-1">จำนวนเงินที่ต้องการย้าย (บาท)</label>
+                    <div class="relative mt-1">
+                        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-app-text text-sm font-medium">฿</span>
+                        <input type="number" min="0" step="any" id="input-transfer-amount" placeholder="0" class="w-full bg-[#09090b] border border-app-border rounded-xl pl-9 pr-4 py-3 text-xl font-bold text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all" inputmode="decimal">
+                    </div>
+                </div>
+
+                <div class="text-[10px] text-app-text text-center px-4 leading-relaxed">
+                    ระบบจะสร้างบันทึก "โอนเข้าบัญชีส่วนตัว" ใน Lalamove และ "รับเงินจาก Lalamove" ในกระเป๋าส่วนตัว ให้อัตโนมัติ
+                </div>
+
+                <button onclick="saveTransfer()" class="btn-press w-full py-4 rounded-2xl font-bold text-white text-base shadow-[0_4px_14px_rgba(59,130,246,0.3)] bg-blue-600 transition-all mt-4">ยืนยันการย้ายเงิน</button>
+            </div>
+        </div>
+
     </div>
 
     <!-- LOGIC -->
     <script>
         const CATEGORIES = {
-            'lalamove-expense': ['อาหาร/น้ำ', 'ค่าจอดรถ', 'ค่าสึกหรอ/ซ่อมบำรุง', 'ค่าโทรศัพท์/เน็ต', 'เติมน้ำมัน (จ่ายจริง)', 'อื่นๆ'],
-            'personal-income': ['รายได้ภารกิจ', 'เงินเดือน', 'ค้าขาย', 'งานเสริม', 'อื่นๆ'],
+            'lalamove-income-mission': ['รายได้ภารกิจ', 'ค่าติดสติ๊กเกอร์', 'โบนัสอื่นๆ'],
+            'lalamove-expense': ['อาหาร/น้ำ', 'ค่าจอดรถ', 'ค่าทางด่วน (จ่ายแยก)', 'ค่าสึกหรอ/ซ่อมบำรุง', 'เติมเครดิตแอป', 'โอนเข้าบัญชีส่วนตัว', 'เติมน้ำมัน (จ่ายจริง)', 'อื่นๆ'],
+            'personal-income': ['รับเงินจาก Lalamove', 'รายได้ภารกิจ', 'เงินเดือน', 'ค้าขาย', 'งานเสริม', 'อื่นๆ'],
             'personal-expense': ['หักค่าแรงตัวเอง', 'อาหาร/เครื่องดื่ม', 'ผ่อนรถ/หนี้สิน', 'บิล/ค่าใช้จ่าย', 'ของใช้ส่วนตัว', 'อื่นๆ']
         };
 
@@ -466,6 +501,7 @@
         };
         
         let currentTollPayer = 'customer'; let currentPaymentMethod = 'credit';
+        let currentTransferSource = 'credit'; // 🎯 สำหรับหน้าต่าง Transfer
 
         const formatDateISO = (d) => { const offset = d.getTimezoneOffset() * 60000; return new Date(d.getTime() - offset).toISOString().split('T')[0]; };
         const getToday = () => formatDateISO(new Date());
@@ -606,6 +642,7 @@
             
             const fieldExtras = document.getElementById('field-lalamove-extras');
             const fieldTipGp = document.getElementById('field-tip-gp');
+            const fieldCat = document.getElementById('field-category');
 
             const activeTripClass = "flex-1 h-full rounded-lg text-[11px] font-bold bg-emerald-900/60 text-emerald-400 shadow-sm transition-colors flex items-center justify-center gap-1.5";
             const inactiveClass = "flex-1 h-full rounded-lg text-[11px] font-bold text-app-text transition-colors flex items-center justify-center gap-1.5 hover:text-white";
@@ -617,12 +654,22 @@
                 document.getElementById('label-amount').innerText = 'รายได้จากแอป (ค่ารอบ)';
                 fieldExtras.classList.remove('hidden');
                 fieldTipGp.classList.remove('hidden');
+                fieldCat.classList.add('hidden');
             } else {
                 btnMission.className = activeMissionClass;
                 btnTrip.className = inactiveClass;
-                document.getElementById('label-amount').innerText = 'จำนวนเงินโบนัส/ภารกิจ (บาท)';
+                document.getElementById('label-amount').innerText = 'จำนวนเงินโบนัส/สติ๊กเกอร์ (บาท)';
                 fieldExtras.classList.add('hidden');
                 fieldTipGp.classList.add('hidden');
+                fieldCat.classList.remove('hidden');
+                
+                const cats = CATEGORIES['lalamove-income-mission'];
+                document.getElementById('cat-grid').innerHTML = cats.map(c => `<button onclick="selectCat(this, '${c}')" class="cat-btn px-4 py-2 rounded-xl border border-app-border text-xs text-app-text font-medium transition-colors">${c}</button>`).join('');
+                if (!state.category || !cats.includes(state.category)) state.category = cats[0];
+                setTimeout(() => {
+                     const btns = document.querySelectorAll('#cat-grid .cat-btn');
+                     btns.forEach(b => { if(b.innerText === state.category) selectCat(b, state.category); });
+                }, 10);
             }
         };
 
@@ -698,8 +745,9 @@
                     finalCategory = 'วิ่งงานปกติ';
                     finalNet = amount + tip - gp - tripFuelCost - tripTollCost;
                 } else {
-                    if (amount === 0) return showToast('กรุณากรอกยอดภารกิจ', true);
-                    finalCategory = 'รายได้ภารกิจ/โบนัส';
+                    if (amount === 0) return showToast('กรุณากรอกยอด', true);
+                    if (!state.category) return showToast('กรุณาเลือกหมวดหมู่', true);
+                    finalCategory = state.category;
                     finalNet = amount;
                 }
             } else {
@@ -808,7 +856,8 @@
                 document.getElementById('field-payment-method').classList.remove('hidden');
                 setPaymentMethod(r.paymentMethod || 'credit');
 
-                if(r.category === 'รายได้ภารกิจ' || r.category === 'รายได้ภารกิจ/โบนัส') {
+                if(CATEGORIES['lalamove-income-mission'].includes(r.category) || r.category === 'รายได้ภารกิจ/โบนัส' || r.category === 'รายได้ภารกิจ') {
+                    state.category = (r.category === 'รายได้ภารกิจ/โบนัส') ? 'รายได้ภารกิจ' : r.category;
                     setLalaIncomeType('mission');
                 } else {
                     setLalaIncomeType('trip');
@@ -884,6 +933,68 @@
             setTimeout(() => { document.getElementById('modal-overlay').classList.add('opacity-100'); document.getElementById('entry-modal').classList.add('open'); }, 10);
         };
 
+        // 🎯 NEW: ระบบ Transfer UI Logic
+        window.openTransferModal = () => {
+            document.getElementById('input-transfer-amount').value = '';
+            setTransferSource('credit'); // default ถอนจากแอป
+            
+            document.getElementById('modal-overlay').classList.remove('hidden');
+            setTimeout(() => { 
+                document.getElementById('modal-overlay').classList.add('opacity-100'); 
+                document.getElementById('transfer-modal').classList.add('open'); 
+            }, 10);
+        };
+
+        window.setTransferSource = (source) => {
+            currentTransferSource = source;
+            const btnCredit = document.getElementById('btn-trans-src-credit'), btnCash = document.getElementById('btn-trans-src-cash');
+            if(source === 'credit') {
+                btnCredit.className = "flex-1 h-full rounded-lg text-[11px] font-bold bg-blue-900/60 text-blue-400 shadow-sm transition-colors flex items-center justify-center gap-1.5";
+                btnCash.className = "flex-1 h-full rounded-lg text-[11px] font-bold text-app-text transition-colors flex items-center justify-center gap-1.5 hover:text-white";
+            } else {
+                btnCash.className = "flex-1 h-full rounded-lg text-[11px] font-bold bg-emerald-900/60 text-emerald-400 shadow-sm transition-colors flex items-center justify-center gap-1.5";
+                btnCredit.className = "flex-1 h-full rounded-lg text-[11px] font-bold text-app-text transition-colors flex items-center justify-center gap-1.5 hover:text-white";
+            }
+        };
+
+        window.saveTransfer = () => {
+            const amt = parseFloat(document.getElementById('input-transfer-amount').value) || 0;
+            if(amt <= 0) return showToast('กรุณากรอกจำนวนเงิน', true);
+
+            const timestamp = Date.now();
+            const dateStr = getToday();
+            const timeStr = getTime();
+
+            // 1. สร้างรายการ จ่ายออก (ฝั่ง Lalamove)
+            state.records.push({
+                id: timestamp.toString() + '_out',
+                module: 'lalamove', type: 'expense',
+                category: 'โอนเข้าบัญชีส่วนตัว',
+                note: currentTransferSource === 'credit' ? 'ย้ายจากเงินแอป' : 'ย้ายจากเงินสด',
+                amount: amt, netAmount: amt,
+                paymentMethod: currentTransferSource, // 🎯 ให้รู้ว่าหักจากไหน
+                date: dateStr, time: timeStr, timestamp: timestamp
+            });
+
+            // 2. สร้างรายการ รับเข้า (ฝั่ง Personal)
+            state.records.push({
+                id: timestamp.toString() + '_in',
+                module: 'personal', type: 'income',
+                category: 'รับเงินจาก Lalamove',
+                note: currentTransferSource === 'credit' ? 'โอนเข้าจากแอป' : 'เก็บเงินสดจากงาน',
+                amount: amt, netAmount: amt,
+                paymentMethod: 'cash',
+                date: dateStr, time: timeStr, timestamp: timestamp + 1
+            });
+
+            saveData(); 
+            document.getElementById('transfer-modal').classList.remove('open');
+            setTimeout(() => { closeAllModals(); }, 300);
+            renderUI(); 
+            if(state.activeTab === 'analytics') renderChartAndHistory();
+            showToast('ย้ายเงินสำเร็จ! 💸');
+        };
+
         window.selectCat = (btn, cat) => {
             state.category = cat;
             document.querySelectorAll('.cat-btn').forEach(b => b.className = 'cat-btn px-4 py-2 rounded-xl border border-app-border text-xs text-app-text font-medium transition-colors');
@@ -891,7 +1002,13 @@
         };
 
         window.closeEntryModal = () => { document.getElementById('entry-modal').classList.remove('open'); document.getElementById('modal-overlay').classList.remove('opacity-100'); setTimeout(() => document.getElementById('modal-overlay').classList.add('hidden'), 300); }
-        window.closeAllModals = () => { document.getElementById('entry-modal').classList.remove('open'); document.getElementById('detail-modal').classList.remove('open'); document.getElementById('modal-overlay').classList.remove('opacity-100'); setTimeout(() => document.getElementById('modal-overlay').classList.add('hidden'), 300); };
+        window.closeAllModals = () => { 
+            document.getElementById('entry-modal').classList.remove('open'); 
+            document.getElementById('detail-modal').classList.remove('open'); 
+            document.getElementById('transfer-modal').classList.remove('open'); 
+            document.getElementById('modal-overlay').classList.remove('opacity-100'); 
+            setTimeout(() => document.getElementById('modal-overlay').classList.add('hidden'), 300); 
+        };
 
         window.switchTab = (tab) => {
             state.activeTab = tab;
@@ -1022,7 +1139,7 @@
                                 grossInc += r.amount;
                             }
                         }
-                        else if(r.category !== 'เติมน้ำมัน (จ่ายจริง)') { expOther+=r.amount; }
+                        else if(!['เติมน้ำมัน (จ่ายจริง)', 'เติมเครดิตแอป', 'โอนเข้าบัญชีส่วนตัว'].includes(r.category)) { expOther+=r.amount; }
                     });
                     const dayNet = grossInc - tripFuel - expOther;
                     totalRangeNet += dayNet;
@@ -1052,9 +1169,9 @@
                             if(r.tripTollCost > 0) { totalExpBreakdown += r.tripTollCost; catExp['ค่าทางด่วน (จ่ายเอง)'] = (catExp['ค่าทางด่วน (จ่ายเอง)'] || 0) + r.tripTollCost; }
                         } else {
                             totalIncBreakdown += r.amount;
-                            catInc['รายได้ภารกิจ/โบนัส'] = (catInc['รายได้ภารกิจ/โบนัส'] || 0) + r.amount;
+                            catInc[r.category] = (catInc[r.category] || 0) + r.amount;
                         }
-                    } else if(r.category !== 'เติมน้ำมัน (จ่ายจริง)') {
+                    } else if(!['เติมน้ำมัน (จ่ายจริง)', 'เติมเครดิตแอป', 'โอนเข้าบัญชีส่วนตัว'].includes(r.category)) {
                         totalExpBreakdown += r.amount;
                         catExp[r.category] = (catExp[r.category] || 0) + r.amount;
                     }
@@ -1123,7 +1240,7 @@
                                     dayNet += r.amount;
                                 }
                             }
-                            else if(r.category !== 'เติมน้ำมัน (จ่ายจริง)') { dayNet -= r.amount; }
+                            else if(!['เติมน้ำมัน (จ่ายจริง)', 'เติมเครดิตแอป', 'โอนเข้าบัญชีส่วนตัว'].includes(r.category)) { dayNet -= r.amount; }
                         } else {
                             if(r.type === 'income') { dayNet += r.amount; }
                             else { dayNet -= r.amount; }
@@ -1228,7 +1345,22 @@
                         else creditNet += r.netAmount;
                     } 
                     else { 
-                        if(r.category !== 'เติมน้ำมัน (จ่ายจริง)') expOther += r.amount; 
+                        // 🎯 การคำนวณเงินสด vs เข้าแอป 
+                        if(r.category === 'โอนเข้าบัญชีส่วนตัว') {
+                            if(r.paymentMethod === 'credit') creditNet -= r.amount;
+                            else cashNet -= r.amount;
+                        } 
+                        else {
+                            if(!['เติมน้ำมัน (จ่ายจริง)', 'เติมเครดิตแอป'].includes(r.category)) {
+                                expOther += r.amount; 
+                                cashNet -= r.amount; 
+                            } else if (r.category === 'เติมเครดิตแอป') {
+                                cashNet -= r.amount;
+                                creditNet += r.amount; 
+                            } else if (r.category === 'เติมน้ำมัน (จ่ายจริง)') {
+                                cashNet -= r.amount;
+                            }
+                        }
                     }
                 });
                 const net = grossInc - tripFuel - expOther;
@@ -1260,7 +1392,6 @@
                 document.getElementById('transaction-count').innerText = `${todayRecs.length} รายการ`;
                 const listEl = document.getElementById('transactions-list');
                 
-                // 🎯 ส่วนที่แก้ไข: กล่องเชียร์อัปหน้า Lalamove
                 if(todayRecs.length === 0) {
                     listEl.innerHTML = `
                     <div class="flex flex-col items-center justify-center py-10 px-4 border border-emerald-900/30 border-dashed rounded-3xl bg-emerald-950/10 mt-2">
@@ -1281,6 +1412,9 @@
                             payIcon = r.paymentMethod === 'cash' ? ' <i class="fas fa-money-bill-wave text-emerald-500/70 ml-1"></i>' : ' <i class="fas fa-mobile-screen text-blue-400/70 ml-1"></i>';
                         } else if (isInc && r.category === 'รายได้ภารกิจ') {
                             payIcon = r.paymentMethod === 'cash' ? ' <i class="fas fa-money-bill-wave text-emerald-500/70 ml-1"></i>' : ' <i class="fas fa-mobile-screen text-blue-400/70 ml-1"></i>';
+                        } else if (r.category === 'โอนเข้าบัญชีส่วนตัว') {
+                            // 🎯 แสดงข้อมูลต้นทางการย้ายเงินให้ชัดขึ้น
+                            detail = r.paymentMethod === 'credit' ? 'ย้ายจากเงินแอป' : 'ย้ายจากเงินสด';
                         }
                         
                         return `<div onclick="viewRecord('${r.id}')" class="stagger-item animate-fade-in-up flex items-center justify-between p-3.5 bg-app-card rounded-2xl border border-app-border active:scale-95 transition-all cursor-pointer hover:border-gray-600 shadow-sm" style="animation-delay: ${i * 0.05}s">
@@ -1362,6 +1496,5 @@
     </script>
 </body>
 </html>
-
 
 
