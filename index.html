@@ -20,6 +20,16 @@
                     fontFamily: { sans: ['"Noto Sans Thai"', 'sans-serif'] },
                     colors: {
                         app: { bg: '#09090b', card: '#18181b', border: '#27272a', text: '#a1a1aa', primary: '#10b981', secondary: '#3b82f6' }
+                    },
+                    animation: {
+                        'fade-in-up': 'fadeInUp 0.4s ease-out forwards',
+                        'pulse-slow': 'pulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                    },
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(15px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
                     }
                 }
             }
@@ -36,14 +46,16 @@
         .btn-press:active { transform: scale(0.95); }
         .tab-content { display: none; opacity: 0; transition: opacity 0.3s; }
         .tab-content.active { display: block; opacity: 1; }
-        @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .toast-enter { animation: slideDown 0.3s ease-out forwards; }
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
         input[type="date"]::-webkit-calendar-picker-indicator, input[type="time"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: 0.6; }
+        
+        /* Utility for staggering animations */
+        .stagger-item { opacity: 0; }
     </style>
 </head>
 <body class="antialiased font-sans">
 
+    <!-- Toast Notification -->
     <div id="toast-container" class="fixed top-4 left-0 right-0 z-[100] flex flex-col items-center gap-2 pointer-events-none px-4"></div>
 
     <div class="max-w-[480px] mx-auto h-[100dvh] bg-app-bg relative flex flex-col shadow-2xl overflow-hidden border-x border-app-border/30">
@@ -68,6 +80,7 @@
             <!-- ================= 1. LALAMOVE TAB ================= -->
             <div id="tab-lalamove" class="tab-content active space-y-4">
                 
+                <!-- Progress & Check-in -->
                 <div class="bg-app-card border border-app-border rounded-3xl p-5 shadow-lg relative overflow-hidden flex gap-4">
                     <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
                     <div class="relative w-[88px] h-[88px] shrink-0">
@@ -77,29 +90,29 @@
                         </svg>
                         <div class="absolute inset-0 flex flex-col items-center justify-center">
                             <span class="text-[10px] text-app-text mb-[-4px]">เป้าหมาย</span>
-                            <span id="progress-text" class="text-lg font-bold text-white">0%</span>
+                            <span id="progress-text" class="text-lg font-bold text-white transition-all duration-500">0%</span>
                         </div>
                     </div>
                     <div class="flex-1 flex flex-col justify-center relative z-10">
                         <div class="flex justify-between items-start mb-2">
                             <div>
                                 <div class="text-[11px] text-app-text">สถานะกะทำงาน</div>
-                                <div id="checkin-status" class="text-base font-bold text-white mt-0.5 leading-tight">ออฟไลน์</div>
+                                <div id="checkin-status" class="text-base font-bold text-white mt-0.5 leading-tight transition-colors">ออฟไลน์</div>
                             </div>
-                            <!-- เปลี่ยนคลาสของ duration เพื่อความยืดหยุ่น -->
                             <div id="checkin-duration" class="text-[10px] font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-900 hidden transition-all"></div>
                         </div>
                         <div class="flex gap-2 mt-2">
                             <button id="btn-checkin" onclick="handleCheckIn()" class="btn-press flex-1 py-2 bg-emerald-600 rounded-xl text-xs font-semibold text-white flex justify-center items-center gap-1.5 shadow-lg">
                                 <i class="fas fa-play text-[10px]"></i> เริ่มกะ
                             </button>
-                            <button id="btn-checkout" onclick="handleCheckOut()" class="btn-press flex-1 py-2 bg-app-border rounded-xl text-xs font-semibold text-white flex justify-center items-center gap-1.5 opacity-50 pointer-events-none">
+                            <button id="btn-checkout" onclick="handleCheckOut()" class="btn-press flex-1 py-2 bg-app-border rounded-xl text-xs font-semibold text-white flex justify-center items-center gap-1.5 opacity-50 pointer-events-none transition-opacity">
                                 <i class="fas fa-stop text-[10px]"></i> จบกะ
                             </button>
                         </div>
                     </div>
                 </div>
 
+                <!-- Dashboard สรุปยอด -->
                 <div class="space-y-3">
                     <div class="bg-gradient-to-br from-emerald-900/40 to-app-card border border-emerald-800/50 p-4 rounded-3xl flex flex-col shadow-lg relative overflow-hidden">
                         <div class="absolute right-0 bottom-0 w-24 h-24 bg-emerald-500/10 rounded-full blur-xl -mr-4 -mb-4 pointer-events-none"></div>
@@ -107,38 +120,32 @@
                             <div>
                                 <span class="text-xs text-app-text block mb-1">กำไรสุทธิวันนี้ <span class="text-[9px] text-emerald-500/70">(หักต้นทุนแล้ว)</span> <span id="target-display" class="text-app-text text-[10px] ml-1">เป้า: 0</span></span>
                                 <div class="flex items-baseline gap-2">
-                                    <span id="lala-net" class="text-4xl font-bold text-white tracking-tight">0</span>
+                                    <span id="lala-net" class="text-4xl font-bold text-white tracking-tight" data-val="0">0</span>
                                     <span class="text-sm text-emerald-400 font-medium">฿</span>
                                 </div>
                             </div>
                             <div class="w-12 h-12 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 text-xl relative z-10 shadow-inner"><i class="fas fa-wallet"></i></div>
                         </div>
                         <div class="flex gap-2 relative z-10 pt-3 border-t border-emerald-800/30">
-                            <div class="flex-1 bg-black/30 rounded-lg px-2 py-1.5 flex items-center justify-center gap-1.5 border border-emerald-900/30">
-                                <i class="fas fa-box text-[9px] text-emerald-500/70"></i> <span id="lala-stat-trips" class="text-[11px] font-medium text-white">0 งาน</span>
-                            </div>
-                            <div class="flex-1 bg-black/30 rounded-lg px-2 py-1.5 flex items-center justify-center gap-1.5 border border-emerald-900/30">
-                                <i class="fas fa-route text-[9px] text-emerald-500/70"></i> <span id="lala-stat-km" class="text-[11px] font-medium text-white">0 กม.</span>
-                            </div>
-                            <div class="flex-1 bg-black/30 rounded-lg px-2 py-1.5 flex items-center justify-center gap-1.5 border border-emerald-900/30">
-                                <i class="fas fa-gas-pump text-[9px] text-emerald-500/70"></i> <span id="lala-stat-liters" class="text-[11px] font-medium text-white">0 L</span>
-                            </div>
+                            <div class="flex-1 bg-black/30 rounded-lg px-2 py-1.5 flex items-center justify-center gap-1.5 border border-emerald-900/30"><i class="fas fa-box text-[9px] text-emerald-500/70"></i> <span id="lala-stat-trips" class="text-[11px] font-medium text-white">0 งาน</span></div>
+                            <div class="flex-1 bg-black/30 rounded-lg px-2 py-1.5 flex items-center justify-center gap-1.5 border border-emerald-900/30"><i class="fas fa-route text-[9px] text-emerald-500/70"></i> <span id="lala-stat-km" class="text-[11px] font-medium text-white">0 กม.</span></div>
+                            <div class="flex-1 bg-black/30 rounded-lg px-2 py-1.5 flex items-center justify-center gap-1.5 border border-emerald-900/30"><i class="fas fa-gas-pump text-[9px] text-emerald-500/70"></i> <span id="lala-stat-liters" class="text-[11px] font-medium text-white">0 L</span></div>
                         </div>
                     </div>
 
                     <div class="grid grid-cols-3 gap-2">
                         <div class="bg-app-card border border-app-border p-3 rounded-2xl flex flex-col justify-center shadow-sm">
-                            <span class="text-[10px] text-app-text mb-1">รายรับแอป (สุทธิ)</span>
-                            <span id="lala-income" class="text-base font-bold text-emerald-400">0</span>
+                            <span class="text-[10px] text-app-text mb-1">รายรับแอป</span>
+                            <span id="lala-income" class="text-base font-bold text-emerald-400" data-val="0">0</span>
                         </div>
                         <div class="bg-app-card border border-orange-900/30 p-3 rounded-2xl flex flex-col justify-center shadow-sm relative overflow-hidden">
                             <div class="absolute inset-0 bg-gradient-to-br from-orange-500/5 to-transparent pointer-events-none"></div>
-                            <span class="text-[10px] text-orange-400/80 mb-1 relative z-10">ค่าน้ำมันวิ่งงาน</span>
-                            <span id="lala-trip-fuel" class="text-base font-bold text-orange-400 relative z-10">0</span>
+                            <span class="text-[10px] text-orange-400/80 mb-1 relative z-10">ค่าน้ำมันวิ่ง</span>
+                            <span id="lala-trip-fuel" class="text-base font-bold text-orange-400 relative z-10" data-val="0">0</span>
                         </div>
                         <div class="bg-app-card border border-app-border p-3 rounded-2xl flex flex-col justify-center shadow-sm">
-                            <span class="text-[10px] text-app-text mb-1">จ่ายอื่นๆ (+ทางด่วน)</span>
-                            <span id="lala-expense" class="text-base font-bold text-red-400">0</span>
+                            <span class="text-[10px] text-app-text mb-1">จ่ายอื่นๆ</span>
+                            <span id="lala-expense" class="text-base font-bold text-red-400" data-val="0">0</span>
                         </div>
                     </div>
                 </div>
@@ -152,14 +159,14 @@
                 </div>
             </div>
 
-            <!-- ================= 2. PERSONAL TAB (UPDATED) ================= -->
-            <div id="tab-personal" class="tab-content space-y-4">
+            <!-- ================= 2. PERSONAL TAB ================= -->
+            <div id="tab-personal" class="tab-content space-y-6">
                 <div class="bg-gradient-to-br from-blue-900/40 to-app-card border border-blue-800/50 p-5 rounded-3xl flex items-center justify-between shadow-lg relative overflow-hidden">
                     <div class="absolute right-0 bottom-0 w-24 h-24 bg-blue-500/10 rounded-full blur-xl -mr-4 -mb-4 pointer-events-none"></div>
                     <div class="relative z-10">
                         <span class="text-xs text-blue-200/80 block mb-1">เงินเหลือส่วนตัว (วันนี้)</span>
                         <div class="flex items-baseline gap-2">
-                            <span id="pers-net" class="text-4xl font-bold text-white tracking-tight">0</span>
+                            <span id="pers-net" class="text-4xl font-bold text-white tracking-tight" data-val="0">0</span>
                             <span class="text-sm text-blue-400 font-medium">฿</span>
                         </div>
                     </div>
@@ -167,16 +174,14 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-app-card border border-app-border p-4 rounded-2xl flex flex-col justify-center shadow-sm">
-                        <span class="text-[10px] text-app-text mb-1">รายรับส่วนตัวรวม</span>
-                        <span id="pers-income" class="text-xl font-bold text-emerald-400">0 <span class="text-[10px] font-normal text-emerald-500/60">฿</span></span>
+                        <span class="text-[10px] text-app-text mb-1">รับส่วนตัวรวม</span>
+                        <span id="pers-income" class="text-xl font-bold text-emerald-400" data-val="0">0</span>
                     </div>
                     <div class="bg-app-card border border-app-border p-4 rounded-2xl flex flex-col justify-center shadow-sm">
-                        <span class="text-[10px] text-app-text mb-1">รายจ่ายส่วนตัวรวม</span>
-                        <span id="pers-expense" class="text-xl font-bold text-red-400">0 <span class="text-[10px] font-normal text-red-500/60">฿</span></span>
+                        <span class="text-[10px] text-app-text mb-1">จ่ายส่วนตัวรวม</span>
+                        <span id="pers-expense" class="text-xl font-bold text-red-400" data-val="0">0</span>
                     </div>
                 </div>
-
-                <!-- 🎯 NEW: ส่วนประวัติของ Personal -->
                 <div>
                     <div class="flex items-center justify-between mb-3 px-1 mt-6 border-t border-app-border/50 pt-4">
                         <h3 class="text-base font-semibold text-white">รายการส่วนตัววันนี้</h3>
@@ -188,8 +193,6 @@
 
             <!-- ================= 3. ANALYTICS & HISTORY ================= -->
             <div id="tab-analytics" class="tab-content space-y-4 pb-20">
-                
-                <!-- 🎯 สลับ Module ดูรายงาน (Lalamove / Personal) -->
                 <div class="bg-[#121214] p-1 rounded-xl border border-app-border flex shadow-sm mb-2">
                     <button id="btn-ana-mod-lala" onclick="setAnalyticsModule('lalamove')" class="flex-1 py-2 text-xs font-bold bg-app-border text-emerald-400 shadow-sm rounded-lg transition-colors flex items-center justify-center gap-1"><i class="fas fa-car-side"></i> Lalamove</button>
                     <button id="btn-ana-mod-pers" onclick="setAnalyticsModule('personal')" class="flex-1 py-2 text-xs font-bold text-app-text rounded-lg transition-colors flex items-center justify-center gap-1"><i class="fas fa-wallet"></i> ส่วนตัว</button>
@@ -202,14 +205,8 @@
                 </div>
                 
                 <div id="custom-range-box" class="hidden grid grid-cols-2 gap-3 bg-app-card p-3 rounded-xl border border-app-border">
-                    <div>
-                        <label class="block text-[10px] text-app-text mb-1">ตั้งแต่วันที่</label>
-                        <input type="date" id="range-start" onchange="renderChartAndHistory()" class="w-full bg-[#121214] border border-app-border rounded-lg px-2 py-1.5 text-white text-xs outline-none focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label class="block text-[10px] text-app-text mb-1">ถึงวันที่</label>
-                        <input type="date" id="range-end" onchange="renderChartAndHistory()" class="w-full bg-[#121214] border border-app-border rounded-lg px-2 py-1.5 text-white text-xs outline-none focus:border-blue-500">
-                    </div>
+                    <div><label class="block text-[10px] text-app-text mb-1">ตั้งแต่</label><input type="date" id="range-start" onchange="renderChartAndHistory()" class="w-full bg-[#121214] border border-app-border rounded-lg px-2 py-1.5 text-white text-xs outline-none focus:border-blue-500"></div>
+                    <div><label class="block text-[10px] text-app-text mb-1">ถึง</label><input type="date" id="range-end" onchange="renderChartAndHistory()" class="w-full bg-[#121214] border border-app-border rounded-lg px-2 py-1.5 text-white text-xs outline-none focus:border-blue-500"></div>
                 </div>
 
                 <div class="bg-app-card border border-app-border rounded-3xl p-4 shadow-lg">
@@ -220,26 +217,13 @@
                     <div class="h-44 w-full relative"><canvas id="profitChart"></canvas></div>
                 </div>
                 
-                <!-- กล่องสถิติย่อย จะเปลี่ยนตามโหมด Lalamove/Personal -->
                 <div id="ana-stats-lala" class="grid grid-cols-2 gap-3">
-                    <div class="bg-app-card border border-app-border rounded-2xl p-3 flex flex-col justify-center">
-                        <span class="text-[10px] text-app-text mb-1"><i class="fas fa-box text-emerald-500/70 mr-1"></i> รอบวิ่ง (ช่วงที่เลือก)</span>
-                        <span id="stat-trips" class="text-lg font-bold text-white">0 <span class="text-[10px] font-normal text-app-text">งาน</span></span>
-                    </div>
-                    <div class="bg-app-card border border-app-border rounded-2xl p-3 flex flex-col justify-center">
-                        <span class="text-[10px] text-app-text mb-1"><i class="fas fa-route text-emerald-500/70 mr-1"></i> ระยะทางรวม</span>
-                        <span id="stat-km" class="text-lg font-bold text-white">0 <span class="text-[10px] font-normal text-app-text">กม.</span></span>
-                    </div>
+                    <div class="bg-app-card border border-app-border rounded-2xl p-3 flex flex-col justify-center"><span class="text-[10px] text-app-text mb-1"><i class="fas fa-box text-emerald-500/70 mr-1"></i> รอบวิ่ง (ช่วงที่เลือก)</span><span id="stat-trips" class="text-lg font-bold text-white">0</span></div>
+                    <div class="bg-app-card border border-app-border rounded-2xl p-3 flex flex-col justify-center"><span class="text-[10px] text-app-text mb-1"><i class="fas fa-route text-emerald-500/70 mr-1"></i> ระยะทางรวม</span><span id="stat-km" class="text-lg font-bold text-white">0</span></div>
                 </div>
                 <div id="ana-stats-pers" class="hidden grid grid-cols-2 gap-3">
-                    <div class="bg-app-card border border-app-border rounded-2xl p-3 flex flex-col justify-center">
-                        <span class="text-[10px] text-app-text mb-1"><i class="fas fa-arrow-turn-up text-emerald-500/70 mr-1"></i> รับรวม (ช่วงที่เลือก)</span>
-                        <span id="stat-pers-inc" class="text-lg font-bold text-emerald-400">0 <span class="text-[10px] font-normal text-app-text">฿</span></span>
-                    </div>
-                    <div class="bg-app-card border border-app-border rounded-2xl p-3 flex flex-col justify-center">
-                        <span class="text-[10px] text-app-text mb-1"><i class="fas fa-arrow-turn-down text-red-500/70 mr-1"></i> จ่ายรวม</span>
-                        <span id="stat-pers-exp" class="text-lg font-bold text-red-400">0 <span class="text-[10px] font-normal text-app-text">฿</span></span>
-                    </div>
+                    <div class="bg-app-card border border-app-border rounded-2xl p-3 flex flex-col justify-center"><span class="text-[10px] text-app-text mb-1"><i class="fas fa-arrow-turn-up text-emerald-500/70 mr-1"></i> รับรวม</span><span id="stat-pers-inc" class="text-lg font-bold text-emerald-400">0</span></div>
+                    <div class="bg-app-card border border-app-border rounded-2xl p-3 flex flex-col justify-center"><span class="text-[10px] text-app-text mb-1"><i class="fas fa-arrow-turn-down text-red-500/70 mr-1"></i> จ่ายรวม</span><span id="stat-pers-exp" class="text-lg font-bold text-red-400">0</span></div>
                 </div>
 
                 <div class="mt-8 border-t border-app-border/50 pt-5">
@@ -275,28 +259,14 @@
 
                 <div class="space-y-4">
                     <h3 class="text-sm font-semibold text-white px-1">ตั้งค่าแอป และ การคำนวณต้นทุน</h3>
-                    
                     <div class="space-y-3">
-                        <div>
-                            <label class="block text-[11px] font-medium text-app-text mb-1 px-1">เป้าหมายกำไรรายวัน (บาท)</label>
-                            <input type="number" id="set-target" onchange="updateSettings()" class="w-full bg-[#18181b] border border-app-border rounded-xl px-4 py-3 text-white text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 outline-none transition-all">
-                        </div>
+                        <div><label class="block text-[11px] font-medium text-app-text mb-1 px-1">เป้าหมายกำไรรายวัน (บาท)</label><input type="number" min="0" id="set-target" onchange="updateSettings()" class="w-full bg-[#18181b] border border-app-border rounded-xl px-4 py-3 text-white text-sm focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 outline-none transition-all"></div>
                         <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[11px] font-medium text-app-text mb-1 px-1">ราคาน้ำมัน (฿/L)</label>
-                                <input type="number" id="set-fuel-price" onchange="updateSettings()" class="w-full bg-[#18181b] border border-app-border rounded-xl px-4 py-3 text-white text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 outline-none transition-all">
-                            </div>
-                            <div>
-                                <label class="block text-[11px] font-medium text-app-text mb-1 px-1">สิ้นเปลือง (km/L)</label>
-                                <input type="number" id="set-fuel-rate" onchange="updateSettings()" class="w-full bg-[#18181b] border border-app-border rounded-xl px-4 py-3 text-white text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 outline-none transition-all">
-                            </div>
+                            <div><label class="block text-[11px] font-medium text-app-text mb-1 px-1">ราคาน้ำมัน (฿/L)</label><input type="number" min="0" step="0.01" id="set-fuel-price" onchange="updateSettings()" class="w-full bg-[#18181b] border border-app-border rounded-xl px-4 py-3 text-white text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 outline-none transition-all"></div>
+                            <div><label class="block text-[11px] font-medium text-app-text mb-1 px-1">สิ้นเปลือง (km/L)</label><input type="number" min="0" step="0.1" id="set-fuel-rate" onchange="updateSettings()" class="w-full bg-[#18181b] border border-app-border rounded-xl px-4 py-3 text-white text-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 outline-none transition-all"></div>
                         </div>
-                        <div>
-                            <label class="block text-[11px] font-medium text-app-text mb-1 px-1">ระยะตั้งเตือนบำรุงรักษา (กม.)</label>
-                            <input type="number" id="set-maint" onchange="updateSettings()" class="w-full bg-[#18181b] border border-app-border rounded-xl px-4 py-3 text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all">
-                        </div>
+                        <div><label class="block text-[11px] font-medium text-app-text mb-1 px-1">ระยะตั้งเตือนบำรุงรักษา (กม.)</label><input type="number" min="0" id="set-maint" onchange="updateSettings()" class="w-full bg-[#18181b] border border-app-border rounded-xl px-4 py-3 text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500/50 outline-none transition-all"></div>
                     </div>
-                    
                     <button onclick="resetMaintenance()" class="w-full py-3.5 bg-app-border text-white text-sm rounded-xl font-medium mt-2 active:bg-gray-700 transition-colors">รีเซ็ตระยะทางรถสะสม (เริ่ม 0 ใหม่)</button>
                     <button onclick="clearAllData()" class="w-full py-3.5 bg-red-950/40 text-red-400 border border-red-900/50 text-sm rounded-xl font-medium mt-6 active:bg-red-900/60 transition-colors">ล้างข้อมูลทั้งหมดในเครื่อง</button>
                 </div>
@@ -336,9 +306,7 @@
                 <h3 class="text-xl font-bold text-white tracking-tight">รายละเอียดบิล</h3>
                 <button onclick="closeAllModals()" class="w-8 h-8 flex items-center justify-center bg-app-border text-app-text rounded-full hover:bg-gray-700"><i class="fas fa-times text-sm"></i></button>
             </div>
-            <div id="detail-content" class="bg-[#09090b] rounded-2xl p-5 border border-app-border space-y-3 mb-5 shadow-inner relative overflow-hidden">
-                <!-- Content injected via JS -->
-            </div>
+            <div id="detail-content" class="bg-[#09090b] rounded-2xl p-5 border border-app-border space-y-3 mb-5 shadow-inner relative overflow-hidden"></div>
             <div class="flex gap-3">
                 <button onclick="confirmDelete()" class="btn-press flex-1 py-3.5 rounded-xl font-bold text-red-400 bg-red-950/40 border border-red-900/50 shadow-lg"><i class="fas fa-trash-alt mr-1"></i> ลบ</button>
                 <button onclick="openEditForm()" class="btn-press flex-[2] py-3.5 rounded-xl font-bold text-blue-400 bg-blue-950/40 border border-blue-900/50 shadow-lg"><i class="fas fa-edit mr-1"></i> แก้ไขข้อมูล</button>
@@ -348,22 +316,20 @@
         <!-- ================= ENTRY FORM MODAL ================= -->
         <div id="entry-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[70] px-6 pt-3 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
             <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-4"></div>
-            
             <div class="flex justify-between items-center mb-4">
                 <h3 id="modal-title" class="text-xl font-bold text-white tracking-tight">บันทึก</h3>
                 <button onclick="closeEntryModal()" class="w-8 h-8 flex items-center justify-center bg-app-border text-app-text rounded-full hover:bg-gray-700"><i class="fas fa-times text-sm"></i></button>
             </div>
 
             <div class="space-y-4 max-h-[68vh] overflow-y-auto pb-4 hide-scroll pr-1">
-                
-                <div class="grid grid-cols-2 gap-3 bg-[#121214] p-3 rounded-2xl border border-app-border/60">
+                <div class="grid grid-cols-2 gap-3 bg-[#121214] p-3 rounded-2xl border border-app-border/60 shadow-inner">
                     <div>
                         <label class="block text-[10px] text-app-text mb-1">วันที่ (ด/ว/ป)</label>
-                        <input type="date" id="input-date" class="w-full bg-[#09090b] border border-app-border rounded-lg px-2 py-1.5 text-white text-xs outline-none focus:border-emerald-500">
+                        <input type="date" id="input-date" class="w-full bg-[#09090b] border border-app-border rounded-lg px-2 py-1.5 text-white text-xs outline-none focus:border-emerald-500 transition-colors">
                     </div>
                     <div>
                         <label class="block text-[10px] text-app-text mb-1">เวลา</label>
-                        <input type="time" id="input-time" class="w-full bg-[#09090b] border border-app-border rounded-lg px-2 py-1.5 text-white text-xs outline-none focus:border-emerald-500">
+                        <input type="time" id="input-time" class="w-full bg-[#09090b] border border-app-border rounded-lg px-2 py-1.5 text-white text-xs outline-none focus:border-emerald-500 transition-colors">
                     </div>
                 </div>
 
@@ -374,15 +340,12 @@
 
                 <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <div class="flex justify-between items-end mb-1">
-                            <label id="label-amount" class="block text-xs font-medium text-app-text">รายรับ (บาท)</label>
-                        </div>
+                        <div class="flex justify-between items-end mb-1"><label id="label-amount" class="block text-xs font-medium text-app-text">รายรับ (บาท)</label></div>
                         <div class="relative mt-1">
                             <span class="absolute left-4 top-1/2 -translate-y-1/2 text-app-text text-sm font-medium">฿</span>
-                            <input type="number" id="input-amount" placeholder="0" oninput="calcPreview()" class="w-full bg-[#121214] border border-app-border rounded-2xl pl-9 pr-4 py-3.5 text-lg font-bold text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 outline-none transition-all" inputmode="decimal">
+                            <input type="number" min="0" step="any" id="input-amount" placeholder="0" oninput="calcPreview()" class="w-full bg-[#121214] border border-app-border rounded-2xl pl-9 pr-4 py-3.5 text-lg font-bold text-white focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 outline-none transition-all" inputmode="decimal">
                         </div>
                     </div>
-                    
                     <div id="field-payment-method" class="hidden flex flex-col justify-end">
                         <label class="block text-[10px] font-medium text-app-text mb-1">ช่องทางรับเงิน</label>
                         <div class="flex bg-[#09090b] rounded-xl border border-app-border p-1 h-[54px] items-center">
@@ -390,16 +353,9 @@
                             <button id="btn-pay-cash" onclick="setPaymentMethod('cash')" class="flex-1 h-full rounded-lg text-[11px] font-medium text-app-text transition-colors flex items-center justify-center gap-1"><i class="fas fa-money-bill-wave"></i> เงินสด</button>
                         </div>
                     </div>
-                    
                     <div id="field-tip-gp" class="hidden col-span-2 flex gap-2">
-                        <div class="flex-1">
-                            <label class="block text-xs font-medium text-emerald-400/80 mb-1">ทิป</label>
-                            <input type="number" id="input-tip" placeholder="0" oninput="calcPreview()" class="w-full bg-[#121214] border border-emerald-900/50 rounded-xl px-3 py-3 text-base font-bold text-emerald-400 focus:border-emerald-500 outline-none transition-all" inputmode="decimal">
-                        </div>
-                        <div class="flex-1">
-                            <label class="block text-xs font-medium text-red-400/80 mb-1">หัก GP</label>
-                            <input type="number" id="input-gp" placeholder="0" oninput="calcPreview()" class="w-full bg-[#121214] border border-red-900/50 rounded-xl px-3 py-3 text-base font-bold text-red-400 focus:border-red-500 outline-none transition-all" inputmode="decimal">
-                        </div>
+                        <div class="flex-1"><label class="block text-xs font-medium text-emerald-400/80 mb-1">ทิป</label><input type="number" min="0" step="any" id="input-tip" placeholder="0" oninput="calcPreview()" class="w-full bg-[#121214] border border-emerald-900/50 rounded-xl px-3 py-3 text-base font-bold text-emerald-400 focus:border-emerald-500 outline-none transition-all" inputmode="decimal"></div>
+                        <div class="flex-1"><label class="block text-xs font-medium text-red-400/80 mb-1">หัก GP</label><input type="number" min="0" step="any" id="input-gp" placeholder="0" oninput="calcPreview()" class="w-full bg-[#121214] border border-red-900/50 rounded-xl px-3 py-3 text-base font-bold text-red-400 focus:border-red-500 outline-none transition-all" inputmode="decimal"></div>
                     </div>
                 </div>
 
@@ -407,61 +363,28 @@
                     <div class="bg-orange-950/10 p-3 rounded-2xl border border-orange-900/20 space-y-3">
                         <div>
                             <label class="block text-xs font-medium text-orange-400 mb-1">ระยะทางทริปนี้ (กม.)</label>
-                            <input type="number" id="input-km" placeholder="เช่น 15.5" oninput="calcPreview()" class="w-full bg-[#121214] border border-orange-900/50 rounded-xl px-4 py-3 font-bold text-white text-lg focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 outline-none transition-all" inputmode="decimal">
+                            <input type="number" min="0" step="any" id="input-km" placeholder="เช่น 15.5" oninput="calcPreview()" class="w-full bg-[#121214] border border-orange-900/50 rounded-xl px-4 py-3 font-bold text-white text-lg focus:border-orange-500 focus:ring-1 focus:ring-orange-500/50 outline-none transition-all" inputmode="decimal">
                         </div>
                         <div class="grid grid-cols-2 gap-3">
-                            <div>
-                                <label class="block text-[10px] text-orange-400/70 mb-1">หน้าปัดโชว์ (กม./ลิตร)</label>
-                                <input type="number" id="input-dash-rate" placeholder="อัตราสิ้นเปลือง" oninput="calcPreview()" class="w-full bg-[#121214] border border-orange-900/30 rounded-xl px-3 py-2 text-sm font-medium text-white focus:border-orange-500 outline-none transition-all" inputmode="decimal">
-                            </div>
-                            <div>
-                                <label class="block text-[10px] text-orange-400/70 mb-1">ราคาน้ำมัน (฿/ลิตร)</label>
-                                <input type="number" id="input-fuel-price" placeholder="ราคา" oninput="calcPreview()" class="w-full bg-[#121214] border border-orange-900/30 rounded-xl px-3 py-2 text-sm font-medium text-white focus:border-orange-500 outline-none transition-all" inputmode="decimal">
-                            </div>
+                            <div><label class="block text-[10px] text-orange-400/70 mb-1">หน้าปัดโชว์ (กม./ลิตร)</label><input type="number" min="0" step="any" id="input-dash-rate" placeholder="อัตราสิ้นเปลือง" oninput="calcPreview()" class="w-full bg-[#121214] border border-orange-900/30 rounded-xl px-3 py-2 text-sm font-medium text-white focus:border-orange-500 outline-none transition-all" inputmode="decimal"></div>
+                            <div><label class="block text-[10px] text-orange-400/70 mb-1">ราคาน้ำมัน (฿/ลิตร)</label><input type="number" min="0" step="any" id="input-fuel-price" placeholder="ราคา" oninput="calcPreview()" class="w-full bg-[#121214] border border-orange-900/30 rounded-xl px-3 py-2 text-sm font-medium text-white focus:border-orange-500 outline-none transition-all" inputmode="decimal"></div>
                         </div>
                     </div>
 
                     <div class="bg-[#121214] border border-blue-900/30 p-2.5 rounded-2xl flex items-center gap-3 shadow-inner">
-                        <div class="w-[35%]">
-                            <label class="block text-[10px] text-blue-400/80 mb-1">ค่าทางด่วน (฿)</label>
-                            <input type="number" id="input-toll-fee" placeholder="0" oninput="toggleTollState(); calcPreview();" class="w-full bg-[#09090b] border border-blue-900/50 rounded-xl px-3 py-2 font-bold text-blue-400 focus:border-blue-500 outline-none transition-all" inputmode="decimal">
-                        </div>
-                        <div class="flex-1">
-                            <label class="block text-[10px] text-app-text mb-1">ผู้รับผิดชอบจ่าย</label>
-                            <div id="toll-payer-group" class="flex bg-[#09090b] rounded-xl border border-app-border p-0.5 opacity-50 pointer-events-none transition-all duration-300">
-                                <button id="btn-toll-customer" onclick="setTollPayer('customer')" class="flex-1 py-1.5 rounded-lg text-[10px] font-medium bg-blue-900/60 text-blue-300 transition-colors shadow-sm">ลูกค้าจ่าย</button>
-                                <button id="btn-toll-driver" onclick="setTollPayer('driver')" class="flex-1 py-1.5 rounded-lg text-[10px] font-medium text-app-text transition-colors">เราจ่ายเอง</button>
-                            </div>
-                        </div>
+                        <div class="w-[35%]"><label class="block text-[10px] text-blue-400/80 mb-1">ค่าทางด่วน (฿)</label><input type="number" min="0" step="any" id="input-toll-fee" placeholder="0" oninput="toggleTollState(); calcPreview();" class="w-full bg-[#09090b] border border-blue-900/50 rounded-xl px-3 py-2 font-bold text-blue-400 focus:border-blue-500 outline-none transition-all" inputmode="decimal"></div>
+                        <div class="flex-1"><label class="block text-[10px] text-app-text mb-1">ผู้รับผิดชอบจ่าย</label><div id="toll-payer-group" class="flex bg-[#09090b] rounded-xl border border-app-border p-0.5 opacity-50 pointer-events-none transition-all duration-300"><button id="btn-toll-customer" onclick="setTollPayer('customer')" class="flex-1 py-1.5 rounded-lg text-[10px] font-medium bg-blue-900/60 text-blue-300 transition-colors shadow-sm">ลูกค้าจ่าย</button><button id="btn-toll-driver" onclick="setTollPayer('driver')" class="flex-1 py-1.5 rounded-lg text-[10px] font-medium text-app-text transition-colors">เราจ่ายเอง</button></div></div>
                     </div>
                     
                     <div class="bg-[#09090b] p-4 rounded-2xl border border-app-border shadow-inner">
                         <div class="space-y-1.5 mb-3 border-b border-app-border/50 pb-3">
-                            <div class="flex justify-between text-xs text-app-text">
-                                <span>รายรับรวม <span class="text-[9px]">(หัก GP)</span></span>
-                                <span class="font-medium text-emerald-400" id="prev-income">0 ฿</span>
-                            </div>
-                            <div class="flex justify-between text-xs text-app-text">
-                                <span>ปริมาณน้ำมันที่ใช้</span>
-                                <span class="font-medium text-orange-300" id="prev-calc-liters">0.0 ลิตร</span>
-                            </div>
-                            <div class="flex justify-between text-xs text-app-text">
-                                <span>ต้นทุนกิโลเมตรละ</span>
-                                <span class="font-medium text-orange-300" id="prev-cost-per-km">0.00 ฿/กม.</span>
-                            </div>
-                            <div class="flex justify-between text-xs text-app-text">
-                                <span>รวมต้นทุนน้ำมัน</span>
-                                <span class="font-bold text-orange-500" id="prev-fuel">-0 ฿</span>
-                            </div>
-                            <div id="prev-toll-row" class="hidden justify-between text-xs text-app-text mt-1 pt-1.5 border-t border-app-border/30">
-                                <span>ค่าทางด่วน <span id="prev-toll-payer" class="text-[9px] text-blue-300"></span></span>
-                                <span class="font-medium" id="prev-toll-amt">0 ฿</span>
-                            </div>
+                            <div class="flex justify-between text-xs text-app-text"><span>รายรับรวม <span class="text-[9px]">(หัก GP)</span></span><span class="font-medium text-emerald-400" id="prev-income">0 ฿</span></div>
+                            <div class="flex justify-between text-xs text-app-text"><span>ปริมาณน้ำมันที่ใช้</span><span class="font-medium text-orange-300" id="prev-calc-liters">0.0 ลิตร</span></div>
+                            <div class="flex justify-between text-xs text-app-text"><span>ต้นทุนกิโลเมตรละ</span><span class="font-medium text-orange-300" id="prev-cost-per-km">0.00 ฿/กม.</span></div>
+                            <div class="flex justify-between text-xs text-app-text"><span>รวมต้นทุนน้ำมัน</span><span class="font-bold text-orange-500" id="prev-fuel">-0 ฿</span></div>
+                            <div id="prev-toll-row" class="hidden justify-between text-xs text-app-text mt-1 pt-1.5 border-t border-app-border/30"><span>ค่าทางด่วน <span id="prev-toll-payer" class="text-[9px] text-blue-300"></span></span><span class="font-medium" id="prev-toll-amt">0 ฿</span></div>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-sm text-white font-medium">กำไรสุทธิทริปนี้</span>
-                            <span class="text-emerald-400 font-bold text-2xl tracking-tight" id="prev-net">0 ฿</span>
-                        </div>
+                        <div class="flex justify-between items-center"><span class="text-sm text-white font-medium">กำไรสุทธิทริปนี้</span><span class="text-emerald-400 font-bold text-2xl tracking-tight" id="prev-net">0 ฿</span></div>
                     </div>
                 </div>
 
@@ -489,29 +412,39 @@
 
         let state = {
             activeTab: 'lalamove',
-            modalType: '',
-            category: '',
-            viewId: null, editId: null, 
+            modalType: '', category: '', viewId: null, editId: null, 
             records: [],
             settings: { dailyTarget: 1000, maintLimit: 3000, totalKm: 0, defaultFuelPrice: 35.5, defaultFuelRate: 15.0 },
             checkin: { start: null, end: null },
             timerInterval: null,
-            analytics: { range: '7', module: 'lalamove' } // เก็บ state สำหรับแยกระบบรายงาน
+            analytics: { range: '7', module: 'lalamove' }
         };
         
-        let currentTollPayer = 'customer';
-        let currentPaymentMethod = 'credit';
+        let currentTollPayer = 'customer'; let currentPaymentMethod = 'credit';
 
         const formatDateISO = (d) => { const offset = d.getTimezoneOffset() * 60000; return new Date(d.getTime() - offset).toISOString().split('T')[0]; };
         const getToday = () => formatDateISO(new Date());
-        
-        const getTime = () => {
-            const d = new Date();
-            return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-        };
-        
+        const getTime = () => { const d = new Date(); return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`; };
         const formatMoney = (num) => Number(num).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
         
+        // 🎯 Number Animation Helper
+        const animateValue = (id, start, end, duration) => {
+            const obj = document.getElementById(id);
+            if (!obj) return;
+            // Guard for NaN or same value
+            if (isNaN(end)) end = 0; if (isNaN(start)) start = 0;
+            if (start === end) { obj.innerText = formatMoney(end); return; }
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerText = formatMoney((progress * (end - start) + start));
+                if (progress < 1) { window.requestAnimationFrame(step); }
+                else { obj.innerText = formatMoney(end); obj.dataset.val = end; }
+            };
+            window.requestAnimationFrame(step);
+        };
+
         window.showToast = (msg, isError = false) => {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
@@ -523,9 +456,9 @@
 
         function loadData() {
             try {
-                const r = localStorage.getItem('ld_max_records_v11'); if(r) state.records = JSON.parse(r);
-                const s = localStorage.getItem('ld_max_settings_v11'); if(s) state.settings = { ...state.settings, ...JSON.parse(s) };
-                const c = localStorage.getItem('ld_max_checkin_v11'); if(c) state.checkin = JSON.parse(c);
+                const r = localStorage.getItem('ld_max_records_final'); if(r) state.records = JSON.parse(r);
+                const s = localStorage.getItem('ld_max_settings_final'); if(s) state.settings = { ...state.settings, ...JSON.parse(s) };
+                const c = localStorage.getItem('ld_max_checkin_final'); if(c) state.checkin = JSON.parse(c);
                 
                 document.getElementById('set-target').value = state.settings.dailyTarget;
                 document.getElementById('set-maint').value = state.settings.maintLimit;
@@ -541,33 +474,40 @@
             } catch(e) {}
         }
         function saveData() {
-            localStorage.setItem('ld_max_records_v11', JSON.stringify(state.records));
-            localStorage.setItem('ld_max_settings_v11', JSON.stringify(state.settings));
-            localStorage.setItem('ld_max_checkin_v11', JSON.stringify(state.checkin));
+            localStorage.setItem('ld_max_records_final', JSON.stringify(state.records));
+            localStorage.setItem('ld_max_settings_final', JSON.stringify(state.settings));
+            localStorage.setItem('ld_max_checkin_final', JSON.stringify(state.checkin));
         }
 
         window.clearAllData = () => { if(confirm("ลบข้อมูลทั้งหมด? (กู้ไม่ได้นะ)")) { localStorage.clear(); location.reload(); } }
         
-        // 🎯 FIX: เช็คอินเริ่มกะ และจับเวลาที่เสถียร
+        // 🎯 FIX Check-in UI update correctly
         window.handleCheckIn = () => { 
             if(state.checkin.start && !state.checkin.end) return; 
             state.checkin = { start: new Date().toISOString(), end: null }; 
-            saveData(); startTimer(); renderUI(); showToast("เริ่มงานแล้ว!"); 
+            saveData(); startTimer(); renderUI(); showToast("เริ่มกะแล้ว ลุย!"); 
         };
         window.handleCheckOut = () => { 
             if(!state.checkin.start || state.checkin.end) return; 
             state.checkin.end = new Date().toISOString(); 
-            saveData(); stopTimer(); renderUI(); showToast("จบกะทำงาน"); 
+            saveData(); stopTimer(); renderUI(); showToast("จบกะทำงาน พักผ่อนได้เลย"); 
         };
         
         const updateTimerUI = () => {
             const el = document.getElementById('checkin-duration'); 
-            if(!state.checkin.start || state.checkin.end) { return; }
+            const stEl = document.getElementById('checkin-status');
+            if(!state.checkin.start || state.checkin.end) return;
             const diff = Date.now() - new Date(state.checkin.start).getTime();
             const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
             const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
             const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
             el.innerText = `${h}:${m}:${s}`; 
+            
+            // Add pulse to status while working
+            if(stEl && !stEl.innerHTML.includes('animate-pulse-slow')) {
+                const sDt = new Date(state.checkin.start);
+                stEl.innerHTML = `<span class="animate-pulse-slow">🟢 วิ่งงาน</span> <span class="text-[10px] font-normal text-emerald-500/70 ml-1">(เริ่ม ${sDt.getHours().toString().padStart(2,'0')}:${sDt.getMinutes().toString().padStart(2,'0')})</span>`; 
+            }
         };
 
         function startTimer() { 
@@ -653,7 +593,9 @@
                     document.getElementById('prev-toll-amt').className = `font-bold text-red-400`;
                 }
             } else { tollRow.classList.add('hidden'); tollRow.classList.remove('flex'); }
-            document.getElementById('prev-net').innerText = `${formatMoney(net)} ฿`;
+            
+            // 🎯 Animate Preview Net
+            animateValue('prev-net', parseFloat(document.getElementById('prev-net').dataset.val) || 0, net, 300);
         };
 
         window.saveRecord = () => {
@@ -725,6 +667,7 @@
 
             const isInc = r.type === 'income';
             const color = isInc ? (r.module==='lalamove'?'text-emerald-400':'text-blue-400') : 'text-red-400';
+            const sign = isInc ? '+' : '-';
             
             let payIcon = '';
             if(r.module === 'lalamove' && isInc) {
@@ -734,7 +677,7 @@
             let html = `
                 <div class="text-center mb-4 pb-4 border-b border-app-border/50">
                     <p class="text-[11px] text-app-text mb-1">${new Date(r.date).toLocaleDateString('th-TH',{day:'numeric',month:'short'})} เวลา ${r.time}</p>
-                    <h4 class="text-3xl font-bold ${color} tracking-tight">${isInc?'+':'-'}${formatMoney(r.netAmount)} <span class="text-lg">฿</span></h4>
+                    <h4 class="text-3xl font-bold ${color} tracking-tight">${sign}${formatMoney(r.netAmount)} <span class="text-lg">฿</span></h4>
                     ${r.module === 'lalamove' && isInc ? '<span class="text-[10px] text-emerald-500/70 block mt-1">กำไรสุทธิรอบนี้ (หักต้นทุนแล้ว)</span>' : ''}
                 </div>
                 <div class="space-y-2.5 text-[13px]">
@@ -847,7 +790,9 @@
                 document.getElementById('input-dash-rate').value = state.settings.defaultFuelRate;
                 document.getElementById('input-fuel-price').value = state.settings.defaultFuelPrice;
                 
-                setPaymentMethod('credit'); setTollPayer('customer'); toggleTollState(); calcPreview();
+                setPaymentMethod('credit'); setTollPayer('customer'); toggleTollState(); 
+                document.getElementById('prev-net').dataset.val = 0; // reset anim
+                calcPreview();
             } else {
                 document.getElementById('label-amount').innerText = 'จำนวนเงิน (บาท)';
                 document.getElementById('field-category').classList.remove('hidden');
@@ -891,7 +836,6 @@
             if(tab === 'analytics') setTimeout(renderChartAndHistory, 50);
         };
 
-        // 🎯 สลับ Module ในหน้ารายงาน
         window.setAnalyticsModule = (mod) => {
             state.analytics.module = mod;
             const btnLala = document.getElementById('btn-ana-mod-lala');
@@ -900,7 +844,7 @@
             if(mod === 'lalamove') {
                 btnLala.className = "flex-1 py-2 text-xs font-bold bg-app-border text-emerald-400 shadow-sm rounded-lg transition-colors flex items-center justify-center gap-1";
                 btnPers.className = "flex-1 py-2 text-xs font-bold text-app-text rounded-lg transition-colors flex items-center justify-center gap-1";
-                document.getElementById('chart-title').innerText = "กำไร (Lalamove)";
+                document.getElementById('chart-title').innerText = "กำไรสุทธิ (Lalamove)";
                 document.getElementById('ana-stats-lala').classList.remove('hidden');
                 document.getElementById('ana-stats-pers').classList.add('hidden');
             } else {
@@ -949,7 +893,6 @@
             let datesArr = []; let curr = new Date(startDt);
             while(curr <= endDt) { datesArr.push(formatDateISO(curr)); curr.setDate(curr.getDate() + 1); }
 
-            // 🎯 กรองเฉพาะโมดูลที่เลือก
             const modRecs = state.records.filter(r => r.module === state.analytics.module);
             let totalRangeNet = 0; let totalRangeTrips = 0; let totalRangeKm = 0;
             let totalPersInc = 0; let totalPersExp = 0;
@@ -977,8 +920,12 @@
                 }
             });
             
+            // Fix Chart axis
+            let maxValue = Math.max(...data, 100); // minimum scale is 100 to avoid flat lines
+            let minValue = Math.min(...data, 0);
+            
             const labels = datesArr.map(d => { const obj = new Date(d); return `${obj.getDate()}/${obj.getMonth()+1}`; });
-            const chartColor = state.analytics.module === 'lalamove' ? '#10b981' : '#3b82f6'; // เขียว Lala / ฟ้า Pers
+            const chartColor = state.analytics.module === 'lalamove' ? '#10b981' : '#3b82f6';
 
             document.getElementById('chart-total-net').innerText = `${totalRangeNet>=0?'+':''}${formatMoney(totalRangeNet)} ฿`;
             if(state.analytics.module === 'lalamove') {
@@ -996,7 +943,7 @@
             Chart.defaults.color = '#a1a1aa'; Chart.defaults.font.family = "'Noto Sans Thai', sans-serif";
             state.chartInstance = new Chart(ctx, {
                 type: 'bar', data: { labels: labels, datasets: [{ label: 'ยอดเงิน (บาท)', data: data, backgroundColor: data.map(v => v >= 0 ? chartColor : '#f87171'), borderRadius: 6 }] },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#27272a', drawBorder: false } }, x: { grid: { display: false }, border: { display: false }, ticks: { maxTicksLimit: 14 } } } }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { suggestedMin: minValue, suggestedMax: maxValue, grid: { color: '#27272a', drawBorder: false } }, x: { grid: { display: false }, border: { display: false }, ticks: { maxTicksLimit: 14 } } } }
             });
 
             // 🎯 Render History
@@ -1024,7 +971,7 @@
                     const dNetColor = state.analytics.module === 'lalamove' ? 'emerald' : 'blue';
 
                     html += `<div class="mb-5"><div class="flex justify-between items-end mb-3"><h4 class="text-sm font-bold text-white">${dStr}</h4><span class="text-[11px] font-semibold ${dayNet>=0?`text-${dNetColor}-400 bg-${dNetColor}-950/40 border-${dNetColor}-900/50`:'text-red-400 bg-red-950/40 border-red-900/50'} px-2 py-0.5 rounded-full border">${dayNet>=0?'+':''}${formatMoney(dayNet)} ฿</span></div><div class="space-y-2.5">`;
-                    html += records.map(r => {
+                    html += records.map((r, i) => {
                         const isInc = r.type === 'income'; 
                         let color = 'text-red-400';
                         if(isInc) color = r.module === 'lalamove' ? 'text-emerald-400' : 'text-blue-400';
@@ -1037,7 +984,8 @@
                             payIcon = r.paymentMethod === 'cash' ? ' <i class="fas fa-money-bill-wave text-emerald-500/70 ml-1"></i>' : ' <i class="fas fa-mobile-screen text-blue-400/70 ml-1"></i>';
                         }
                         
-                        return `<div onclick="viewRecord('${r.id}')" class="flex justify-between p-3.5 bg-app-card rounded-2xl border border-app-border cursor-pointer active:scale-95 transition-all hover:border-gray-600 shadow-sm">
+                        // 🎯 Add staggered animation
+                        return `<div onclick="viewRecord('${r.id}')" class="stagger-item animate-fade-in-up flex justify-between p-3.5 bg-app-card rounded-2xl border border-app-border cursor-pointer active:scale-95 transition-all hover:border-gray-600 shadow-sm" style="animation-delay: ${i * 0.05}s">
                             <div class="flex gap-3 items-center">
                                 <div class="w-8 h-8 rounded-full bg-app-border/30 flex items-center justify-center ${color}"><i class="fas ${isInc?'fa-arrow-turn-up':'fa-arrow-turn-down'} text-xs"></i></div>
                                 <div><div class="font-semibold text-gray-200 text-[13px]">${r.category}${payIcon}</div><div class="text-[10px] text-app-text truncate w-[140px] mt-0.5">${detail}</div></div>
@@ -1068,14 +1016,15 @@
             } else if(!state.checkin.end) {
                 if(sEl) { 
                     const sDt = new Date(state.checkin.start);
-                    sEl.innerHTML = `วิ่งงาน <span class="text-[10px] font-normal text-emerald-500/70 ml-1">(เริ่ม ${sDt.getHours().toString().padStart(2,'0')}:${sDt.getMinutes().toString().padStart(2,'0')})</span>`; 
+                    sEl.innerHTML = `<span class="animate-pulse-slow">🟢 วิ่งงาน</span> <span class="text-[10px] font-normal text-emerald-500/70 ml-1">(เริ่ม ${sDt.getHours().toString().padStart(2,'0')}:${sDt.getMinutes().toString().padStart(2,'0')})</span>`; 
                     sEl.className = 'text-base font-bold text-emerald-400 mt-0.5 leading-tight'; 
                 }
                 if(bIn) { bIn.classList.add('opacity-50', 'pointer-events-none'); }
                 if(bOut) { bOut.classList.remove('opacity-50', 'pointer-events-none'); }
                 if(dEl) { 
                     dEl.classList.remove('hidden'); 
-                    dEl.className = 'text-[10px] font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-900 transition-all';
+                    dEl.className = 'text-[10px] font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-900 transition-all animate-pulse-slow';
+                    updateTimerUI(); // force update
                 }
             } else {
                 if(sEl) { 
@@ -1087,7 +1036,7 @@
                 if(dEl) { 
                     dEl.classList.remove('hidden');
                     const diff = new Date(state.checkin.end) - new Date(state.checkin.start);
-                    dEl.innerText = `รวม ${Math.floor(diff / 3600000)}ชม. ${Math.floor((diff % 3600000) / 60000)}น.`; 
+                    dEl.innerText = `รวมเวลา ${Math.floor(diff / 3600000)}ชม. ${Math.floor((diff % 3600000) / 60000)}น.`; 
                     dEl.className = 'text-[10px] font-medium text-gray-400 bg-gray-800 px-2 py-0.5 rounded-md border border-gray-600 transition-all';
                 }
                 if(bIn) { bIn.classList.remove('opacity-50', 'pointer-events-none'); }
@@ -1105,7 +1054,8 @@
                 });
                 const net = grossInc - tripFuel - expOther;
 
-                document.getElementById('lala-net').innerText = formatMoney(net);
+                // Animate Numbers
+                animateValue('lala-net', parseFloat(document.getElementById('lala-net').dataset.val) || 0, net, 500);
                 document.getElementById('lala-income').innerText = formatMoney(grossInc);
                 document.getElementById('lala-trip-fuel').innerText = formatMoney(tripFuel);
                 document.getElementById('lala-expense').innerText = formatMoney(expOther);
@@ -1128,7 +1078,7 @@
                 const listEl = document.getElementById('transactions-list');
                 if(todayRecs.length === 0) listEl.innerHTML = `<div class="text-center py-8 border border-app-border/40 border-dashed rounded-3xl bg-app-card/30"><p class="text-app-text text-xs">ยังไม่มีรายการวันนี้</p></div>`;
                 else {
-                    listEl.innerHTML = todayRecs.map(r => {
+                    listEl.innerHTML = todayRecs.map((r, i) => {
                         const isInc = r.type === 'income'; const color = isInc ? 'text-emerald-400' : 'text-red-400';
                         let detail = r.note || '-'; let payIcon = '';
                         if(isInc) {
@@ -1137,10 +1087,10 @@
                             if(r.tripTollCost>0) detail += ` | ทางด่วน -฿${formatMoney(r.tripTollCost)}`;
                             payIcon = r.paymentMethod === 'cash' ? ' <i class="fas fa-money-bill-wave text-emerald-500/70 ml-1"></i>' : ' <i class="fas fa-mobile-screen text-blue-400/70 ml-1"></i>';
                         }
-                        return `<div onclick="viewRecord('${r.id}')" class="flex items-center justify-between p-3.5 bg-app-card rounded-2xl border border-app-border active:scale-95 transition-all cursor-pointer hover:border-gray-600 shadow-sm">
+                        return `<div onclick="viewRecord('${r.id}')" class="stagger-item animate-fade-in-up flex items-center justify-between p-3.5 bg-app-card rounded-2xl border border-app-border active:scale-95 transition-all cursor-pointer hover:border-gray-600 shadow-sm" style="animation-delay: ${i * 0.05}s">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center bg-app-border/30 ${color}"><i class="fas ${isInc?'fa-arrow-turn-up':'fa-arrow-turn-down'} text-sm"></i></div>
-                                <div><div class="font-semibold text-gray-200 text-[13px] mb-0.5">${r.category}${payIcon}</div><div class="text-[10px] text-app-text truncate w-[140px]">${detail}</div></div>
+                                <div><div class="font-semibold text-gray-200 text-[13px] mb-0.5">${r.category}${payIcon}</div><div class="text-[10px] text-app-text truncate w-40">${detail}</div></div>
                             </div>
                             <div class="text-right">
                                 <div class="font-bold ${color} text-sm">${isInc?'+':'-'}${formatMoney(r.netAmount)}</div>
@@ -1149,22 +1099,21 @@
                         </div>`;
                     }).join('');
                 }
-            } 
-            // 🎯 Render Personal Tab (Added History List here)
-            else if(state.activeTab === 'personal') {
+            } else if(state.activeTab === 'personal') {
                 let pInc = 0, pExp = 0;
                 todayRecs.forEach(r => { r.type === 'income' ? pInc+=r.amount : pExp+=r.amount; });
+                
+                animateValue('pers-net', parseFloat(document.getElementById('pers-net').dataset.val) || 0, pInc - pExp, 500);
                 document.getElementById('pers-income').innerText = formatMoney(pInc);
                 document.getElementById('pers-expense').innerText = formatMoney(pExp);
-                document.getElementById('pers-net').innerText = formatMoney(pInc-pExp);
 
                 document.getElementById('transaction-count-pers').innerText = `${todayRecs.length} รายการ`;
                 const listElPers = document.getElementById('transactions-list-pers');
                 if(todayRecs.length === 0) listElPers.innerHTML = `<div class="text-center py-8 border border-app-border/40 border-dashed rounded-3xl bg-app-card/30"><p class="text-app-text text-xs">ยังไม่มีรายการวันนี้</p></div>`;
                 else {
-                    listElPers.innerHTML = todayRecs.map(r => {
+                    listElPers.innerHTML = todayRecs.map((r, i) => {
                         const isInc = r.type === 'income'; const color = isInc ? 'text-blue-400' : 'text-red-400';
-                        return `<div onclick="viewRecord('${r.id}')" class="flex items-center justify-between p-3.5 bg-app-card rounded-2xl border border-app-border active:scale-95 transition-all cursor-pointer hover:border-gray-600 shadow-sm">
+                        return `<div onclick="viewRecord('${r.id}')" class="stagger-item animate-fade-in-up flex items-center justify-between p-3.5 bg-app-card rounded-2xl border border-app-border active:scale-95 transition-all cursor-pointer hover:border-gray-600 shadow-sm" style="animation-delay: ${i * 0.05}s">
                             <div class="flex items-center gap-3">
                                 <div class="w-10 h-10 rounded-full flex items-center justify-center bg-app-border/30 ${color}"><i class="fas ${isInc?'fa-arrow-turn-up':'fa-arrow-turn-down'} text-sm"></i></div>
                                 <div><div class="font-semibold text-gray-200 text-[13px] mb-0.5">${r.category}</div><div class="text-[10px] text-app-text truncate w-40">${r.note||'-'}</div></div>
@@ -1202,6 +1151,5 @@
     </script>
 </body>
 </html>
-
 
 
