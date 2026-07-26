@@ -63,8 +63,6 @@
         .auth-panel.active { display: block; }
         .avatar-img { object-fit: cover; }
         .nav-btn.active { color: #34d399 !important; }
-        .cat-btn { transition: all 0.15s; }
-        .cat-btn.active { background: #10b981 !important; color: white !important; border-color: #10b981 !important; }
     </style>
 </head>
 <body class="antialiased font-sans">
@@ -87,7 +85,6 @@
             </div>
 
             <div class="p-5 space-y-4">
-                <!-- LOGIN -->
                 <div id="panel-login" class="auth-panel active space-y-4">
                     <div>
                         <label class="block text-[11px] text-app-text mb-1.5 ml-1">อีเมล</label>
@@ -101,7 +98,6 @@
                     <button onclick="window.switchAuthMode('forgot')" class="w-full text-center text-xs text-emerald-400/80 hover:text-emerald-400 py-1">ลืมรหัสผ่าน?</button>
                 </div>
 
-                <!-- REGISTER -->
                 <div id="panel-register" class="auth-panel space-y-4">
                     <div>
                         <label class="block text-[11px] text-app-text mb-1.5 ml-1">อีเมล</label>
@@ -119,7 +115,6 @@
                     <p class="text-[10px] text-app-text text-center leading-relaxed">การสร้างบัญชีหมายความว่าคุณยอมรับการเก็บข้อมูลบัญชีไว้บน Cloud เพื่อซิงค์ข้ามอุปกรณ์</p>
                 </div>
 
-                <!-- FORGOT PASSWORD -->
                 <div id="panel-forgot" class="auth-panel space-y-4">
                     <div class="text-center mb-2">
                         <i class="fas fa-key text-2xl text-emerald-400 mb-2"></i>
@@ -370,8 +365,6 @@
 
             <!-- SETTINGS + PROFILE -->
             <div id="tab-settings" class="tab-content space-y-6 pb-20">
-                
-                <!-- PROFILE CARD -->
                 <div class="bg-app-card border border-app-border rounded-3xl p-5 shadow-lg relative overflow-hidden">
                     <div class="flex items-center gap-4 mb-4">
                         <div class="relative">
@@ -406,7 +399,6 @@
                     </div>
                 </div>
 
-                <!-- Vehicle Tracker -->
                 <div class="bg-app-card border border-app-border rounded-3xl p-5 relative overflow-hidden shadow-lg">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400"><i class="fas fa-wrench"></i></div>
@@ -527,7 +519,7 @@
             <button onclick="window.saveProfile()" id="btn-save-profile" class="btn-press w-full py-4 mt-4 rounded-2xl font-bold text-white text-base bg-emerald-600">บันทึกโปรไฟล์</button>
         </div>
 
-        <!-- Other modals -->
+        <!-- ADJUST MODAL -->
         <div id="adjust-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[80] px-6 pt-3 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
             <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-4"></div>
             <div class="flex justify-between items-center mb-5">
@@ -549,6 +541,7 @@
             </div>
         </div>
 
+        <!-- DETAIL MODAL -->
         <div id="detail-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[60] px-6 pt-3 pb-8">
             <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-5"></div>
             <div class="flex justify-between items-center mb-5">
@@ -562,6 +555,7 @@
             </div>
         </div>
 
+        <!-- ENTRY MODAL - FULL from local -->
         <div id="entry-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[70] px-6 pt-3 pb-8">
             <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-4"></div>
             <div class="flex justify-between items-center mb-4">
@@ -588,6 +582,7 @@
             </div>
         </div>
 
+        <!-- TRANSFER MODAL -->
         <div id="transfer-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[80] px-6 pt-3 pb-8">
             <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-4"></div>
             <div class="flex justify-between items-center mb-5">
@@ -719,7 +714,7 @@
             if (box) box.classList.add('hidden');
         };
 
-        // ===================== AUTH MODE SWITCH =====================
+        // ===================== AUTH =====================
         window.switchAuthMode = (mode) => {
             window.clearAuthError();
             document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
@@ -741,7 +736,6 @@
             }
         };
 
-        // ===================== AUTH HANDLERS =====================
         window.handleLogin = async () => {
             window.clearAuthError();
             if (!auth) return window.showAuthError('ระบบยังเชื่อมต่อ Firebase ไม่ได้ ลองรีเฟรชหน้า');
@@ -1069,7 +1063,7 @@
             }
         };
 
-        // ===================== CORE =====================
+        // ===================== CORE (from local, adapted) =====================
         window.showConfirm = (title, message, iconStr, colorTheme, callback) => {
             document.getElementById('confirm-title').innerText = title;
             document.getElementById('confirm-message').innerText = message;
@@ -1148,9 +1142,10 @@
             return { credit, personal };
         };
 
-        // ===================== FULL RENDER UI =====================
+        // Simplified but working renderUI + openModal + saveRecord for now
+        // Full local logic is complex; this version prioritizes working core features
+
         window.renderUI = () => {
-            // Check-in status
             const sEl = document.getElementById('checkin-status');
             const bIn = document.getElementById('btn-checkin');
             const bOut = document.getElementById('btn-checkout');
@@ -1171,18 +1166,15 @@
             const today = getToday();
             const w = window.calcWallets();
 
-            // Wallets
             const cEl = document.getElementById('lala-credit-today');
             const pEl = document.getElementById('pers-wallet-display');
             if (cEl) cEl.innerText = formatMoney(w.credit) + ' ฿';
             if (pEl) pEl.innerText = formatMoney(w.personal) + ' ฿';
 
-            // Header date
             if (document.getElementById('header-date')) {
                 document.getElementById('header-date').innerText = new Date().toLocaleDateString('th-TH', {weekday:'long', month:'long', day:'numeric'});
             }
 
-            // Calculate today's Lalamove stats
             let todayNet = 0, trips = 0, km = 0, fuelCost = 0;
             const todayLala = [];
             state.records.forEach(r => {
@@ -1196,8 +1188,8 @@
                             const gp = r.gp || 0;
                             const net = gross - gp - (r.fuelCost||0) - (r.tripTollCost||0);
                             todayNet += net;
-                            km += (r.distance || 0);
-                            fuelCost += (r.fuelCost || 0);
+                            km += (r.distance || r.km || 0);
+                            fuelCost += (r.fuelCost || r.tripFuelCost || 0);
                         } else {
                             todayNet += r.amount || 0;
                         }
@@ -1211,7 +1203,6 @@
 
             state.todayNet = todayNet;
 
-            // Update Lala displays
             const netEl = document.getElementById('lala-net');
             if (netEl) {
                 netEl.innerText = formatMoney(todayNet);
@@ -1222,7 +1213,6 @@
             document.getElementById('lala-stat-km').innerText = formatMoney(km);
             document.getElementById('lala-trip-fuel').innerText = formatMoney(fuelCost) + ' ฿';
 
-            // Progress ring
             const pct = state.settings.dailyTarget > 0 ? Math.min(100, Math.round((todayNet / state.settings.dailyTarget) * 100)) : 0;
             const circle = document.getElementById('progress-circle');
             const pctText = document.getElementById('progress-text');
@@ -1232,11 +1222,10 @@
             }
             if (pctText) pctText.innerText = pct + '%';
             if (pct >= 100 && state.lastPct < 100) {
-                confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 } });
+                if (typeof confetti !== 'undefined') confetti({ particleCount: 80, spread: 60, origin: { y: 0.7 } });
             }
             state.lastPct = pct;
 
-            // Personal today
             let persInc = 0, persExp = 0;
             const todayPers = [];
             state.records.forEach(r => {
@@ -1246,7 +1235,6 @@
                     if (r.type === 'income') persInc += r.amount || 0;
                     else persExp += r.amount || 0;
                 }
-                // cash from Lalamove also impacts personal
                 if (r.module === 'lalamove' && r.type === 'income' && r.paymentMethod === 'cash' && r.category === 'วิ่งงานปกติ') {
                     persInc += ((r.amount||0) + (r.tip||0));
                 }
@@ -1255,14 +1243,12 @@
             document.getElementById('pers-expense-today').innerText = formatMoney(persExp);
             document.getElementById('pers-net-alltime').innerText = formatMoney(w.personal);
 
-            // Tracker
             const totalKm = state.settings.totalKm || 0;
             document.getElementById('tracker-current').innerText = formatMoney(totalKm);
             document.getElementById('tracker-limit').innerText = state.settings.maintLimit || 3000;
             const barPct = Math.min(100, (totalKm / (state.settings.maintLimit || 3000)) * 100);
             document.getElementById('tracker-bar').style.width = barPct + '%';
 
-            // Render lists
             window.renderTransactionList('transactions-list', todayLala, 'lalamove');
             window.renderTransactionList('transactions-list-pers', todayPers, 'personal');
             document.getElementById('transaction-count').innerText = todayLala.length + ' รายการ';
@@ -1293,10 +1279,8 @@
             }).join('');
         };
 
-        // ===================== FIXED switchTab =====================
         window.switchTab = (tab) => {
             state.activeTab = tab;
-
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
             const t = document.getElementById('tab-'+tab);
             if (t) t.classList.add('active');
@@ -1340,7 +1324,7 @@
         };
         window.closeEntryModal = window.closeAllModals;
 
-        // ===================== OPEN MODAL =====================
+        // OPEN MODAL - improved
         window.openModal = (type) => {
             state.modalType = type;
             state.editId = null;
@@ -1366,7 +1350,6 @@
             document.getElementById('input-amount').value = '';
             document.getElementById('input-note').value = '';
 
-            // Reset fields
             document.getElementById('field-lala-income-type').classList.add('hidden');
             document.getElementById('field-category').classList.add('hidden');
             document.getElementById('field-payment-method').classList.add('hidden');
@@ -1374,7 +1357,6 @@
             document.getElementById('field-lalamove-extras').classList.add('hidden');
 
             if (isLala && type === 'income') {
-                // Show trip / mission switch
                 const typeBox = document.getElementById('field-lala-income-type');
                 typeBox.classList.remove('hidden');
                 typeBox.innerHTML = `
@@ -1383,7 +1365,6 @@
                 `;
                 window.setLalaIncomeType('trip');
             } else {
-                // Show category
                 window.buildCategoryGrid();
             }
 
@@ -1395,8 +1376,10 @@
 
         window.setLalaIncomeType = (t) => {
             state.lalaIncomeType = t;
-            document.getElementById('btn-type-trip').className = t === 'trip' ? 'flex-1 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 text-white' : 'flex-1 py-2.5 rounded-xl text-xs font-bold bg-app-border text-app-text';
-            document.getElementById('btn-type-mission').className = t === 'mission' ? 'flex-1 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 text-white' : 'flex-1 py-2.5 rounded-xl text-xs font-bold bg-app-border text-app-text';
+            const tripBtn = document.getElementById('btn-type-trip');
+            const missionBtn = document.getElementById('btn-type-mission');
+            if (tripBtn) tripBtn.className = t === 'trip' ? 'flex-1 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 text-white' : 'flex-1 py-2.5 rounded-xl text-xs font-bold bg-app-border text-app-text';
+            if (missionBtn) missionBtn.className = t === 'mission' ? 'flex-1 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 text-white' : 'flex-1 py-2.5 rounded-xl text-xs font-bold bg-app-border text-app-text';
 
             if (t === 'trip') {
                 document.getElementById('field-category').classList.add('hidden');
@@ -1433,8 +1416,10 @@
 
         window.setPaymentMethod = (m) => {
             currentPaymentMethod = m;
-            document.getElementById('btn-pay-credit').className = m === 'credit' ? 'flex-1 py-2 rounded-lg text-[11px] font-bold bg-blue-600 text-white' : 'flex-1 py-2 rounded-lg text-[11px] font-bold bg-app-border text-app-text';
-            document.getElementById('btn-pay-cash').className = m === 'cash' ? 'flex-1 py-2 rounded-lg text-[11px] font-bold bg-blue-600 text-white' : 'flex-1 py-2 rounded-lg text-[11px] font-bold bg-app-border text-app-text';
+            const c = document.getElementById('btn-pay-credit');
+            const s = document.getElementById('btn-pay-cash');
+            if (c) c.className = m === 'credit' ? 'flex-1 py-2 rounded-lg text-[11px] font-bold bg-blue-600 text-white' : 'flex-1 py-2 rounded-lg text-[11px] font-bold bg-app-border text-app-text';
+            if (s) s.className = m === 'cash' ? 'flex-1 py-2 rounded-lg text-[11px] font-bold bg-blue-600 text-white' : 'flex-1 py-2 rounded-lg text-[11px] font-bold bg-app-border text-app-text';
         };
 
         window.buildCategoryGrid = () => {
@@ -1458,9 +1443,9 @@
             });
         };
 
-        window.calcPreview = () => {}; // optional
+        window.calcPreview = () => {};
 
-        // ===================== SAVE RECORD =====================
+        // SAVE RECORD
         window.saveRecord = async () => {
             if (!currentUser) return window.showToast('ยังไม่ได้เข้าสู่ระบบ', true);
 
@@ -1491,11 +1476,12 @@
                 record.tip = parseFloat(document.getElementById('input-tip')?.value) || 0;
                 record.gp = parseFloat(document.getElementById('input-gp')?.value) || 0;
                 record.distance = parseFloat(document.getElementById('input-distance')?.value) || 0;
+                record.km = record.distance;
                 record.fuelCost = parseFloat(document.getElementById('input-fuel-cost')?.value) || 0;
+                record.tripFuelCost = record.fuelCost;
                 record.tripTollCost = parseFloat(document.getElementById('input-toll')?.value) || 0;
                 record.paymentMethod = currentPaymentMethod;
 
-                // Update totalKm
                 if (record.distance > 0) {
                     state.settings.totalKm = (state.settings.totalKm || 0) + record.distance;
                 }
@@ -1515,7 +1501,7 @@
             hapticSuccess();
         };
 
-        // ===================== VIEW / DELETE =====================
+        // VIEW / DELETE
         window.viewRecord = (id) => {
             const r = state.records.find(x => x.id === id);
             if (!r) return;
@@ -1526,7 +1512,7 @@
                 <div class="flex justify-between"><span class="text-app-text text-xs">จำนวน</span><span class="text-white text-sm font-bold ${r.type==='income'?'text-emerald-400':'text-red-400'}">${r.type==='income'?'+':'-'}${formatMoney(r.amount)} ฿</span></div>
                 <div class="flex justify-between"><span class="text-app-text text-xs">วันที่</span><span class="text-white text-sm">${r.date} ${r.time||''}</span></div>
                 ${r.note ? `<div class="flex justify-between"><span class="text-app-text text-xs">หมายเหตุ</span><span class="text-white text-sm">${r.note}</span></div>` : ''}
-                ${r.distance ? `<div class="flex justify-between"><span class="text-app-text text-xs">ระยะทาง</span><span class="text-white text-sm">${r.distance} กม.</span></div>` : ''}
+                ${r.distance || r.km ? `<div class="flex justify-between"><span class="text-app-text text-xs">ระยะทาง</span><span class="text-white text-sm">${r.distance || r.km} กม.</span></div>` : ''}
             `;
             const modal = document.getElementById('detail-modal');
             const ov = document.getElementById('modal-overlay');
@@ -1545,12 +1531,11 @@
         };
 
         window.openEditForm = () => {
-            // Simple: for now just close detail and reopen as new (full edit can be added later)
             window.closeAllModals();
-            window.showToast('ฟีเจอร์แก้ไขแบบเต็มจะมาในรอบถัดไป ตอนนี้ลบแล้วสร้างใหม่ได้');
+            window.showToast('ฟีเจอร์แก้ไขแบบเต็มจะมาในรอบถัดไป');
         };
 
-        // ===================== TRANSFER =====================
+        // TRANSFER
         window.openTransferModal = () => {
             currentTransferAction = 'withdraw';
             window.setTransferAction('withdraw');
@@ -1583,7 +1568,6 @@
             const time = getTime();
 
             if (currentTransferAction === 'withdraw') {
-                // Credit out + Personal in
                 state.records.push({
                     id: generateId(), date: today, time, module: 'lalamove', type: 'expense',
                     category: SYS_CATS.TRANSFER_OUT, amount, note: 'โอนเข้าส่วนตัว', createdAt: new Date().toISOString()
@@ -1593,7 +1577,6 @@
                     category: SYS_CATS.TRANSFER_IN, amount, note: 'รับจาก Lalamove', createdAt: new Date().toISOString()
                 });
             } else {
-                // Personal out + Credit in
                 state.records.push({
                     id: generateId(), date: today, time, module: 'personal', type: 'expense',
                     category: SYS_CATS.TOPUP_TO_LALA, amount, note: 'เติมเครดิต', createdAt: new Date().toISOString()
@@ -1611,7 +1594,7 @@
             hapticSuccess();
         };
 
-        // ===================== ADJUST =====================
+        // ADJUST
         window.openAdjustModal = (wallet) => {
             state.adjustingWallet = wallet;
             const w = window.calcWallets();
@@ -1662,7 +1645,7 @@
             hapticSuccess();
         };
 
-        // ===================== SETTINGS & OTHERS =====================
+        // SETTINGS
         window.updateSettings = () => {
             state.settings.dailyTarget = parseFloat(document.getElementById('set-target').value) || 1000;
             state.settings.defaultFuelPrice = parseFloat(document.getElementById('set-fuel-price').value) || 35.5;
@@ -1709,7 +1692,7 @@
             window.showToast('Export แล้ว');
         };
 
-        // Analytics stubs (basic)
+        // Analytics basic
         window.setAnalyticsModule = (m) => {
             state.analytics.module = m;
             document.getElementById('btn-ana-mod-lala').className = m === 'lalamove' ? 'flex-1 py-2 text-xs font-bold bg-app-border text-emerald-400 shadow-sm rounded-lg transition-colors flex items-center justify-center gap-1' : 'flex-1 py-2 text-xs font-bold text-app-text rounded-lg transition-colors flex items-center justify-center gap-1';
@@ -1727,7 +1710,6 @@
             window.renderChartAndHistory();
         };
         window.renderChartAndHistory = () => {
-            // Basic placeholder for now - will expand later
             document.getElementById('chart-total-net').innerText = '+0 ฿';
             document.getElementById('history-list').innerHTML = '<div class="text-center text-app-text text-xs py-6">กำลังพัฒนา Analytics เต็มรูปแบบ</div>';
         };
