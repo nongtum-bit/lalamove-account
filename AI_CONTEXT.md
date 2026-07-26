@@ -1,35 +1,71 @@
-LalaDaily - Lalamove Daily Tracker
+LalaDaily Ultimate - Cloud
+=========================
+
 Project Goal
-Build a reliable daily financial tracker for Lalamove drivers that can later integrate with deeper financial analysis (bank statements, monthly P&L).
-Update History
-Current Status (24 Jul 2026) - "LalaDaily Max Pro" Update
-￼ UI/UX Overhaul:
-￼ Premium Dark UI design with Glassmorphism effects.
-￼ Implemented Bottom Sheet modals for forms and details (Mobile-native feel).
-￼ Fixed Floating Action Button (FAB) layout and scroll-padding issues.
-￼ Advanced Fuel & Vehicle Tracking:
-￼ Deep fuel logging: input price per liter, distance, and dashboard KM/L.
-￼ Real-time calculation of Actual KM/L vs Dashboard KM/L.
-￼ Vehicle maintenance tracker with accumulated distance and threshold alerts (e.g., Oil change).
-￼ Analytics & Dashboards:
-￼ 7-day net profit bar charts integrated using ⁠Chart.js⁠.
-￼ Daily target goal with circular progress ring (Activity ring style).
-￼ Clear financial dashboard layout (⁠Net Profit = Income - Fuel - Other Expenses⁠).
-￼ Data Management & Flow:
-￼ Full History view, grouped by date.
-￼ Redesigned transaction interaction: ⁠Tap -> View Details -> Edit or Delete⁠.
-￼ Upgraded CSV Export to include all historical data with Thai language support (BOM).
-￼ Modules: Fully activated the "Personal" module (separate income/expense tracking).
-￼ Tech stack: Vanilla JS + Tailwind + localStorage + Chart.js.
-￼ Next priorities: IndexedDB/Firebase Cloud migration, PWA support (Add to Home Screen capability), Monthly P&L reporting.
-Previous Status (22 Jul 2026) - MVP Baseline
-￼ Architecture: Fully modular (Core + Module separation)
-￼ Features implemented:
-￼ Live work timer (1-second update)
-￼ Income recording with fare + tip + GP deduction
-￼ Expense tracking with categories (fuel, food, other)
-￼ Daily summary (income, expense, net profit)
-￼ Transaction list for today
-￼ Export today to CSV
-￼ Tech stack: Vanilla JS + Tailwind + localStorage
-￼ Next priorities: History view + Charts, IndexedDB migration, PWA support
+------------
+ระบบบัญชีคนขับ Lalamove แบบ Dual Wallet (เครดิตแอป + เงินส่วนตัว) ที่ซิงค์ข้อมูลผ่าน Firebase Authentication + Firestore แบบ Real-time
+
+Current Status (26 Jul 2026) - "LalaDaily Ultimate - Cloud"
+----------------------------------------------------------
+
+### Architecture
+- **Monolithic Single File**: ทุกอย่างอยู่ใน `index.html` ไฟล์เดียว (ไม่ใช้ modular JS อีกต่อไป)
+- **Auth**: Firebase Authentication (Email/Password)
+- **Database**: Cloud Firestore (path: `artifacts/{appId}/users/{uid}/data/mainDoc`)
+- **UI**: Tailwind CSS + Font Awesome + Chart.js + canvas-confetti
+- **Design**: Premium Dark Theme + Glassmorphism + Bottom Sheet (Mobile-first)
+
+### Core Features (ทำงานจริง)
+
+**1. Dual Wallet System**
+- เครดิตแอป (Credit) vs เงินส่วนตัว (Personal)
+- โอนเงินข้ามกระเป๋า (ถอนเครดิต / เติมเครดิต)
+- ระบบปรับปรุงยอด (Adjust Balance) เมื่อยอดไม่ตรงความจริง
+
+**2. Lalamove Module**
+- Check-in / Check-out + Live Timer + ค่าแรงเฉลี่ย ฿/ชม.
+- บันทึกงานวิ่งละเอียด: Fare + Tip + GP + ระยะทาง + อัตราสิ้นเปลืองหน้าปัด + ราคาน้ำมัน
+- คำนวณต้นทุนน้ำมันอัตโนมัติ (ลิตร + ฿/กม.)
+- ค่าทางด่วน (เลือกว่าลูกค้าจ่ายหรือคนขับจ่าย)
+- แยกประเภท: วิ่งงานปกติ vs โบนัส/ภารกิจ
+- Progress Ring เป้าหมายรายวัน + Confetti เมื่อถึงเป้า
+
+**3. Personal Module**
+- ติดตามเงินส่วนตัวสะสม
+- รายรับ-รายจ่ายวันนี้ (รวมผลกระทบจากงาน Lalamove ที่เป็นเงินสด)
+- ใช้ฟังก์ชัน `getPersonalImpact()` แปลงรายการข้ามโมดูลอัตโนมัติ
+
+**4. Analytics & History**
+- สลับดู Lalamove / ส่วนตัว
+- ช่วงเวลา: 7 วัน / 30 วัน / ระบุเอง
+- Bar Chart กำไรสุทธิรายวัน (Chart.js)
+- Breakdown สัดส่วนรายรับ-รายจ่าย
+- ประวัติรายการจัดกลุ่มตามวัน
+
+**5. Settings & Tools**
+- ตั้งเป้าหมายรายวัน / ราคาน้ำมัน / อัตราสิ้นเปลือง / ระยะบำรุงรักษา
+- รีเซ็ตระยะทางรถสะสม
+- Export CSV ครบทุกฟิลด์ (มี BOM ไทย)
+- ล้างข้อมูล Cloud ทั้งหมด
+- Logout
+
+### Tech Stack
+- Vanilla JS (no framework)
+- Tailwind CSS (CDN)
+- Firebase Compat SDK v10.8.0 (Auth + Firestore)
+- Chart.js
+- canvas-confetti
+- Font Awesome 6.5.1
+- Noto Sans Thai
+
+### Next Priorities
+- แยก records ออกเป็น sub-collection (เมื่อข้อมูลเริ่มเยอะ)
+- Offline support / IndexedDB fallback
+- PWA (Add to Home Screen)
+- Monthly P&L Report
+- Security Rules แน่นขึ้น
+
+Previous Status (24 Jul 2026)
+----------------------------
+- LalaDaily Max Pro (localStorage + modular structure)
+- มี UI/UX ดี แต่ยังไม่ Cloud Sync
