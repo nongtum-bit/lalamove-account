@@ -19,6 +19,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-storage-compat.js"></script>
 
     <script>
         tailwind.config = {
@@ -60,35 +61,30 @@
         .stagger-item { opacity: 0; }
         .auth-panel { display: none; }
         .auth-panel.active { display: block; }
+        .avatar-img { object-fit: cover; }
     </style>
 </head>
 <body class="antialiased font-sans">
 
-    <!-- Toast (z-index สูงกว่า auth-screen) -->
+    <!-- Toast -->
     <div id="toast-container" class="fixed top-4 left-0 right-0 z-[300] flex flex-col items-center gap-2 pointer-events-none px-4"></div>
 
     <!-- ===================== AUTH SCREEN ===================== -->
     <div id="auth-screen" class="fixed inset-0 bg-[#09090b] z-[200] flex flex-col items-center justify-center px-5 transition-opacity duration-500">
-        
-        <!-- Logo -->
         <div class="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-5 shadow-[0_0_40px_rgba(16,185,129,0.15)] border border-emerald-500/20">
             <i class="fas fa-car text-4xl text-emerald-400"></i>
         </div>
         <h1 class="text-2xl font-bold text-white mb-1 tracking-tight">LalaDaily <span class="text-emerald-400">Cloud</span></h1>
         <p class="text-app-text text-xs mb-8">ระบบบัญชีคนขับ • ซิงค์ข้อมูลออนไลน์</p>
 
-        <!-- Card -->
         <div class="w-full max-w-sm bg-[#121214] rounded-3xl border border-app-border shadow-xl overflow-hidden">
-            
-            <!-- Tabs -->
-            <div class="flex border-b border-app-border">
+            <div class="flex border-b border-app-border" id="auth-tabs">
                 <button id="tab-login" onclick="window.switchAuthMode('login')" class="flex-1 py-3.5 text-sm font-bold text-emerald-400 border-b-2 border-emerald-500 transition-colors">เข้าสู่ระบบ</button>
                 <button id="tab-register" onclick="window.switchAuthMode('register')" class="flex-1 py-3.5 text-sm font-medium text-app-text border-b-2 border-transparent transition-colors">สร้างบัญชี</button>
             </div>
 
             <div class="p-5 space-y-4">
-
-                <!-- ===== LOGIN PANEL ===== -->
+                <!-- LOGIN -->
                 <div id="panel-login" class="auth-panel active space-y-4">
                     <div>
                         <label class="block text-[11px] text-app-text mb-1.5 ml-1">อีเมล</label>
@@ -98,12 +94,11 @@
                         <label class="block text-[11px] text-app-text mb-1.5 ml-1">รหัสผ่าน</label>
                         <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password" class="w-full bg-[#09090b] border border-app-border rounded-xl px-4 py-3.5 text-white text-sm outline-none focus:border-emerald-500 transition-colors">
                     </div>
-                    <button onclick="window.handleLogin()" id="btn-login" class="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-900/40 active:scale-[0.98] transition-all flex justify-center items-center gap-2">
-                        เข้าสู่ระบบ
-                    </button>
+                    <button onclick="window.handleLogin()" id="btn-login" class="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-900/40 active:scale-[0.98] transition-all flex justify-center items-center gap-2">เข้าสู่ระบบ</button>
+                    <button onclick="window.switchAuthMode('forgot')" class="w-full text-center text-xs text-emerald-400/80 hover:text-emerald-400 py-1">ลืมรหัสผ่าน?</button>
                 </div>
 
-                <!-- ===== REGISTER PANEL ===== -->
+                <!-- REGISTER -->
                 <div id="panel-register" class="auth-panel space-y-4">
                     <div>
                         <label class="block text-[11px] text-app-text mb-1.5 ml-1">อีเมล</label>
@@ -117,34 +112,50 @@
                         <label class="block text-[11px] text-app-text mb-1.5 ml-1">ยืนยันรหัสผ่าน</label>
                         <input type="password" id="register-confirm" placeholder="••••••••" autocomplete="new-password" class="w-full bg-[#09090b] border border-app-border rounded-xl px-4 py-3.5 text-white text-sm outline-none focus:border-emerald-500 transition-colors">
                     </div>
-                    <button onclick="window.handleRegister()" id="btn-register" class="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-900/40 active:scale-[0.98] transition-all flex justify-center items-center gap-2">
-                        สร้างบัญชีใหม่
-                    </button>
-                    <p class="text-[10px] text-app-text text-center leading-relaxed">
-                        การสร้างบัญชีหมายความว่าคุณยอมรับการเก็บข้อมูลบัญชีไว้บน Cloud เพื่อซิงค์ข้ามอุปกรณ์
-                    </p>
+                    <button onclick="window.handleRegister()" id="btn-register" class="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-900/40 active:scale-[0.98] transition-all flex justify-center items-center gap-2">สร้างบัญชีใหม่</button>
+                    <p class="text-[10px] text-app-text text-center leading-relaxed">การสร้างบัญชีหมายความว่าคุณยอมรับการเก็บข้อมูลบัญชีไว้บน Cloud เพื่อซิงค์ข้ามอุปกรณ์</p>
                 </div>
 
-                <!-- Error Box (แสดงในหน้า Auth เอง) -->
+                <!-- FORGOT PASSWORD -->
+                <div id="panel-forgot" class="auth-panel space-y-4">
+                    <div class="text-center mb-2">
+                        <i class="fas fa-key text-2xl text-emerald-400 mb-2"></i>
+                        <h3 class="text-sm font-bold text-white">รีเซ็ทรหัสผ่าน</h3>
+                        <p class="text-[11px] text-app-text mt-1">ระบบจะส่งลิงก์ตั้งรหัสผ่านใหม่ไปที่อีเมลของคุณ</p>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] text-app-text mb-1.5 ml-1">อีเมลที่ใช้สมัคร</label>
+                        <input type="email" id="forgot-email" placeholder="email@example.com" class="w-full bg-[#09090b] border border-app-border rounded-xl px-4 py-3.5 text-white text-sm outline-none focus:border-emerald-500 transition-colors">
+                    </div>
+                    <button onclick="window.handleForgotPassword()" id="btn-forgot" class="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-900/40 active:scale-[0.98] transition-all flex justify-center items-center gap-2">ส่งลิงก์รีเซ็ต</button>
+                    <button onclick="window.switchAuthMode('login')" class="w-full text-center text-xs text-app-text hover:text-white py-1">กลับไปเข้าสู่ระบบ</button>
+                </div>
+
                 <div id="auth-error-box" class="hidden bg-red-950/70 border border-red-700/60 rounded-xl p-3 text-left">
                     <div class="flex items-start gap-2">
                         <i class="fas fa-exclamation-circle text-red-400 mt-0.5 text-sm"></i>
                         <p id="auth-error-text" class="text-red-200 text-[12px] leading-relaxed"></p>
                     </div>
                 </div>
-
             </div>
         </div>
 
-        <!-- Fatal error (เช่น Firebase โหลดไม่ได้) -->
         <div id="fatal-error-box" class="hidden w-full max-w-sm mt-4 bg-red-950/60 border border-red-700 rounded-2xl p-4 text-left"></div>
-
         <p class="text-[10px] text-app-text/50 mt-6">LalaDaily Cloud • สำหรับคนขับ Lalamove</p>
     </div>
 
     <!-- ===================== MAIN APP ===================== -->
     <div id="main-app" class="max-w-[480px] mx-auto h-[100dvh] bg-app-bg relative flex flex-col shadow-2xl overflow-hidden border-x border-app-border/30">
         
+        <!-- Email Verification Banner -->
+        <div id="email-verify-banner" class="hidden bg-amber-900/40 border-b border-amber-700/50 px-4 py-2.5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2 text-amber-200 text-xs">
+                <i class="fas fa-envelope-open-text"></i>
+                <span>กรุณายืนยันอีเมลของคุณ</span>
+            </div>
+            <button onclick="window.resendVerification()" class="text-[11px] font-bold text-amber-300 bg-amber-900/50 px-3 py-1 rounded-lg border border-amber-700/50 active:scale-95">ส่งอีกครั้ง</button>
+        </div>
+
         <!-- Header -->
         <header class="glass-header sticky top-0 z-40 px-5 pt-6 pb-4 border-b border-app-border flex justify-between items-end shrink-0">
             <div>
@@ -161,10 +172,9 @@
             </button>
         </header>
 
-        <!-- Main Content (kept identical structure) -->
         <main id="main-content" class="flex-1 overflow-y-auto px-5 pt-5 pb-[140px] space-y-6">
             
-            <!-- 1. LALAMOVE TAB -->
+            <!-- LALAMOVE TAB (kept structure) -->
             <div id="tab-lalamove" class="tab-content active space-y-4">
                 <div class="bg-app-card border border-app-border rounded-3xl p-5 shadow-lg relative overflow-hidden flex gap-4">
                     <div class="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
@@ -266,7 +276,7 @@
                 </div>
             </div>
 
-            <!-- 2. PERSONAL TAB -->
+            <!-- PERSONAL TAB -->
             <div id="tab-personal" class="tab-content space-y-6">
                 <div class="bg-gradient-to-br from-purple-900/40 to-app-card border border-purple-800/50 p-5 rounded-3xl flex items-center justify-between shadow-lg relative overflow-hidden">
                     <div class="absolute right-0 bottom-0 w-24 h-24 bg-purple-500/10 rounded-full blur-xl -mr-4 -mb-4 pointer-events-none"></div>
@@ -282,7 +292,6 @@
                     </div>
                     <div class="w-12 h-12 rounded-full bg-purple-500/20 flex items-center justify-center text-purple-400 text-xl relative z-10 shadow-inner"><i class="fas fa-piggy-bank"></i></div>
                 </div>
-                
                 <h3 class="text-sm font-semibold text-white px-1 -mb-3">ความเคลื่อนไหววันนี้ (รวมเงินสด)</h3>
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-app-card border border-app-border p-4 rounded-2xl flex flex-col justify-center shadow-sm">
@@ -303,7 +312,7 @@
                 </div>
             </div>
 
-            <!-- 3. ANALYTICS -->
+            <!-- ANALYTICS -->
             <div id="tab-analytics" class="tab-content space-y-4 pb-20">
                 <div class="bg-[#121214] p-1 rounded-xl border border-app-border flex shadow-sm mb-2">
                     <button id="btn-ana-mod-lala" onclick="window.setAnalyticsModule('lalamove')" class="flex-1 py-2 text-xs font-bold bg-app-border text-emerald-400 shadow-sm rounded-lg transition-colors flex items-center justify-center gap-1"><i class="fas fa-car-side"></i> Lalamove</button>
@@ -356,8 +365,45 @@
                 </div>
             </div>
 
-            <!-- 4. SETTINGS -->
+            <!-- SETTINGS + PROFILE -->
             <div id="tab-settings" class="tab-content space-y-6 pb-20">
+                
+                <!-- PROFILE CARD -->
+                <div class="bg-app-card border border-app-border rounded-3xl p-5 shadow-lg relative overflow-hidden">
+                    <div class="flex items-center gap-4 mb-4">
+                        <div class="relative">
+                            <div id="profile-avatar" class="w-16 h-16 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center text-2xl font-bold text-emerald-400 overflow-hidden">
+                                <span id="profile-avatar-text">?</span>
+                                <img id="profile-avatar-img" class="hidden w-full h-full avatar-img" alt="">
+                            </div>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h3 id="profile-name" class="text-base font-bold text-white truncate">ยังไม่ได้ตั้งชื่อ</h3>
+                            <p id="profile-email" class="text-xs text-app-text truncate mt-0.5">-</p>
+                            <div id="profile-verified" class="mt-1"></div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2 text-xs mb-4">
+                        <div class="bg-[#121214] rounded-xl p-2.5 border border-app-border/50">
+                            <div class="text-app-text text-[10px] mb-0.5">เบอร์โทร</div>
+                            <div id="profile-phone" class="text-white font-medium">-</div>
+                        </div>
+                        <div class="bg-[#121214] rounded-xl p-2.5 border border-app-border/50">
+                            <div class="text-app-text text-[10px] mb-0.5">ทะเบียนรถ</div>
+                            <div id="profile-plate" class="text-white font-medium">-</div>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="window.openProfileModal()" class="flex-1 py-2.5 bg-emerald-600/20 text-emerald-400 border border-emerald-700/40 rounded-xl text-xs font-bold active:scale-95">
+                            <i class="fas fa-user-edit mr-1"></i> แก้ไขโปรไฟล์
+                        </button>
+                        <button onclick="window.handleChangePassword()" class="flex-1 py-2.5 bg-app-border text-app-text rounded-xl text-xs font-medium active:scale-95">
+                            <i class="fas fa-key mr-1"></i> เปลี่ยนรหัสผ่าน
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Vehicle Tracker -->
                 <div class="bg-app-card border border-app-border rounded-3xl p-5 relative overflow-hidden shadow-lg">
                     <div class="flex items-center gap-3 mb-4">
                         <div class="w-10 h-10 rounded-full bg-orange-500/20 flex items-center justify-center text-orange-400"><i class="fas fa-wrench"></i></div>
@@ -377,6 +423,7 @@
                     </div>
                     <p id="tracker-alert" class="text-[10px] text-app-text">เช็กระยะทางเพื่อเตรียมบำรุงรักษา</p>
                 </div>
+
                 <div class="space-y-4">
                     <h3 class="text-sm font-semibold text-white px-1">ตั้งค่าแอป และ การคำนวณต้นทุน</h3>
                     <div class="space-y-3">
@@ -419,9 +466,10 @@
             </div>
         </nav>
 
-        <!-- OVERLAY & MODALS (kept structure, truncated for size but functional) -->
+        <!-- OVERLAY -->
         <div id="modal-overlay" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden transition-opacity opacity-0" onclick="window.closeAllModals()"></div>
         
+        <!-- Confirm Modal -->
         <div id="confirm-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden opacity-0 transition-opacity">
             <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="window.closeConfirmModal()"></div>
             <div class="bg-app-card border border-app-border rounded-3xl p-6 relative z-10 w-[85%] max-w-[320px] shadow-2xl transform scale-95 transition-transform" id="confirm-modal-box">
@@ -435,8 +483,49 @@
             </div>
         </div>
 
-        <!-- Note: For brevity in this update the remaining modals (adjust, detail, entry, transfer) retain the same structure as the previous working version. The full logic is preserved in the script section below. -->
+        <!-- PROFILE EDIT MODAL -->
+        <div id="profile-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[80] px-6 pt-3 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+            <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-4"></div>
+            <div class="flex justify-between items-center mb-5">
+                <h3 class="text-xl font-bold text-emerald-400 tracking-tight">แก้ไขโปรไฟล์</h3>
+                <button onclick="window.closeAllModals()" class="w-8 h-8 flex items-center justify-center bg-app-border text-app-text rounded-full"><i class="fas fa-times text-sm"></i></button>
+            </div>
+            <div class="space-y-4 max-h-[65vh] overflow-y-auto pb-2">
+                <!-- Avatar Upload -->
+                <div class="flex flex-col items-center gap-3">
+                    <div class="relative">
+                        <div id="edit-avatar-preview" class="w-20 h-20 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center text-3xl font-bold text-emerald-400 overflow-hidden">
+                            <span id="edit-avatar-text">?</span>
+                            <img id="edit-avatar-img" class="hidden w-full h-full avatar-img" alt="">
+                        </div>
+                        <label class="absolute -bottom-1 -right-1 w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs cursor-pointer shadow-lg">
+                            <i class="fas fa-camera"></i>
+                            <input type="file" id="profile-photo-input" accept="image/*" class="hidden" onchange="window.handlePhotoSelect(event)">
+                        </label>
+                    </div>
+                    <p class="text-[10px] text-app-text">แตะไอคอนกล้องเพื่อเปลี่ยนรูป</p>
+                </div>
+                <div>
+                    <label class="block text-xs text-app-text mb-1.5">ชื่อที่แสดง</label>
+                    <input type="text" id="edit-display-name" placeholder="ชื่อเล่นหรือชื่อจริง" class="w-full bg-[#121214] border border-app-border rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-app-text mb-1.5">เบอร์โทรศัพท์</label>
+                    <input type="tel" id="edit-phone" placeholder="08x-xxx-xxxx" class="w-full bg-[#121214] border border-app-border rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-app-text mb-1.5">ทะเบียนรถ</label>
+                    <input type="text" id="edit-plate" placeholder="เช่น กข 1234" class="w-full bg-[#121214] border border-app-border rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs text-app-text mb-1.5">รุ่นรถ (ไม่บังคับ)</label>
+                    <input type="text" id="edit-vehicle" placeholder="เช่น Toyota Vios" class="w-full bg-[#121214] border border-app-border rounded-xl px-4 py-3 text-white text-sm outline-none focus:border-emerald-500">
+                </div>
+            </div>
+            <button onclick="window.saveProfile()" id="btn-save-profile" class="btn-press w-full py-4 mt-4 rounded-2xl font-bold text-white text-base bg-emerald-600">บันทึกโปรไฟล์</button>
+        </div>
 
+        <!-- Other modals kept for structure -->
         <div id="adjust-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[80] px-6 pt-3 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
             <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-4"></div>
             <div class="flex justify-between items-center mb-5">
@@ -558,17 +647,20 @@
 
         let auth = null;
         let db = null;
+        let storage = null;
         try {
             if (typeof firebase === 'undefined') throw new Error('Firebase SDK โหลดไม่สำเร็จ');
             if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
             auth = firebase.auth();
             db = firebase.firestore();
+            storage = firebase.storage();
         } catch (e) {
             window.showFatalError('Firebase init: ' + (e && e.message ? e.message : e));
         }
 
         const appId = 'default-app-id';
         let currentUser = null;
+        let pendingPhotoFile = null;
 
         // ===================== STATE =====================
         const SYS_CATS = { 
@@ -587,7 +679,8 @@
             activeTab: 'lalamove', modalType: '', category: '', viewId: null, editId: null, records: [],
             settings: { dailyTarget: 1000, maintLimit: 3000, totalKm: 0, defaultFuelPrice: 35.5, defaultFuelRate: 15.0 },
             checkin: { start: null, end: null }, timerInterval: null, analytics: { range: '7', module: 'lalamove' },
-            lalaIncomeType: 'trip', lastPct: 0, todayNet: 0, adjustingWallet: null
+            lalaIncomeType: 'trip', lastPct: 0, todayNet: 0, adjustingWallet: null,
+            profile: { displayName: '', phone: '', plateNumber: '', vehicleModel: '', photoURL: '' }
         };
         let currentTollPayer = 'customer', currentPaymentMethod = 'credit', currentTransferAction = 'withdraw', confirmCallback = null;
 
@@ -627,18 +720,22 @@
         // ===================== AUTH MODE SWITCH =====================
         window.switchAuthMode = (mode) => {
             window.clearAuthError();
-            const loginPanel = document.getElementById('panel-login');
-            const regPanel = document.getElementById('panel-register');
-            const tabLogin = document.getElementById('tab-login');
-            const tabReg = document.getElementById('tab-register');
-            if (mode === 'login') {
-                loginPanel.classList.add('active'); regPanel.classList.remove('active');
-                tabLogin.className = 'flex-1 py-3.5 text-sm font-bold text-emerald-400 border-b-2 border-emerald-500 transition-colors';
-                tabReg.className = 'flex-1 py-3.5 text-sm font-medium text-app-text border-b-2 border-transparent transition-colors';
+            document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
+            const tabs = document.getElementById('auth-tabs');
+            if (mode === 'forgot') {
+                document.getElementById('panel-forgot').classList.add('active');
+                if (tabs) tabs.style.display = 'none';
             } else {
-                regPanel.classList.add('active'); loginPanel.classList.remove('active');
-                tabReg.className = 'flex-1 py-3.5 text-sm font-bold text-emerald-400 border-b-2 border-emerald-500 transition-colors';
-                tabLogin.className = 'flex-1 py-3.5 text-sm font-medium text-app-text border-b-2 border-transparent transition-colors';
+                if (tabs) tabs.style.display = 'flex';
+                if (mode === 'login') {
+                    document.getElementById('panel-login').classList.add('active');
+                    document.getElementById('tab-login').className = 'flex-1 py-3.5 text-sm font-bold text-emerald-400 border-b-2 border-emerald-500 transition-colors';
+                    document.getElementById('tab-register').className = 'flex-1 py-3.5 text-sm font-medium text-app-text border-b-2 border-transparent transition-colors';
+                } else {
+                    document.getElementById('panel-register').classList.add('active');
+                    document.getElementById('tab-register').className = 'flex-1 py-3.5 text-sm font-bold text-emerald-400 border-b-2 border-emerald-500 transition-colors';
+                    document.getElementById('tab-login').className = 'flex-1 py-3.5 text-sm font-medium text-app-text border-b-2 border-transparent transition-colors';
+                }
             }
         };
 
@@ -654,22 +751,15 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังเข้าสู่ระบบ...';
             try {
                 await auth.signInWithEmailAndPassword(email, pass);
-                // onAuthStateChanged จะจัดการซ่อนหน้า Auth เอง
                 window.showToast('เข้าสู่ระบบสำเร็จ!');
             } catch (error) {
                 console.error(error);
                 let msg = 'เข้าสู่ระบบไม่สำเร็จ';
-                if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    msg = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
-                } else if (error.code === 'auth/too-many-requests') {
-                    msg = 'พยายามหลายครั้งเกินไป กรุณารอสักครู่';
-                } else if (error.code === 'auth/network-request-failed') {
-                    msg = 'เชื่อมต่ออินเทอร์เน็ตไม่ได้';
-                } else if (error.code === 'auth/unauthorized-domain') {
-                    msg = 'โดเมนยังไม่ได้รับอนุญาตใน Firebase';
-                } else {
-                    msg = 'เกิดข้อผิดพลาด: ' + (error.code || error.message || '');
-                }
+                if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') msg = 'อีเมลหรือรหัสผ่านไม่ถูกต้อง';
+                else if (error.code === 'auth/too-many-requests') msg = 'พยายามหลายครั้งเกินไป กรุณารอสักครู่';
+                else if (error.code === 'auth/network-request-failed') msg = 'เชื่อมต่ออินเทอร์เน็ตไม่ได้';
+                else if (error.code === 'auth/unauthorized-domain') msg = 'โดเมนยังไม่ได้รับอนุญาตใน Firebase';
+                else msg = 'เกิดข้อผิดพลาด: ' + (error.code || error.message || '');
                 window.showAuthError(msg);
             } finally {
                 btn.disabled = false;
@@ -690,8 +780,14 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังสร้างบัญชี...';
             try {
-                await auth.createUserWithEmailAndPassword(email, pass);
-                window.showToast('สร้างบัญชีสำเร็จ!');
+                const cred = await auth.createUserWithEmailAndPassword(email, pass);
+                // ส่งอีเมลยืนยันทันที
+                try {
+                    await cred.user.sendEmailVerification();
+                    window.showToast('สร้างบัญชีสำเร็จ! กรุณาเช็คอีเมลเพื่อยืนยัน');
+                } catch (ve) {
+                    window.showToast('สร้างบัญชีสำเร็จ แต่ส่งอีเมลยืนยันไม่สำเร็จ');
+                }
             } catch (error) {
                 console.error(error);
                 let msg = 'ไม่สามารถสร้างบัญชีได้';
@@ -708,11 +804,189 @@
             }
         };
 
+        window.handleForgotPassword = async () => {
+            window.clearAuthError();
+            if (!auth) return window.showAuthError('ระบบยังเชื่อมต่อ Firebase ไม่ได้');
+            const email = (document.getElementById('forgot-email').value || '').trim();
+            const btn = document.getElementById('btn-forgot');
+            if (!email) return window.showAuthError('กรุณากรอกอีเมล');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังส่ง...';
+            try {
+                await auth.sendPasswordResetEmail(email);
+                window.showToast('ส่งลิงก์รีเซ็ตไปที่อีเมลแล้ว ตรวจสอบกล่องจดหมาย');
+                window.switchAuthMode('login');
+            } catch (error) {
+                console.error(error);
+                let msg = 'ส่งลิงก์ไม่สำเร็จ';
+                if (error.code === 'auth/user-not-found') msg = 'ไม่พบอีเมลนี้ในระบบ';
+                else if (error.code === 'auth/invalid-email') msg = 'รูปแบบอีเมลไม่ถูกต้อง';
+                else if (error.code === 'auth/too-many-requests') msg = 'พยายามหลายครั้งเกินไป กรุณารอสักครู่';
+                else msg = error.message || msg;
+                window.showAuthError(msg);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'ส่งลิงก์รีเซ็ต';
+            }
+        };
+
+        window.resendVerification = async () => {
+            if (!currentUser) return;
+            try {
+                await currentUser.sendEmailVerification();
+                window.showToast('ส่งอีเมลยืนยันอีกครั้งแล้ว');
+            } catch (e) {
+                window.showToast('ส่งไม่สำเร็จ: ' + (e.message || ''), true);
+            }
+        };
+
+        window.handleChangePassword = async () => {
+            if (!currentUser || !currentUser.email) return window.showToast('ไม่พบอีเมล', true);
+            try {
+                await auth.sendPasswordResetEmail(currentUser.email);
+                window.showToast('ส่งลิงก์เปลี่ยนรหัสผ่านไปที่อีเมลแล้ว');
+            } catch (e) {
+                window.showToast('ส่งไม่สำเร็จ: ' + (e.message || ''), true);
+            }
+        };
+
         window.handleLogout = async () => {
             window.showConfirm('ออกจากระบบ', 'คุณต้องการออกจากระบบหรือไม่?', 'fa-sign-out-alt', 'red', async () => {
                 if (auth) await auth.signOut();
                 window.showToast('ออกจากระบบแล้ว');
             });
+        };
+
+        // ===================== PROFILE =====================
+        window.renderProfile = () => {
+            const p = state.profile || {};
+            const name = p.displayName || (currentUser && currentUser.email ? currentUser.email.split('@')[0] : 'ผู้ใช้');
+            const initial = (name.charAt(0) || '?').toUpperCase();
+
+            // Avatar
+            const textEl = document.getElementById('profile-avatar-text');
+            const imgEl = document.getElementById('profile-avatar-img');
+            if (p.photoURL) {
+                if (textEl) textEl.classList.add('hidden');
+                if (imgEl) { imgEl.src = p.photoURL; imgEl.classList.remove('hidden'); }
+            } else {
+                if (textEl) { textEl.classList.remove('hidden'); textEl.innerText = initial; }
+                if (imgEl) imgEl.classList.add('hidden');
+            }
+
+            document.getElementById('profile-name').innerText = p.displayName || 'ยังไม่ได้ตั้งชื่อ';
+            document.getElementById('profile-email').innerText = currentUser ? currentUser.email : '-';
+            document.getElementById('profile-phone').innerText = p.phone || '-';
+            document.getElementById('profile-plate').innerText = p.plateNumber || '-';
+
+            // Verified badge
+            const verifiedEl = document.getElementById('profile-verified');
+            if (verifiedEl && currentUser) {
+                if (currentUser.emailVerified) {
+                    verifiedEl.innerHTML = '<span class="text-[10px] bg-emerald-900/50 text-emerald-400 border border-emerald-800 px-2 py-0.5 rounded-full"><i class="fas fa-check-circle mr-1"></i>ยืนยันอีเมลแล้ว</span>';
+                } else {
+                    verifiedEl.innerHTML = '<span class="text-[10px] bg-amber-900/50 text-amber-400 border border-amber-800 px-2 py-0.5 rounded-full"><i class="fas fa-exclamation-circle mr-1"></i>ยังไม่ยืนยันอีเมล</span>';
+                }
+            }
+
+            // Banner
+            const banner = document.getElementById('email-verify-banner');
+            if (banner) {
+                if (currentUser && !currentUser.emailVerified) banner.classList.remove('hidden');
+                else banner.classList.add('hidden');
+            }
+        };
+
+        window.openProfileModal = () => {
+            const p = state.profile || {};
+            document.getElementById('edit-display-name').value = p.displayName || '';
+            document.getElementById('edit-phone').value = p.phone || '';
+            document.getElementById('edit-plate').value = p.plateNumber || '';
+            document.getElementById('edit-vehicle').value = p.vehicleModel || '';
+            pendingPhotoFile = null;
+
+            const textEl = document.getElementById('edit-avatar-text');
+            const imgEl = document.getElementById('edit-avatar-img');
+            const initial = ((p.displayName || '?').charAt(0) || '?').toUpperCase();
+            if (p.photoURL) {
+                if (textEl) textEl.classList.add('hidden');
+                if (imgEl) { imgEl.src = p.photoURL; imgEl.classList.remove('hidden'); }
+            } else {
+                if (textEl) { textEl.classList.remove('hidden'); textEl.innerText = initial; }
+                if (imgEl) imgEl.classList.add('hidden');
+            }
+
+            const modal = document.getElementById('profile-modal');
+            const ov = document.getElementById('modal-overlay');
+            if (ov) { ov.classList.remove('hidden'); setTimeout(() => ov.classList.add('opacity-100'), 10); }
+            if (modal) modal.classList.add('open');
+        };
+
+        window.handlePhotoSelect = (e) => {
+            const file = e.target.files && e.target.files[0];
+            if (!file) return;
+            if (file.size > 2 * 1024 * 1024) {
+                window.showToast('รูปใหญ่เกินไป (สูงสุด 2MB)', true);
+                return;
+            }
+            pendingPhotoFile = file;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const imgEl = document.getElementById('edit-avatar-img');
+                const textEl = document.getElementById('edit-avatar-text');
+                if (imgEl) { imgEl.src = ev.target.result; imgEl.classList.remove('hidden'); }
+                if (textEl) textEl.classList.add('hidden');
+            };
+            reader.readAsDataURL(file);
+        };
+
+        window.saveProfile = async () => {
+            if (!currentUser || !db) return window.showToast('ยังไม่ได้เข้าสู่ระบบ', true);
+            const btn = document.getElementById('btn-save-profile');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...';
+
+            try {
+                let photoURL = state.profile.photoURL || '';
+
+                // อัปโหลดรูปถ้ามี
+                if (pendingPhotoFile && storage) {
+                    const ref = storage.ref().child(`profiles/${currentUser.uid}/avatar.jpg`);
+                    await ref.put(pendingPhotoFile);
+                    photoURL = await ref.getDownloadURL();
+                }
+
+                const newProfile = {
+                    displayName: (document.getElementById('edit-display-name').value || '').trim(),
+                    phone: (document.getElementById('edit-phone').value || '').trim(),
+                    plateNumber: (document.getElementById('edit-plate').value || '').trim(),
+                    vehicleModel: (document.getElementById('edit-vehicle').value || '').trim(),
+                    photoURL: photoURL,
+                    updatedAt: new Date().toISOString()
+                };
+
+                state.profile = newProfile;
+
+                // บันทึกลง Firestore
+                const docRef = db.collection('artifacts').doc(appId).collection('users').doc(currentUser.uid).collection('data').doc('mainDoc');
+                await docRef.set({ profile: newProfile }, { merge: true });
+
+                // อัปเดต displayName ใน Auth ด้วย
+                if (newProfile.displayName) {
+                    try { await currentUser.updateProfile({ displayName: newProfile.displayName, photoURL: photoURL || null }); } catch(e) {}
+                }
+
+                window.renderProfile();
+                window.closeAllModals();
+                window.showToast('บันทึกโปรไฟล์เรียบร้อย');
+                hapticSuccess();
+            } catch (e) {
+                console.error(e);
+                window.showToast('บันทึกไม่สำเร็จ: ' + (e.message || ''), true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'บันทึกโปรไฟล์';
+            }
         };
 
         // ===================== AUTH STATE =====================
@@ -734,6 +1008,7 @@
                     setTimeout(() => authScreen.classList.remove('opacity-0'), 10);
                     state.records = [];
                     state.checkin = {start:null, end:null};
+                    state.profile = { displayName: '', phone: '', plateNumber: '', vehicleModel: '', photoURL: '' };
                     window.stopTimer();
                     window.renderUI();
                     const badge = document.getElementById('sync-badge');
@@ -741,6 +1016,8 @@
                         badge.innerHTML = '<i class="fas fa-cloud-upload-alt text-[8px]"></i> Offline';
                         badge.className = "text-[10px] bg-gray-900/50 text-gray-400 border border-gray-800 px-2 py-0.5 rounded-full flex items-center gap-1 font-medium";
                     }
+                    const banner = document.getElementById('email-verify-banner');
+                    if (banner) banner.classList.add('hidden');
                 }
             }, (err) => {
                 window.showFatalError('Auth error: ' + (err && err.message ? err.message : err));
@@ -760,7 +1037,12 @@
                     if (data.records) state.records = data.records;
                     if (data.settings) state.settings = {...state.settings, ...data.settings};
                     if (data.checkin) state.checkin = data.checkin;
+                    if (data.profile) state.profile = {...state.profile, ...data.profile};
                 }
+                // fallback จาก Auth
+                if (!state.profile.displayName && currentUser.displayName) state.profile.displayName = currentUser.displayName;
+                if (!state.profile.photoURL && currentUser.photoURL) state.profile.photoURL = currentUser.photoURL;
+
                 document.getElementById('set-target').value = state.settings.dailyTarget;
                 document.getElementById('set-maint').value = state.settings.maintLimit;
                 document.getElementById('set-fuel-price').value = state.settings.defaultFuelPrice;
@@ -775,6 +1057,7 @@
                     badge.className = "text-[10px] bg-blue-900/50 text-blue-400 border border-blue-800 px-2 py-0.5 rounded-full flex items-center gap-1 font-medium";
                 }
                 window.renderUI();
+                window.renderProfile();
             } catch (e) {
                 console.error(e);
                 window.showToast('โหลดข้อมูลไม่สำเร็จ: ' + (e.code || e.message || ''), true);
@@ -786,13 +1069,13 @@
             if (!currentUser || !db) return;
             try {
                 const docRef = db.collection('artifacts').doc(appId).collection('users').doc(currentUser.uid).collection('data').doc('mainDoc');
-                await docRef.set({ records: state.records, settings: state.settings, checkin: state.checkin });
+                await docRef.set({ records: state.records, settings: state.settings, checkin: state.checkin, profile: state.profile }, { merge: true });
             } catch (e) {
                 window.showToast('บันทึกไม่สำเร็จ: ' + (e.code || e.message || ''), true);
             }
         };
 
-        // ===================== CORE (simplified for stability, full logic retained where critical) =====================
+        // ===================== CORE =====================
         window.showConfirm = (title, message, iconStr, colorTheme, callback) => {
             document.getElementById('confirm-title').innerText = title;
             document.getElementById('confirm-message').innerText = message;
@@ -872,7 +1155,6 @@
         };
 
         window.renderUI = () => {
-            // Minimal safe render for check-in + wallets
             const sEl = document.getElementById('checkin-status');
             const bIn = document.getElementById('btn-checkin');
             const bOut = document.getElementById('btn-checkout');
@@ -908,10 +1190,11 @@
             if (tab==='analytics' || tab==='settings') fab.classList.add('translate-y-[150%]');
             else fab.classList.remove('translate-y-[150%]');
             window.renderUI();
+            if (tab === 'settings') window.renderProfile();
         };
 
         window.closeAllModals = () => {
-            ['entry-modal','adjust-modal','detail-modal','transfer-modal'].forEach(id => {
+            ['entry-modal','adjust-modal','detail-modal','transfer-modal','profile-modal'].forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.classList.remove('open');
             });
@@ -920,7 +1203,7 @@
         };
         window.closeEntryModal = window.closeAllModals;
 
-        // Placeholder functions to prevent errors (full logic can be restored from previous version if needed)
+        // Placeholder functions
         window.openModal = () => window.showToast('ฟีเจอร์บันทึกข้อมูลยังอยู่ระหว่างปรับปรุงหลังอัปเดต Auth');
         window.openTransferModal = () => window.showToast('ฟีเจอร์โอนเงินยังอยู่ระหว่างปรับปรุง');
         window.openAdjustModal = () => window.showToast('ฟีเจอร์ปรับยอดยังอยู่ระหว่างปรับปรุง');
