@@ -14,6 +14,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
+    <!-- 🎯 FIREBASE COMPAT SDK v10.8.0 (Stable for GitHub Pages) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -80,10 +85,10 @@
                 <button onclick="window.handleLogin()" id="btn-login" class="w-full py-4 bg-emerald-600 text-white rounded-xl font-bold shadow-lg shadow-emerald-900/40 active:scale-95 transition-all flex justify-center items-center gap-2">เข้าสู่ระบบ</button>
                 <div class="relative flex items-center py-2">
                     <div class="flex-grow border-t border-app-border"></div>
-                    <span class="flex-shrink-0 mx-4 text-app-text text-[10px]">หรือ</span>
+                    <span class="flex-shrink-0 mx-4 text-app-text text-[10px]">หรือยังไม่มีบัญชี?</span>
                     <div class="flex-grow border-t border-app-border"></div>
                 </div>
-                <button onclick="window.handleRegister()" id="btn-register" class="w-full py-3.5 bg-app-card text-emerald-400 border border-app-border rounded-xl font-bold active:scale-95 transition-all">สร้างบัญชีใหม่</button>
+                <button onclick="window.handleRegister()" id="btn-register" class="w-full py-3.5 bg-app-card text-emerald-400 border border-app-border rounded-xl font-bold active:scale-95 transition-all">สร้างบัญชีใหม่ (ฟรี)</button>
             </div>
         </div>
     </div>
@@ -572,15 +577,11 @@
 
     </div>
 
-    <!-- LOGIC WITH FIREBASE -->
-    <script type="module">
-        // --- FIREBASE CONFIGURATION (MODULAR SDK v11.6.1) ---
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
-
+    <!-- LOGIC WITH FIREBASE COMPAT (STABLE) -->
+    <script>
+        // --- 1. FIREBASE CONFIGURATION ---
         const firebaseConfig = {
-            apiKey: "AIzaSyCjT4oVNVZqX147ivHdct8AUf88d5EwSs8", // ** IMPORTANT: Replace in real prod environment **
+            apiKey: "AIzaSyCjT4oVNVZqX147ivHdct8AUf88d5EwSs8",
             authDomain: "firstapp-65043.firebaseapp.com",
             databaseURL: "https://firstapp-65043-default-rtdb.asia-southeast1.firebasedatabase.app",
             projectId: "firstapp-65043",
@@ -590,13 +591,16 @@
             measurementId: "G-LCB3M3L82V"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
+        // Initialize Firebase Compat
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const auth = firebase.auth();
+        const db = firebase.firestore();
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
         let currentUser = null;
 
-        // --- APP STATE & CONSTANTS ---
+        // --- 2. APP STATE & CONSTANTS ---
         const SYS_CATS = { 
             TRANSFER_OUT: 'ถอนเงินเข้าบัญชีส่วนตัว', TRANSFER_IN: 'รับเงินจาก Lalamove', TOPUP_TO_LALA: 'โอนไปเติมเครดิต Lalamove', TOPUP_FROM_PERS: 'เติมเครดิตจากส่วนตัว', ADJUST_CREDIT: 'ปรับปรุงยอด (เครดิตแอป)', ADJUST_PERS: 'ปรับปรุงยอด (เงินส่วนตัว)'
         };
@@ -617,7 +621,7 @@
         
         let currentTollPayer = 'customer'; let currentPaymentMethod = 'credit'; let currentTransferAction = 'withdraw'; let confirmCallback = null;
 
-        // --- HELPERS ---
+        // --- 3. HELPERS ---
         const haptic = (ms = 50) => { if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(ms); };
         const hapticSuccess = () => { if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([30, 50, 30]); };
         const generateId = () => (typeof crypto !== 'undefined' && crypto.randomUUID) ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).substring(2);
@@ -647,7 +651,7 @@
             toast.className = `toast-enter flex items-center gap-2 px-4 py-2 rounded-full shadow-lg ${isError ? 'bg-red-900/90 text-white border-red-700' : 'bg-emerald-900/90 text-emerald-100 border-emerald-700'} border backdrop-blur-md text-sm font-medium`;
             toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
             container.appendChild(toast); if(isError) haptic([50, 50, 50]);
-            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-100%)'; toast.style.transition = 'all 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 3000);
+            setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-100%)'; toast.style.transition = 'all 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 3500);
         };
 
         window.showConfirm = (title, message, iconStr, colorTheme, callback) => {
@@ -689,16 +693,24 @@
             return { inc, exp, label: pLabel };
         };
 
-        // --- FIREBASE AUTHENTICATION & DATA SYNC ---
+        // --- 4. FIREBASE AUTH & FIRESTORE SYNC (COMPAT) ---
+        
         window.handleLogin = async () => {
             const email = document.getElementById('auth-email').value; const pass = document.getElementById('auth-password').value;
             const btn = document.getElementById('btn-login');
             if(!email || !pass) return window.showToast('กรุณากรอกอีเมลและรหัสผ่าน', true);
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังเข้าสู่ระบบ...';
             try {
-                await signInWithEmailAndPassword(auth, email, pass);
+                await auth.signInWithEmailAndPassword(email, pass);
                 window.showToast('เข้าสู่ระบบสำเร็จ!');
-            } catch(e) { window.showToast('อีเมลหรือรหัสผ่านไม่ถูกต้อง', true); } 
+            } catch(error) { 
+                console.error(error);
+                let msg = 'เข้าสู่ระบบไม่สำเร็จ';
+                if(error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                    msg = 'อีเมลหรือรหัสผ่านผิด (หากคุณยังไม่มีบัญชี กรุณากด "สร้างบัญชีใหม่")';
+                }
+                window.showToast(msg, true); 
+            } 
             finally { btn.innerHTML = 'เข้าสู่ระบบ'; }
         };
 
@@ -708,19 +720,24 @@
             if(!email || !pass || pass.length < 6) return window.showToast('กรุณากรอกอีเมล และรหัสผ่าน 6 ตัวอักษรขึ้นไป', true);
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังสร้างบัญชี...';
             try {
-                await createUserWithEmailAndPassword(auth, email, pass);
+                await auth.createUserWithEmailAndPassword(email, pass);
                 window.showToast('สร้างบัญชีสำเร็จ!');
-            } catch(e) { window.showToast('ไม่สามารถสร้างบัญชีได้ หรืออีเมลซ้ำ', true); } 
-            finally { btn.innerHTML = 'สร้างบัญชีใหม่'; }
+            } catch(error) { 
+                console.error(error);
+                let msg = 'ไม่สามารถสร้างบัญชีได้';
+                if(error.code === 'auth/email-already-in-use') msg = 'อีเมลนี้มีคนใช้สมัครไปแล้วครับ';
+                window.showToast(msg, true); 
+            } 
+            finally { btn.innerHTML = 'สร้างบัญชีใหม่ (ฟรี)'; }
         };
 
         window.handleLogout = async () => {
             window.showConfirm('ออกจากระบบ', 'คุณต้องการออกจากระบบหรือไม่?', 'fa-sign-out-alt', 'red', async () => {
-                await signOut(auth); window.showToast('ออกจากระบบแล้ว');
+                await auth.signOut(); window.showToast('ออกจากระบบแล้ว');
             });
         };
 
-        onAuthStateChanged(auth, (user) => {
+        auth.onAuthStateChanged((user) => {
             const authScreen = document.getElementById('auth-screen');
             if (user) {
                 currentUser = user;
@@ -731,7 +748,6 @@
                 currentUser = null;
                 authScreen.classList.remove('hidden');
                 setTimeout(() => authScreen.classList.remove('opacity-0'), 10);
-                // Reset local state when logged out
                 state.records = []; state.checkin = {start: null, end: null}; window.stopTimer();
                 window.renderUI();
                 document.getElementById('sync-badge').innerHTML = '<i class="fas fa-cloud-upload-alt text-[8px]"></i> Offline';
@@ -739,26 +755,15 @@
             }
         });
 
-        // 🎯 Initialize Auth for Canvas Environment (System required)
-        const initAuth = async () => {
-            if(!currentUser) {
-                try {
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    }
-                } catch(e) { console.log('Custom Auth Fallback Error', e); }
-            }
-        };
-        initAuth();
-
+        // Fetch data from Firestore
         window.loadData = async () => {
             if(!currentUser) return;
             try {
-                // Rule 1 Adherence: Private Data Path
-                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'data', 'mainDoc');
-                const docSnap = await getDoc(docRef);
+                // Rule 1 Adherence using standard compat format
+                const docRef = db.collection('artifacts').doc(appId).collection('users').doc(currentUser.uid).collection('data').doc('mainDoc');
+                const docSnap = await docRef.get();
                 
-                if (docSnap.exists()) {
+                if (docSnap.exists) {
                     const data = docSnap.data();
                     if(data.records) state.records = data.records;
                     if(data.settings) state.settings = { ...state.settings, ...data.settings };
@@ -771,7 +776,6 @@
                 document.getElementById('range-start').value = formatDateISO(d); document.getElementById('range-end').value = getToday();
                 if(state.checkin.start && !state.checkin.end) window.startTimer();
                 
-                // Update Sync Badge
                 document.getElementById('sync-badge').innerHTML = '<i class="fas fa-cloud text-[8px]"></i> Cloud';
                 document.getElementById('sync-badge').className = "text-[10px] bg-blue-900/50 text-blue-400 border border-blue-800 px-2 py-0.5 rounded-full flex items-center gap-1 font-medium shadow-sm transition-all";
 
@@ -782,12 +786,12 @@
             }
         };
 
+        // Save data to Firestore
         window.saveData = async () => {
             if(!currentUser) return;
             try {
-                // Rule 1 Adherence: Private Data Path
-                const docRef = doc(db, 'artifacts', appId, 'users', currentUser.uid, 'data', 'mainDoc');
-                await setDoc(docRef, {
+                const docRef = db.collection('artifacts').doc(appId).collection('users').doc(currentUser.uid).collection('data').doc('mainDoc');
+                await docRef.set({
                     records: state.records,
                     settings: state.settings,
                     checkin: state.checkin
@@ -804,7 +808,7 @@
             }); 
         };
         
-        // --- APP LOGIC ---
+        // --- 5. APP CORE LOGIC ---
         window.handleCheckIn = () => { if(state.checkin.start && !state.checkin.end) return; state.checkin = { start: new Date().toISOString(), end: null }; window.saveData(); window.startTimer(); window.renderUI(); window.showToast("เริ่มกะแล้ว ลุย!"); hapticSuccess(); };
         window.handleCheckOut = () => { if(!state.checkin.start || state.checkin.end) return; state.checkin.end = new Date().toISOString(); window.saveData(); window.stopTimer(); window.renderUI(); window.showToast("จบกะทำงาน พักผ่อนได้เลย"); hapticSuccess(); };
         
