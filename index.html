@@ -541,12 +541,7 @@
     <!-- LOGIC -->
     <script>
         const SYS_CATS = { 
-            TRANSFER_OUT: 'ถอนเงินเข้าบัญชีส่วนตัว', 
-            TRANSFER_IN: 'รับเงินจาก Lalamove',
-            TOPUP_TO_LALA: 'โอนไปเติมเครดิต Lalamove',
-            TOPUP_FROM_PERS: 'เติมเครดิตจากส่วนตัว',
-            ADJUST_CREDIT: 'ปรับปรุงยอด (เครดิตแอป)',
-            ADJUST_PERS: 'ปรับปรุงยอด (เงินส่วนตัว)'
+            TRANSFER_OUT: 'ถอนเงินเข้าบัญชีส่วนตัว', TRANSFER_IN: 'รับเงินจาก Lalamove', TOPUP_TO_LALA: 'โอนไปเติมเครดิต Lalamove', TOPUP_FROM_PERS: 'เติมเครดิตจากส่วนตัว', ADJUST_CREDIT: 'ปรับปรุงยอด (เครดิตแอป)', ADJUST_PERS: 'ปรับปรุงยอด (เงินส่วนตัว)'
         };
 
         const CATEGORIES = {
@@ -560,12 +555,10 @@
             activeTab: 'lalamove', modalType: '', category: '', viewId: null, editId: null, records: [],
             settings: { dailyTarget: 1000, maintLimit: 3000, totalKm: 0, defaultFuelPrice: 35.5, defaultFuelRate: 15.0 },
             checkin: { start: null, end: null }, timerInterval: null, analytics: { range: '7', module: 'lalamove' },
-            lalaIncomeType: 'trip', lastPct: 0, todayNet: 0,
-            adjustingWallet: null
+            lalaIncomeType: 'trip', lastPct: 0, todayNet: 0, adjustingWallet: null
         };
         
-        let currentTollPayer = 'customer'; let currentPaymentMethod = 'credit'; let currentTransferAction = 'withdraw';
-        let confirmCallback = null;
+        let currentTollPayer = 'customer'; let currentPaymentMethod = 'credit'; let currentTransferAction = 'withdraw'; let confirmCallback = null;
 
         const haptic = (ms = 50) => { if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(ms); };
         const hapticSuccess = () => { if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate([30, 50, 30]); };
@@ -579,28 +572,23 @@
         const formatMoney = (num) => Number(num).toLocaleString('th-TH', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
         
         const animateValue = (id, start, end, duration) => {
-            const obj = document.getElementById(id);
-            if (!obj) return;
+            const obj = document.getElementById(id); if (!obj) return;
             if (isNaN(end)) end = 0; if (isNaN(start)) start = 0;
             if (start === end) { obj.innerText = formatMoney(end); return; }
             let startTimestamp = null;
             const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                if (!startTimestamp) startTimestamp = timestamp; const progress = Math.min((timestamp - startTimestamp) / duration, 1);
                 obj.innerText = formatMoney((progress * (end - start) + start));
-                if (progress < 1) { window.requestAnimationFrame(step); }
-                else { obj.innerText = formatMoney(end); obj.dataset.val = end; }
+                if (progress < 1) { window.requestAnimationFrame(step); } else { obj.innerText = formatMoney(end); obj.dataset.val = end; }
             };
             window.requestAnimationFrame(step);
         };
 
         window.showToast = (msg, isError = false) => {
-            const container = document.getElementById('toast-container');
-            const toast = document.createElement('div');
+            const container = document.getElementById('toast-container'); const toast = document.createElement('div');
             toast.className = `toast-enter flex items-center gap-2 px-4 py-2 rounded-full shadow-lg ${isError ? 'bg-red-900/90 text-white border-red-700' : 'bg-emerald-900/90 text-emerald-100 border-emerald-700'} border backdrop-blur-md text-sm font-medium`;
             toast.innerHTML = `<i class="fas ${isError ? 'fa-exclamation-circle' : 'fa-check-circle'}"></i> ${msg}`;
-            container.appendChild(toast);
-            if(isError) haptic([50, 50, 50]);
+            container.appendChild(toast); if(isError) haptic([50, 50, 50]);
             setTimeout(() => { toast.style.opacity = '0'; toast.style.transform = 'translateY(-100%)'; toast.style.transition = 'all 0.3s ease'; setTimeout(() => toast.remove(), 300); }, 3000);
         };
 
@@ -611,8 +599,7 @@
             iconEl.innerHTML = `<i class="fas ${iconStr}"></i>`;
             const btnConfirm = document.getElementById('confirm-btn-action');
             btnConfirm.className = `flex-1 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-transform text-white ${colorTheme === 'red' ? 'bg-red-600 shadow-red-900/40' : 'bg-orange-600 shadow-orange-900/40'}`;
-            btnConfirm.innerText = "ยืนยัน";
-            confirmCallback = callback;
+            btnConfirm.innerText = "ยืนยัน"; confirmCallback = callback;
             const modal = document.getElementById('confirm-modal'); const box = document.getElementById('confirm-modal-box');
             modal.classList.remove('hidden'); setTimeout(() => { modal.classList.add('opacity-100'); box.classList.remove('scale-95'); box.classList.add('scale-100'); }, 10);
         };
@@ -622,14 +609,38 @@
             modal.classList.remove('opacity-100'); box.classList.remove('scale-100'); box.classList.add('scale-95');
             setTimeout(() => modal.classList.add('hidden'), 300); confirmCallback = null;
         };
-
         window.executeConfirm = () => { if(confirmCallback) confirmCallback(); closeConfirmModal(); };
+
+        // 🎯 สมองกลดึงยอดที่กระทบเงินส่วนตัวจริงๆ จากทุกๆ รายการ
+        window.getPersonalImpact = (r) => {
+            let inc = 0, exp = 0; let pLabel = r.category;
+            if (r.module === 'lalamove') {
+                if (r.type === 'income') {
+                    if (r.category === 'วิ่งงานปกติ') {
+                        const gross = (r.amount || 0) + (r.tip || 0);
+                        if (r.paymentMethod === 'cash') inc += gross;
+                        if (r.tripTollCost > 0) exp += r.tripTollCost;
+                        pLabel = 'งาน Lalamove (เงินสด)';
+                    } else if (r.category !== SYS_CATS.TOPUP_FROM_PERS && r.category !== SYS_CATS.ADJUST_CREDIT) {
+                        if (r.paymentMethod === 'cash') inc += r.amount;
+                        pLabel = r.category + ' (เงินสด)';
+                    }
+                } else { // expense
+                    if (r.category !== SYS_CATS.TRANSFER_OUT && r.category !== SYS_CATS.ADJUST_CREDIT) {
+                        exp += r.amount;
+                    }
+                }
+            } else {
+                if (r.type === 'income') inc += r.amount; else exp += r.amount;
+            }
+            return { inc, exp, label: pLabel };
+        };
 
         function loadData() {
             try {
-                const r = localStorage.getItem('ld_max_records_v19'); if(r) state.records = JSON.parse(r);
-                const s = localStorage.getItem('ld_max_settings_v19'); if(s) state.settings = { ...state.settings, ...JSON.parse(s) };
-                const c = localStorage.getItem('ld_max_checkin_v19'); if(c) state.checkin = JSON.parse(c);
+                const r = localStorage.getItem('ld_max_records_v21'); if(r) state.records = JSON.parse(r);
+                const s = localStorage.getItem('ld_max_settings_v21'); if(s) state.settings = { ...state.settings, ...JSON.parse(s) };
+                const c = localStorage.getItem('ld_max_checkin_v21'); if(c) state.checkin = JSON.parse(c);
                 document.getElementById('set-target').value = state.settings.dailyTarget; document.getElementById('set-maint').value = state.settings.maintLimit;
                 document.getElementById('set-fuel-price').value = state.settings.defaultFuelPrice; document.getElementById('set-fuel-rate').value = state.settings.defaultFuelRate;
                 const d = new Date(); d.setDate(d.getDate() - 6);
@@ -641,14 +652,13 @@
 
         function saveData() {
             try {
-                localStorage.setItem('ld_max_records_v19', JSON.stringify(state.records));
-                localStorage.setItem('ld_max_settings_v19', JSON.stringify(state.settings));
-                localStorage.setItem('ld_max_checkin_v19', JSON.stringify(state.checkin));
+                localStorage.setItem('ld_max_records_v21', JSON.stringify(state.records));
+                localStorage.setItem('ld_max_settings_v21', JSON.stringify(state.settings));
+                localStorage.setItem('ld_max_checkin_v21', JSON.stringify(state.checkin));
             } catch(e) { showToast("หน่วยความจำเครื่องเต็ม!", true); }
         }
 
         window.clearAllData = () => { showConfirm('ล้างข้อมูลทั้งหมด', 'ลบข้อมูลทั้งหมดในเครื่อง? (กู้คืนไม่ได้)', 'fa-exclamation-triangle', 'red', () => { localStorage.clear(); location.reload(); }); };
-        
         window.handleCheckIn = () => { if(state.checkin.start && !state.checkin.end) return; state.checkin = { start: new Date().toISOString(), end: null }; saveData(); startTimer(); renderUI(); showToast("เริ่มกะแล้ว ลุย!"); hapticSuccess(); };
         window.handleCheckOut = () => { if(!state.checkin.start || state.checkin.end) return; state.checkin.end = new Date().toISOString(); saveData(); stopTimer(); renderUI(); showToast("จบกะทำงาน พักผ่อนได้เลย"); hapticSuccess(); };
         
@@ -671,9 +681,8 @@
             state.records.forEach(r => {
                 if (r.module === 'lalamove') {
                     if (r.type === 'income') {
-                        if (r.category === SYS_CATS.TOPUP_FROM_PERS || r.category === SYS_CATS.ADJUST_CREDIT) {
-                            credit += r.amount; 
-                        } else if (r.category === 'วิ่งงานปกติ') {
+                        if (r.category === SYS_CATS.TOPUP_FROM_PERS || r.category === SYS_CATS.ADJUST_CREDIT) { credit += r.amount; } 
+                        else if (r.category === 'วิ่งงานปกติ') {
                             const gross = (r.amount || 0) + (r.tip || 0); const gp = (r.gp || 0); const tollDriver = (r.tripTollCost || 0);
                             if (r.paymentMethod === 'cash') { personal += gross; credit -= gp; } else { credit += (gross - gp); }
                             personal -= tollDriver; 
@@ -701,8 +710,7 @@
         window.openAdjustModal = (walletType) => {
             state.adjustingWallet = walletType; const w = calcWallets(); const currVal = walletType === 'credit' ? w.credit : w.personal;
             document.getElementById('adjust-wallet-label').innerHTML = walletType === 'credit' ? '<i class="fas fa-mobile-screen text-blue-400"></i> ปรับปรุงยอดเครดิตแอป' : '<i class="fas fa-wallet text-purple-400"></i> ปรับปรุงยอดเงินส่วนตัว';
-            document.getElementById('adjust-current-hint').innerText = `ยอดในแอปตอนนี้: ${formatMoney(currVal)} ฿`;
-            document.getElementById('input-adjust-amount').value = '';
+            document.getElementById('adjust-current-hint').innerText = `ยอดในแอปตอนนี้: ${formatMoney(currVal)} ฿`; document.getElementById('input-adjust-amount').value = '';
             document.getElementById('modal-overlay').classList.remove('hidden'); setTimeout(() => { document.getElementById('modal-overlay').classList.add('opacity-100'); document.getElementById('adjust-modal').classList.add('open'); }, 10);
         };
 
@@ -875,14 +883,6 @@
             document.getElementById('detail-modal').classList.remove('open'); setTimeout(() => { document.getElementById('entry-modal').classList.add('open'); }, 300);
         };
 
-        window.confirmDelete = () => {
-            const delId = state.viewId || state.editId; if(!delId) return;
-            showConfirm('ยืนยันการลบ', 'คุณแน่ใจหรือไม่ที่จะลบรายการนี้?', 'fa-trash-alt', 'red', () => {
-                const r = state.records.find(x => x.id === delId); if(r && r.km > 0 && state.settings.totalKm >= r.km) state.settings.totalKm -= r.km;
-                state.records = state.records.filter(x => x.id !== delId); state.viewId = null; state.editId = null; saveData(); closeAllModals(); showToast("ลบรายการแล้ว"); renderUI(); if(state.activeTab === 'analytics') renderChartAndHistory();
-            });
-        };
-
         window.openModal = (type) => {
             state.editId = null; state.viewId = null; state.modalType = type; state.category = '';
             const isLala = state.activeTab === 'lalamove'; const tc = type==='income' ? 'text-emerald-400' : 'text-red-400'; const bc = type==='income' ? 'bg-emerald-600 shadow-[0_4px_14px_rgba(16,185,129,0.3)]' : 'bg-red-600 shadow-[0_4px_14px_rgba(220,38,38,0.3)]';
@@ -983,17 +983,16 @@
             if(startDt > endDt) { const temp = startDt; startDt = endDt; endDt = temp; }
             let datesArr = []; let curr = new Date(startDt); while(curr <= endDt) { datesArr.push(formatDateISO(curr)); curr.setDate(curr.getDate() + 1); }
 
-            const modRecs = state.records.filter(r => r.module === state.analytics.module);
-            const filteredRecs = modRecs.filter(r => r.date >= formatDateISO(startDt) && r.date <= formatDateISO(endDt));
+            const filteredRecs = state.records.filter(r => r.date >= formatDateISO(startDt) && r.date <= formatDateISO(endDt));
 
             let totalRangeNet = 0; let totalRangeTrips = 0; let totalRangeKm = 0; let totalPersInc = 0; let totalPersExp = 0; let totalIncBreakdown = 0; let totalExpBreakdown = 0; let catInc = {}; let catExp = {};
 
             const data = datesArr.map(d => {
-                const dayRecs = modRecs.filter(r => r.date === d);
+                const dayRecs = state.records.filter(r => r.date === d);
                 if(state.analytics.module === 'lalamove') {
                     let grossInc=0, tripFuel=0, expOther=0;
                     dayRecs.forEach(r => { 
-                        if(r.category === SYS_CATS.ADJUST_CREDIT) return; // 🎯 Keep Lalamove Daily Net unpolluted by manual adjustment
+                        if (r.module !== 'lalamove' || r.category === SYS_CATS.ADJUST_CREDIT) return;
                         if(r.type==='income') { 
                             if(r.category === 'วิ่งงานปกติ') { grossInc+=(r.amount+r.tip-r.gp); tripFuel+=(r.tripFuelCost||0); expOther+=(r.tripTollCost||0); totalRangeTrips++; totalRangeKm+=(Number(r.km)||0); } 
                             else if (r.category !== SYS_CATS.TOPUP_FROM_PERS) { grossInc += r.amount; }
@@ -1003,22 +1002,28 @@
                 } else {
                     let pInc=0, pExp=0;
                     dayRecs.forEach(r => { 
-                        // 🎯 ปลดล็อก: ให้นับรวม "ปรับปรุงยอด (เงินส่วนตัว)" ในการคำนวณ Net ของกราฟ
-                        if(r.type==='income') { pInc+=r.amount; totalPersInc+=r.amount; } else { pExp+=r.amount; totalPersExp+=r.amount; }
+                        const imp = getPersonalImpact(r);
+                        pInc += imp.inc; pExp += imp.exp;
                     });
-                    const dayNet = pInc - pExp; totalRangeNet += dayNet; return dayNet;
+                    const dayNet = pInc - pExp; totalRangeNet += dayNet;
+                    totalPersInc += pInc; totalPersExp += pExp; return dayNet;
                 }
             });
 
             filteredRecs.forEach(r => {
                 if(state.analytics.module === 'lalamove') {
-                    if(r.category === SYS_CATS.ADJUST_CREDIT) return; // Ignore Lalamove adjust from breakdown
+                    if (r.module !== 'lalamove' || r.category === SYS_CATS.ADJUST_CREDIT) return;
                     if(r.type === 'income') {
                         if(r.category === 'วิ่งงานปกติ') { const inc = r.amount + (r.tip||0); totalIncBreakdown += inc; catInc['ค่ารอบแอป + ทิป'] = (catInc['ค่ารอบแอป + ทิป'] || 0) + inc; if(r.gp > 0) { totalExpBreakdown += r.gp; catExp['หัก GP (แอปลดเงิน)'] = (catExp['หัก GP (แอปลดเงิน)'] || 0) + r.gp; } if(r.tripFuelCost > 0) { totalExpBreakdown += r.tripFuelCost; catExp['ค่าน้ำมัน (ต้นทุนวิ่ง)'] = (catExp['ค่าน้ำมัน (ต้นทุนวิ่ง)'] || 0) + r.tripFuelCost; } if(r.tripTollCost > 0) { totalExpBreakdown += r.tripTollCost; catExp['ค่าทางด่วน (จ่ายเอง)'] = (catExp['ค่าทางด่วน (จ่ายเอง)'] || 0) + r.tripTollCost; } } else if (r.category !== SYS_CATS.TOPUP_FROM_PERS) { totalIncBreakdown += r.amount; catInc[r.category] = (catInc[r.category] || 0) + r.amount; }
                     } else if(!['เติมน้ำมัน (จ่ายจริง)', SYS_CATS.TRANSFER_OUT].includes(r.category)) { totalExpBreakdown += r.amount; catExp[r.category] = (catExp[r.category] || 0) + r.amount; }
                 } else {
-                    // 🎯 ปลดล็อกให้ "ปรับปรุงยอด" เข้าไปโชว์ในสัดส่วน (Pie Chart) ด้วย
-                    if(r.type === 'income') { totalIncBreakdown += r.amount; catInc[r.category] = (catInc[r.category] || 0) + r.amount; } else { totalExpBreakdown += r.amount; catExp[r.category] = (catExp[r.category] || 0) + r.amount; }
+                    const imp = getPersonalImpact(r);
+                    if(imp.inc > 0) { totalIncBreakdown += imp.inc; catInc[imp.label] = (catInc[imp.label] || 0) + imp.inc; }
+                    if(imp.exp > 0) { 
+                        totalExpBreakdown += imp.exp; 
+                        let eLabel = r.category; if(r.module === 'lalamove' && r.category === 'วิ่งงานปกติ') eLabel = 'ค่าทางด่วน (วิ่งงาน)';
+                        catExp[eLabel] = (catExp[eLabel] || 0) + imp.exp; 
+                    }
                 }
             });
 
@@ -1039,42 +1044,48 @@
             if(state.chartInstance) state.chartInstance.destroy(); const ctx = document.getElementById('profitChart').getContext('2d'); Chart.defaults.color = '#a1a1aa'; Chart.defaults.font.family = "'Noto Sans Thai', sans-serif";
             state.chartInstance = new Chart(ctx, { type: 'bar', data: { labels: labels, datasets: [{ label: 'ยอดเงิน (บาท)', data: data, backgroundColor: data.map(v => v >= 0 ? chartColor : '#f87171'), borderRadius: 6 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { suggestedMin: minValue, suggestedMax: maxValue, grid: { color: '#27272a', drawBorder: false } }, x: { grid: { display: false }, border: { display: false }, ticks: { maxTicksLimit: 14 } } } } });
 
+            const recordsForHistory = filteredRecs.filter(r => {
+                if (state.analytics.module === 'lalamove') return r.module === 'lalamove' && r.category !== SYS_CATS.ADJUST_CREDIT;
+                const imp = getPersonalImpact(r); return imp.inc > 0 || imp.exp > 0;
+            });
+
             const listEl = document.getElementById('history-list');
-            if(filteredRecs.length === 0) { 
+            if(recordsForHistory.length === 0) { 
                 listEl.innerHTML = `<div class="flex flex-col items-center justify-center py-12 border border-app-border/40 border-dashed rounded-3xl bg-app-card/30"><div class="w-14 h-14 bg-gray-800 rounded-full flex items-center justify-center mb-3"><i class="fas fa-folder-open text-2xl text-gray-400"></i></div><h4 class="text-sm font-bold text-white mb-1">ไม่พบประวัติ</h4><p class="text-[10px] text-app-text text-center">ไม่มีรายการถูกบันทึกในช่วงเวลานี้</p></div>`; 
             } else {
-                const grouped = filteredRecs.sort((a,b) => b.timestamp - a.timestamp).reduce((acc, r) => { if(!acc[r.date]) acc[r.date] = []; acc[r.date].push(r); return acc; }, {});
+                const grouped = recordsForHistory.sort((a,b) => b.timestamp - a.timestamp).reduce((acc, r) => { if(!acc[r.date]) acc[r.date] = []; acc[r.date].push(r); return acc; }, {});
                 let html = '';
                 for(const [date, records] of Object.entries(grouped)) {
                     const dStr = new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short', year: 'numeric' });
                     let dayNet = 0; 
                     records.forEach(r => {
                         if(state.analytics.module === 'lalamove') {
-                            if (r.category === SYS_CATS.ADJUST_CREDIT) return; // 🎯 Ignore only for lalamove daily summary
                             if(r.type === 'income') { if (r.category === 'วิ่งงานปกติ') { dayNet += (r.amount+(r.tip||0)-(r.gp||0) - (r.tripFuelCost||0) - (r.tripTollCost||0)); } else if (r.category !== SYS_CATS.TOPUP_FROM_PERS) { dayNet += r.amount; } }
                             else if(!['เติมน้ำมัน (จ่ายจริง)', SYS_CATS.TRANSFER_OUT].includes(r.category)) { dayNet -= r.amount; }
                         } else {
-                            // 🎯 ปลดล็อกให้นับ Adjustments ส่วนตัว
-                            if(r.type === 'income') { dayNet += r.amount; } else { dayNet -= r.amount; } 
+                            const imp = getPersonalImpact(r); dayNet += (imp.inc - imp.exp);
                         }
                     });
 
                     const dNetColor = state.analytics.module === 'lalamove' ? 'emerald' : 'purple';
                     html += `<div class="mb-5"><div class="flex justify-between items-end mb-3"><h4 class="text-sm font-bold text-white">${dStr}</h4><span class="text-[11px] font-semibold ${dayNet>=0?`text-${dNetColor}-400 bg-${dNetColor}-950/40 border-${dNetColor}-900/50`:'text-red-400 bg-red-950/40 border-red-900/50'} px-2 py-0.5 rounded-full border">${dayNet>=0?'+':''}${formatMoney(dayNet)} ฿</span></div><div class="space-y-2.5">`;
                     html += records.map((r, i) => {
-                        // Skip rendering Adjust Credit in Lalamove history if wanted, but fine to show so user knows it happened
-                        if(r.category === SYS_CATS.ADJUST_CREDIT && state.analytics.module === 'lalamove') return '';
-
-                        const isInc = r.type === 'income'; let color = 'text-red-400';
-                        if(isInc) color = r.module === 'lalamove' ? 'text-emerald-400' : 'text-purple-400';
-                        let detail = r.note || '-'; let payIcon = '';
-                        if(isInc && r.module === 'lalamove') {
-                            if(r.category === 'วิ่งงานปกติ') { detail = `แอป ฿${r.amount}`; if(r.tripFuelCost>0) detail += ` | น้ำมัน -฿${formatMoney(r.tripFuelCost)}`; if(r.tripTollCost>0) detail += ` | ทางด่วน -฿${formatMoney(r.tripTollCost)}`; payIcon = r.paymentMethod === 'cash' ? ' <i class="fas fa-money-bill-wave text-emerald-500/70 ml-1"></i>' : ' <i class="fas fa-mobile-screen text-blue-400/70 ml-1"></i>'; } 
-                            else { detail = r.note || 'รายได้ภารกิจ/โบนัส'; }
-                        } else if(isInc) { payIcon = r.paymentMethod === 'cash' ? ' <i class="fas fa-money-bill-wave text-purple-500/70 ml-1"></i>' : ' <i class="fas fa-mobile-screen text-blue-400/70 ml-1"></i>'; }
-                        
-                        return `<div onclick="viewRecord('${r.id}')" class="stagger-item animate-fade-in-up flex justify-between p-3.5 bg-app-card rounded-2xl border border-app-border cursor-pointer active:scale-95 transition-all hover:border-gray-600 shadow-sm" style="animation-delay: ${i * 0.05}s"><div class="flex gap-3 items-center"><div class="w-8 h-8 rounded-full bg-app-border/30 flex items-center justify-center ${color}"><i class="fas ${isInc?'fa-arrow-turn-up':'fa-arrow-turn-down'} text-xs"></i></div><div><div class="font-semibold text-gray-200 text-[13px]">${r.category}${payIcon}</div><div class="text-[10px] text-app-text truncate w-[140px] mt-0.5">${detail}</div></div></div><div class="text-right"><div class="font-bold ${color} text-sm">${isInc?'+':'-'}${formatMoney(r.netAmount)}</div><div class="text-[9px] text-app-text mt-1">${r.time}</div></div></div>`;
-                    }).join(''); html += `</div></div>`;
+                        if(state.analytics.module === 'lalamove') {
+                            const isInc = r.type === 'income'; const color = isInc ? 'text-emerald-400' : 'text-red-400';
+                            let detail = r.note || '-'; let payIcon = '';
+                            if(isInc && r.category === 'วิ่งงานปกติ') { detail = `แอป ฿${r.amount}`; if(r.tripFuelCost>0) detail += ` | น้ำมัน -฿${formatMoney(r.tripFuelCost)}`; if(r.tripTollCost>0) detail += ` | ทางด่วน -฿${formatMoney(r.tripTollCost)}`; payIcon = r.paymentMethod === 'cash' ? ' <i class="fas fa-money-bill-wave text-emerald-500/70 ml-1"></i>' : ' <i class="fas fa-mobile-screen text-blue-400/70 ml-1"></i>'; } 
+                            else if (isInc && r.category === 'รายได้ภารกิจ') { payIcon = r.paymentMethod === 'cash' ? ' <i class="fas fa-money-bill-wave text-emerald-500/70 ml-1"></i>' : ' <i class="fas fa-mobile-screen text-blue-400/70 ml-1"></i>'; } 
+                            else if (r.category === SYS_CATS.TRANSFER_OUT || r.category === SYS_CATS.TOPUP_FROM_PERS) { detail = r.note; }
+                            
+                            return `<div onclick="viewRecord('${r.id}')" class="stagger-item animate-fade-in-up flex items-center justify-between p-3.5 bg-app-card rounded-2xl border border-app-border active:scale-95 transition-all cursor-pointer hover:border-gray-600 shadow-sm" style="animation-delay: ${i * 0.05}s"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full flex items-center justify-center bg-app-border/30 ${color}"><i class="fas ${isInc?'fa-arrow-turn-up':'fa-arrow-turn-down'} text-sm"></i></div><div><div class="font-semibold text-gray-200 text-[13px] mb-0.5">${r.category}${payIcon}</div><div class="text-[10px] text-app-text truncate w-40">${detail}</div></div></div><div class="text-right"><div class="font-bold ${color} text-sm">${isInc?'+':'-'}${formatMoney(r.netAmount)}</div><div class="text-[9px] text-app-text mt-1">${r.time}</div></div></div>`;
+                        } else {
+                            const imp = getPersonalImpact(r); const net = imp.inc - imp.exp; const isInc = net >= 0; const amt = Math.abs(net);
+                            const color = isInc ? 'text-emerald-400' : 'text-red-400'; const sign = isInc ? '+' : '-';
+                            const lIcon = r.module === 'lalamove' ? ' <i class="fas fa-car-side text-app-text/50 ml-1"></i>' : '';
+                            return `<div onclick="viewRecord('${r.id}')" class="stagger-item animate-fade-in-up flex items-center justify-between p-3.5 bg-app-card rounded-2xl border border-app-border active:scale-95 transition-all cursor-pointer hover:border-gray-600 shadow-sm" style="animation-delay: ${i * 0.05}s"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full flex items-center justify-center bg-app-border/30 ${color}"><i class="fas ${isInc?'fa-arrow-turn-up':'fa-arrow-turn-down'} text-sm"></i></div><div><div class="font-semibold text-gray-200 text-[13px] mb-0.5">${imp.label}${lIcon}</div><div class="text-[10px] text-app-text truncate w-40">${r.note||'-'}</div></div></div><div class="text-right"><div class="font-bold ${color} text-sm">${sign}${formatMoney(amt)}</div><div class="text-[9px] text-app-text mt-1">${r.time}</div></div></div>`;
+                        }
+                    }).join('');
+                    html += `</div></div>`;
                 }
                 document.getElementById('history-list').innerHTML = html;
             }
@@ -1086,10 +1097,10 @@
             else if(!state.checkin.end) { if(sEl) { const sDt = new Date(state.checkin.start); sEl.innerHTML = `<span class="animate-pulse-slow">🟢 วิ่งงาน</span> <span class="text-[10px] font-normal text-emerald-500/70 ml-1">(เริ่ม ${sDt.getHours().toString().padStart(2,'0')}:${sDt.getMinutes().toString().padStart(2,'0')})</span>`; sEl.className = 'text-base font-bold text-emerald-400 mt-0.5 leading-tight'; } if(bIn) { bIn.classList.add('opacity-50', 'pointer-events-none'); } if(bOut) { bOut.classList.remove('opacity-50', 'pointer-events-none'); } if(dEl) { dEl.classList.remove('hidden'); dEl.className = 'text-[10px] font-mono text-emerald-400 bg-emerald-950/50 px-2 py-0.5 rounded-md border border-emerald-900 transition-all animate-pulse-slow'; updateTimerUI(); } } 
             else { if(sEl) { const sDt = new Date(state.checkin.start); const eDt = new Date(state.checkin.end); sEl.innerHTML = `จบกะแล้ว <span class="text-[10px] font-normal text-gray-500 ml-1">(${sDt.getHours().toString().padStart(2,'0')}:${sDt.getMinutes().toString().padStart(2,'0')} - ${eDt.getHours().toString().padStart(2,'0')}:${eDt.getMinutes().toString().padStart(2,'0')})</span>`; sEl.className = 'text-base font-bold text-white mt-0.5 leading-tight'; } if(dEl) { dEl.classList.remove('hidden'); const diff = new Date(state.checkin.end) - new Date(state.checkin.start); dEl.innerText = `รวมเวลา ${Math.floor(diff / 3600000)}ชม. ${Math.floor((diff % 3600000) / 60000)}น.`; dEl.className = 'text-[10px] font-medium text-gray-400 bg-gray-800 px-2 py-0.5 rounded-md border border-gray-600 transition-all'; } if(bIn) { bIn.classList.remove('opacity-50', 'pointer-events-none'); } if(bOut) { bOut.classList.add('opacity-50', 'pointer-events-none'); } if(wEl) { wEl.classList.add('hidden'); } }
 
-            const todayRecs = state.records.filter(r => r.date === getToday() && r.module === state.activeTab).sort((a,b) => b.timestamp - a.timestamp);
             const wallets = calcWallets();
             
             if(state.activeTab === 'lalamove') {
+                const todayRecs = state.records.filter(r => r.date === getToday() && r.module === 'lalamove').sort((a,b) => b.timestamp - a.timestamp);
                 let grossInc = 0, tripFuel = 0, expOther = 0, todayTrips = 0, todayKm = 0, todayLiters = 0;
 
                 todayRecs.forEach(r => { 
@@ -1110,17 +1121,16 @@
                 const pct = Math.min(100, Math.max(0, (net / (state.settings.dailyTarget || 1)) * 100)) || 0; document.getElementById('progress-text').innerText = `${Math.floor(pct)}%`; const circ = document.getElementById('progress-circle'); circ.style.strokeDashoffset = 238.7 - (pct / 100 * 238.7);
                 if(pct >= 100) { circ.classList.replace('text-emerald-500', 'text-yellow-400'); if(state.lastPct < 100 && typeof confetti !== 'undefined') { confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 }, zIndex: 9999 }); hapticSuccess(); } } else circ.classList.replace('text-yellow-400', 'text-emerald-500'); state.lastPct = pct;
 
-                document.getElementById('transaction-count').innerText = `${todayRecs.filter(x => x.category !== SYS_CATS.ADJUST_CREDIT).length} รายการ`; const listEl = document.getElementById('transactions-list');
-                if(todayRecs.filter(x => x.category !== SYS_CATS.ADJUST_CREDIT).length === 0) { listEl.innerHTML = `<div class="flex flex-col items-center justify-center py-10 px-4 border border-emerald-900/30 border-dashed rounded-3xl bg-emerald-950/10 mt-2"><div class="w-14 h-14 bg-emerald-900/40 rounded-full flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(16,185,129,0.2)]"><i class="fas fa-car text-2xl text-emerald-400"></i></div><h4 class="text-sm font-bold text-white mb-1">พร้อมลุยหรือยัง?</h4><p class="text-[10px] text-app-text text-center leading-relaxed">ยังไม่มีรายการวันนี้ กด <b class="text-emerald-400">"รับเงิน"</b> ด้านล่าง<br>เพื่อบันทึกงานแรกของคุณได้เลย! 🚀</p></div>`; } 
+                const lalaTodayForList = todayRecs.filter(x => x.category !== SYS_CATS.ADJUST_CREDIT);
+                document.getElementById('transaction-count').innerText = `${lalaTodayForList.length} รายการ`; const listEl = document.getElementById('transactions-list');
+                if(lalaTodayForList.length === 0) { listEl.innerHTML = `<div class="flex flex-col items-center justify-center py-10 px-4 border border-emerald-900/30 border-dashed rounded-3xl bg-emerald-950/10 mt-2"><div class="w-14 h-14 bg-emerald-900/40 rounded-full flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(16,185,129,0.2)]"><i class="fas fa-car text-2xl text-emerald-400"></i></div><h4 class="text-sm font-bold text-white mb-1">พร้อมลุยหรือยัง?</h4><p class="text-[10px] text-app-text text-center leading-relaxed">ยังไม่มีรายการวันนี้ กด <b class="text-emerald-400">"รับเงิน"</b> ด้านล่าง<br>เพื่อบันทึกงานแรกของคุณได้เลย! 🚀</p></div>`; } 
                 else {
-                    listEl.innerHTML = todayRecs.map((r, i) => {
-                        if(r.category === SYS_CATS.ADJUST_CREDIT) return ''; // Hide adjust in daily feed
+                    listEl.innerHTML = lalaTodayForList.map((r, i) => {
                         const isInc = r.type === 'income'; const color = isInc ? 'text-emerald-400' : 'text-red-400';
                         let detail = r.note || '-'; let payIcon = '';
                         if(isInc && r.category === 'วิ่งงานปกติ') { detail = `แอป ฿${r.amount}`; if(r.tripFuelCost>0) detail += ` | น้ำมัน -฿${formatMoney(r.tripFuelCost)}`; if(r.tripTollCost>0) detail += ` | ทางด่วน -฿${formatMoney(r.tripTollCost)}`; payIcon = r.paymentMethod === 'cash' ? ' <i class="fas fa-money-bill-wave text-emerald-500/70 ml-1"></i>' : ' <i class="fas fa-mobile-screen text-blue-400/70 ml-1"></i>'; } 
                         else if (isInc && r.category === 'รายได้ภารกิจ') { payIcon = r.paymentMethod === 'cash' ? ' <i class="fas fa-money-bill-wave text-emerald-500/70 ml-1"></i>' : ' <i class="fas fa-mobile-screen text-blue-400/70 ml-1"></i>'; } 
                         else if (r.category === SYS_CATS.TRANSFER_OUT || r.category === SYS_CATS.TOPUP_FROM_PERS) { detail = r.note; }
-                        
                         return `<div onclick="viewRecord('${r.id}')" class="stagger-item animate-fade-in-up flex items-center justify-between p-3.5 bg-app-card rounded-2xl border border-app-border active:scale-95 transition-all cursor-pointer hover:border-gray-600 shadow-sm" style="animation-delay: ${i * 0.05}s"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full flex items-center justify-center bg-app-border/30 ${color}"><i class="fas ${isInc?'fa-arrow-turn-up':'fa-arrow-turn-down'} text-sm"></i></div><div><div class="font-semibold text-gray-200 text-[13px] mb-0.5">${r.category}${payIcon}</div><div class="text-[10px] text-app-text truncate w-40">${detail}</div></div></div><div class="text-right"><div class="font-bold ${color} text-sm">${isInc?'+':'-'}${formatMoney(r.netAmount)}</div><div class="text-[9px] text-app-text mt-1">${r.time}</div></div></div>`;
                     }).join('');
                 }
@@ -1128,18 +1138,21 @@
                 animateValue('pers-net-alltime', parseFloat(document.getElementById('pers-net-alltime').dataset.val) || 0, wallets.personal, 500);
                 
                 let todayPInc = 0, todayPExp = 0;
-                todayRecs.forEach(r => { 
-                    // 🎯 ปลดล็อก: รวมการปรับยอด เข้าในสรุปรับเข้า/จ่ายออกของวันนี้
-                    r.type === 'income' ? todayPInc+=r.amount : todayPExp+=r.amount; 
-                });
+                // 🎯 ดึงทุกรายการของวันนี้ มาสกัดเอาแค่ "รายการที่ส่งผลต่อเงินส่วนตัว"
+                const allTodayRecs = state.records.filter(r => r.date === getToday());
+                const personalTodayRecs = allTodayRecs.filter(r => { const imp = getPersonalImpact(r); return imp.inc > 0 || imp.exp > 0; }).sort((a,b) => b.timestamp - a.timestamp);
+
+                personalTodayRecs.forEach(r => { const imp = getPersonalImpact(r); todayPInc += imp.inc; todayPExp += imp.exp; });
                 
-                document.getElementById('pers-income-today').innerText = formatMoney(todayPInc); document.getElementById('pers-expense-today').innerText = formatMoney(todayPExp); document.getElementById('transaction-count-pers').innerText = `${todayRecs.length} รายการ`; const listElPers = document.getElementById('transactions-list-pers');
+                document.getElementById('pers-income-today').innerText = formatMoney(todayPInc); document.getElementById('pers-expense-today').innerText = formatMoney(todayPExp); document.getElementById('transaction-count-pers').innerText = `${personalTodayRecs.length} รายการ`; const listElPers = document.getElementById('transactions-list-pers');
                 
-                if(todayRecs.length === 0) { listElPers.innerHTML = `<div class="flex flex-col items-center justify-center py-10 px-4 border border-purple-900/30 border-dashed rounded-3xl bg-purple-950/10"><div class="w-14 h-14 bg-purple-900/40 rounded-full flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(168,85,247,0.2)]"><i class="fas fa-piggy-bank text-2xl text-purple-400"></i></div><h4 class="text-sm font-bold text-white mb-1">กระเป๋าตังค์ยังว่าง</h4><p class="text-[10px] text-app-text text-center">เริ่มบันทึกรับ-จ่ายส่วนตัว<br>เพื่อติดตามสภาพคล่องของคุณ 💸</p></div>`; } 
+                if(personalTodayRecs.length === 0) { listElPers.innerHTML = `<div class="flex flex-col items-center justify-center py-10 px-4 border border-purple-900/30 border-dashed rounded-3xl bg-purple-950/10"><div class="w-14 h-14 bg-purple-900/40 rounded-full flex items-center justify-center mb-3 shadow-[0_0_15px_rgba(168,85,247,0.2)]"><i class="fas fa-piggy-bank text-2xl text-purple-400"></i></div><h4 class="text-sm font-bold text-white mb-1">กระเป๋าตังค์ยังว่าง</h4><p class="text-[10px] text-app-text text-center">เริ่มบันทึกรับ-จ่ายส่วนตัว<br>เพื่อติดตามสภาพคล่องของคุณ 💸</p></div>`; } 
                 else {
-                    listElPers.innerHTML = todayRecs.map((r, i) => {
-                        const isInc = r.type === 'income'; const color = isInc ? 'text-purple-400' : 'text-red-400';
-                        return `<div onclick="viewRecord('${r.id}')" class="stagger-item animate-fade-in-up flex items-center justify-between p-3.5 bg-app-card rounded-2xl border border-app-border active:scale-95 transition-all cursor-pointer hover:border-gray-600 shadow-sm" style="animation-delay: ${i * 0.05}s"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full flex items-center justify-center bg-app-border/30 ${color}"><i class="fas ${isInc?'fa-arrow-turn-up':'fa-arrow-turn-down'} text-sm"></i></div><div><div class="font-semibold text-gray-200 text-[13px] mb-0.5">${r.category}</div><div class="text-[10px] text-app-text truncate w-40">${r.note||'-'}</div></div></div><div class="text-right"><div class="font-bold ${color} text-sm">${isInc?'+':'-'}${formatMoney(r.amount)}</div><div class="text-[9px] text-app-text mt-1">${r.time}</div></div></div>`;
+                    listElPers.innerHTML = personalTodayRecs.map((r, i) => {
+                        const imp = getPersonalImpact(r); const net = imp.inc - imp.exp; const isInc = net >= 0; const amt = Math.abs(net);
+                        const color = isInc ? 'text-emerald-400' : 'text-red-400'; const sign = isInc ? '+' : '-';
+                        const lIcon = r.module === 'lalamove' ? ' <i class="fas fa-car-side text-app-text/50 ml-1"></i>' : '';
+                        return `<div onclick="viewRecord('${r.id}')" class="stagger-item animate-fade-in-up flex items-center justify-between p-3.5 bg-app-card rounded-2xl border border-app-border active:scale-95 transition-all cursor-pointer hover:border-gray-600 shadow-sm" style="animation-delay: ${i * 0.05}s"><div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full flex items-center justify-center bg-app-border/30 ${color}"><i class="fas ${isInc?'fa-arrow-turn-up':'fa-arrow-turn-down'} text-sm"></i></div><div><div class="font-semibold text-gray-200 text-[13px] mb-0.5">${imp.label}${lIcon}</div><div class="text-[10px] text-app-text truncate w-40">${r.note||'-'}</div></div></div><div class="text-right"><div class="font-bold ${color} text-sm">${sign}${formatMoney(amt)}</div><div class="text-[9px] text-app-text mt-1">${r.time}</div></div></div>`;
                     }).join('');
                 }
             }
