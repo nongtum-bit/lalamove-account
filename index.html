@@ -63,6 +63,7 @@
         .auth-panel.active { display: block; }
         .avatar-img { object-fit: cover; }
         .nav-btn.active { color: #34d399 !important; }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
     </style>
 </head>
 <body class="antialiased font-sans">
@@ -768,6 +769,104 @@
                 else { obj.innerText = formatMoney(end); obj.dataset.val = end; }
             };
             window.requestAnimationFrame(step);
+        };
+
+        // ===================== CONFIRM SYSTEM (สำหรับลบรายการ) =====================
+        window.showConfirm = (title, message, icon, color, callback) => {
+            confirmCallback = callback;
+            const modal = document.getElementById('confirm-modal');
+            const box = document.getElementById('confirm-modal-box');
+            const iconEl = document.getElementById('confirm-icon');
+            const titleEl = document.getElementById('confirm-title');
+            const msgEl = document.getElementById('confirm-message');
+            const btn = document.getElementById('confirm-btn-action');
+
+            if (titleEl) titleEl.innerText = title || 'ยืนยัน';
+            if (msgEl) msgEl.innerText = message || 'คุณแน่ใจหรือไม่?';
+
+            const colorMap = {
+                red: { bg: 'bg-red-500/20', text: 'text-red-500', btn: 'bg-red-600 shadow-red-900/40' },
+                orange: { bg: 'bg-orange-500/20', text: 'text-orange-500', btn: 'bg-orange-600 shadow-orange-900/40' },
+                blue: { bg: 'bg-blue-500/20', text: 'text-blue-500', btn: 'bg-blue-600 shadow-blue-900/40' },
+                emerald: { bg: 'bg-emerald-500/20', text: 'text-emerald-500', btn: 'bg-emerald-600 shadow-emerald-900/40' }
+            };
+            const c = colorMap[color] || colorMap.red;
+
+            if (iconEl) {
+                iconEl.className = `w-12 h-12 rounded-full ${c.bg} ${c.text} flex items-center justify-center text-xl mx-auto mb-4`;
+                iconEl.innerHTML = `<i class="fas ${icon || 'fa-exclamation-triangle'}"></i>`;
+            }
+            if (btn) {
+                btn.className = `flex-1 py-3 ${c.btn} text-white rounded-xl font-bold shadow-lg active:scale-95 transition-transform`;
+                btn.innerText = 'ยืนยัน';
+            }
+
+            if (modal) {
+                modal.classList.remove('hidden');
+                setTimeout(() => {
+                    modal.classList.add('opacity-100');
+                    if (box) box.classList.remove('scale-95');
+                }, 10);
+            }
+            haptic(30);
+        };
+
+        window.closeConfirmModal = () => {
+            const modal = document.getElementById('confirm-modal');
+            const box = document.getElementById('confirm-modal-box');
+            if (modal) {
+                modal.classList.remove('opacity-100');
+                if (box) box.classList.add('scale-95');
+                setTimeout(() => {
+                    modal.classList.add('hidden');
+                    confirmCallback = null;
+                }, 200);
+            }
+        };
+
+        window.executeConfirm = async () => {
+            if (typeof confirmCallback === 'function') {
+                const cb = confirmCallback;
+                window.closeConfirmModal();
+                try {
+                    await cb();
+                } catch (e) {
+                    console.error(e);
+                    window.showToast('เกิดข้อผิดพลาด: ' + (e.message || ''), true);
+                }
+            } else {
+                window.closeConfirmModal();
+            }
+        };
+
+        window.confirmDelete = () => {
+            if (!state.viewId) return window.showToast('ไม่พบรายการที่ต้องการลบ', true);
+            window.showConfirm(
+                'ลบรายการ',
+                'คุณต้องการลบรายการนี้ใช่หรือไม่? การกระทำนี้ไม่สามารถกู้คืนได้',
+                'fa-trash-alt',
+                'red',
+                async () => {
+                    const id = state.viewId;
+                    const idx = state.records.findIndex(r => r.id === id);
+                    if (idx === -1) return window.showToast('ไม่พบรายการ', true);
+
+                    const rec = state.records[idx];
+                    // ปรับระยะทางสะสมถ้ามี km
+                    if (rec.km && rec.km > 0) {
+                        state.settings.totalKm = Math.max(0, (state.settings.totalKm || 0) - rec.km);
+                    }
+
+                    state.records.splice(idx, 1);
+                    state.viewId = null;
+                    await window.saveData();
+                    window.closeAllModals();
+                    window.renderUI();
+                    if (state.activeTab === 'analytics') window.renderChartAndHistory();
+                    window.showToast('ลบรายการเรียบร้อย');
+                    hapticSuccess();
+                }
+            );
         };
 
         // ===================== AUTH UI & HANDLERS =====================
