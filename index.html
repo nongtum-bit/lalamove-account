@@ -71,7 +71,9 @@
     <!-- Toast -->
     <div id="toast-container" class="fixed top-4 left-0 right-0 z-[300] flex flex-col items-center gap-2 pointer-events-none px-4"></div>
 
-    <!-- ===================== AUTH SCREEN ===================== -->
+    <!-- ============================================================ -->
+    <!-- 1. AUTH SCREEN                                                  -->
+    <!-- ============================================================ -->
     <div id="auth-screen" class="fixed inset-0 bg-[#09090b] z-[200] flex flex-col items-center justify-center px-5 transition-opacity duration-500">
         <div class="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-5 shadow-[0_0_40px_rgba(16,185,129,0.15)] border border-emerald-500/20">
             <i class="fas fa-car text-4xl text-emerald-400"></i>
@@ -146,7 +148,9 @@
         <p class="text-[10px] text-app-text/50 mt-6">LalaDaily Cloud • สำหรับคนขับ Lalamove</p>
     </div>
 
-    <!-- ===================== MAIN APP ===================== -->
+    <!-- ============================================================ -->
+    <!-- 2. MAIN APP                                                    -->
+    <!-- ============================================================ -->
     <div id="main-app" class="max-w-[480px] mx-auto h-[100dvh] bg-app-bg relative flex flex-col shadow-2xl overflow-hidden border-x border-app-border/30">
         
         <!-- Email Verification Banner -->
@@ -658,7 +662,25 @@
     </div>
 
     <script>
-        // ===================== SAFETY + FIREBASE =====================
+
+        // ============================================================
+        //  TABLE OF CONTENTS
+        //  1. Safety + Firebase Init
+        //  2. Global State & Constants
+        //  3. Helper Utilities
+        //  4. Confirm / Delete System
+        //  5. Authentication
+        //  6. Profile Management
+        //  7. Data Persistence (loadData / saveData)
+        //  8. Core UI & Calculation Engine
+        //  9. Analytics & Chart
+        // 10. Export
+        // 11. App Initialization
+        // ============================================================
+
+        // ============================================================
+        // 1. SAFETY + FIREBASE INIT
+        // ============================================================
         window.__fatalShown = false;
         window.showFatalError = function(msg) {
             try {
@@ -704,7 +726,10 @@
         let currentUser = null;
         let pendingPhotoFile = null;
 
-        // ===================== STATE =====================
+
+        // ============================================================
+        // 2. GLOBAL STATE & CONSTANTS
+        // ============================================================
         const SYS_CATS = { 
             TRANSFER_OUT: 'ถอนเงินเข้าบัญชีส่วนตัว', TRANSFER_IN: 'รับเงินจาก Lalamove', 
             TOPUP_TO_LALA: 'โอนไปเติมเครดิต Lalamove', TOPUP_FROM_PERS: 'เติมเครดิตจากส่วนตัว', 
@@ -726,7 +751,10 @@
         };
         let currentTollPayer = 'customer', currentPaymentMethod = 'credit', currentTransferAction = 'withdraw', confirmCallback = null;
 
-        // ===================== HELPERS =====================
+
+        // ============================================================
+        // 3. HELPER UTILITIES
+        // ============================================================
         const haptic = (ms=50) => { if (navigator.vibrate) navigator.vibrate(ms); };
         const hapticSuccess = () => { if (navigator.vibrate) navigator.vibrate([30,50,30]); };
         const generateId = () => crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2);
@@ -771,7 +799,10 @@
             window.requestAnimationFrame(step);
         };
 
-        // ===================== CONFIRM SYSTEM (สำหรับลบรายการ) =====================
+
+        // ============================================================
+        // 4. CONFIRM / DELETE SYSTEM
+        // ============================================================
         window.showConfirm = (title, message, icon, color, callback) => {
             confirmCallback = callback;
             const modal = document.getElementById('confirm-modal');
@@ -869,7 +900,10 @@
             );
         };
 
-        // ===================== AUTH UI & HANDLERS =====================
+
+        // ============================================================
+        // 5. AUTHENTICATION
+        // ============================================================
         window.switchAuthMode = (mode) => {
             window.clearAuthError();
             document.querySelectorAll('.auth-panel').forEach(p => p.classList.remove('active'));
@@ -1025,7 +1059,10 @@
             }, (err) => { window.showFatalError('Auth error: ' + (err.message || err)); });
         }
 
-        // ===================== PROFILE LOGIC =====================
+
+        // ============================================================
+        // 6. PROFILE MANAGEMENT
+        // ============================================================
         window.renderProfile = () => {
             const p = state.profile || {};
             const name = p.displayName || (currentUser && currentUser.email ? currentUser.email.split('@')[0] : 'ผู้ใช้');
@@ -1156,7 +1193,10 @@
             }
         };
 
-        // ===================== DATA SYNC =====================
+
+        // ============================================================
+        // 7. DATA PERSISTENCE (loadData / saveData)
+        // ============================================================
         window.loadData = async () => {
             if (!currentUser || !db) return;
             try {
@@ -1202,7 +1242,13 @@
             } catch (e) { window.showToast('บันทึกไม่สำเร็จ: ' + (e.message || ''), true); }
         };
 
-        // ===================== CORE UI & LOGIC =====================
+
+        // ============================================================
+        // 8. CORE UI & CALCULATION ENGINE
+        // ============================================================
+        // ------------------------------------------------------------
+        // 8.1 Tab Switching & Basic UI
+        // ------------------------------------------------------------
         window.switchTab = (tab) => {
             state.activeTab = tab;
             document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
@@ -1250,6 +1296,9 @@
         };
         window.closeEntryModal = window.closeAllModals;
 
+        // ------------------------------------------------------------
+        // 8.6 Check-in / Timer System
+        // ------------------------------------------------------------
         window.handleCheckIn = () => {
             if (state.checkin.start && !state.checkin.end) return;
             state.checkin = { start: new Date().toISOString(), end: null };
@@ -1276,6 +1325,9 @@
             if(wEl && state.todayNet > 0 && diffHours > 0.05) { wEl.innerHTML = `<i class="fas fa-bolt text-yellow-400/80"></i> ค่าแรงเฉลี่ย ฿${formatMoney((state.todayNet/diffHours).toFixed(0))}/ชม.`; wEl.classList.remove('hidden'); } else if(wEl) { wEl.classList.add('hidden'); }
         };
 
+        // ------------------------------------------------------------
+        // 8.2 Calculation Engine (Wallets + Preview)
+        // ------------------------------------------------------------
         window.calcWallets = () => {
             let credit=0, personal=0;
             state.records.forEach(r => {
@@ -1381,6 +1433,9 @@
             btn.className = 'cat-btn px-4 py-2 rounded-xl border bg-app-border text-white border-gray-400 text-xs shadow-inner';
         };
 
+        // ------------------------------------------------------------
+        // 8.3 Live Preview Calculation (Entry Modal)
+        // ------------------------------------------------------------
         window.calcPreview = () => {
             if(state.activeTab !== 'lalamove' || state.modalType !== 'income') return; if(state.lalaIncomeType === 'mission') return; 
             const amt = parseFloat(document.getElementById('input-amount').value)||0, tip = parseFloat(document.getElementById('input-tip').value)||0, gp = parseFloat(document.getElementById('input-gp').value)||0;
@@ -1399,6 +1454,9 @@
             window.animateValue('prev-net', parseFloat(document.getElementById('prev-net').dataset.val)||0, net, 300);
         };
 
+        // ------------------------------------------------------------
+        // 8.4 Modal System (Entry / Transfer / Adjust / Detail)
+        // ------------------------------------------------------------
         window.openModal = (type) => {
             state.editId = null; state.viewId = null; state.modalType = type; state.category = '';
             const isLala = state.activeTab === 'lalamove'; const tc = type==='income' ? 'text-emerald-400' : 'text-red-400'; const bc = type==='income' ? 'bg-emerald-600' : 'bg-red-600';
@@ -1442,6 +1500,9 @@
             document.getElementById('detail-modal').classList.remove('open'); setTimeout(() => { document.getElementById('entry-modal').classList.add('open'); }, 300);
         };
 
+        // ------------------------------------------------------------
+        // 8.5 Save Record Logic
+        // ------------------------------------------------------------
         window.saveRecord = () => {
             const isLala = state.activeTab === 'lalamove'; const isInc = state.modalType === 'income';
             const amount = parseFloat(document.getElementById('input-amount').value) || 0; const note = document.getElementById('input-note').value.trim();
@@ -1664,6 +1725,9 @@
             container.innerHTML = html;
         };
 
+        // ------------------------------------------------------------
+        // 9. Analytics & Chart
+        // ------------------------------------------------------------
         window.renderChartAndHistory = () => {
             let startDt = new Date(); let endDt = new Date();
             if(state.analytics.range === '7') { startDt.setDate(endDt.getDate() - 6); } else if(state.analytics.range === '30') { startDt.setDate(endDt.getDate() - 29); } else if(state.analytics.range === 'custom') { const s = document.getElementById('range-start').value; const e = document.getElementById('range-end').value; if(s && e) { startDt = new Date(s); endDt = new Date(e); } }
@@ -1773,6 +1837,9 @@
             }
         };
         
+        // ------------------------------------------------------------
+        // 10. Export CSV
+        // ------------------------------------------------------------
         window.exportCSV = () => { 
             if(state.records.length === 0) return window.showToast("ไม่มีข้อมูล", true);
             let csv = "\uFEFFวันที่,เวลา,โมดูล,ประเภท,หมวดหมู่,รับเงินทาง,รายรับแอป,ทิป,หักGP,ค่าทางด่วน(ใครจ่าย),ต้นทุนน้ำมัน,ยอดสุทธิ,ระยะทาง(กม.),เรทหน้าปัด(กม/ล),ราคาน้ำมัน,ลิตร,ต้นทุน(บาท/กม),หมายเหตุ\n";
