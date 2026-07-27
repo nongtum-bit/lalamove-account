@@ -1107,13 +1107,22 @@
             const btn = document.getElementById('btn-save-profile');
             btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> กำลังบันทึก...';
 
+            const TIMEOUT_MS = 25000;
+            let timedOut = false;
+            const timeoutId = setTimeout(() => { timedOut = true; }, TIMEOUT_MS);
+
             try {
                 let photoURL = state.profile.photoURL || '';
                 if (pendingPhotoFile && storage) {
                     const ref = storage.ref().child(`profiles/${currentUser.uid}/avatar.jpg`);
-                    await ref.put(pendingPhotoFile);
-                    photoURL = await ref.getDownloadURL();
+                    const uploadPromise = ref.put(pendingPhotoFile).then(() => ref.getDownloadURL());
+                    photoURL = await Promise.race([
+                        uploadPromise,
+                        new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), TIMEOUT_MS))
+                    ]);
                 }
+
+                if (timedOut) throw new Error('TIMEOUT');
 
                 const newProfile = {
                     displayName: (document.getElementById('edit-display-name').value || '').trim(),
@@ -1132,10 +1141,17 @@
                     try { await currentUser.updateProfile({ displayName: newProfile.displayName, photoURL: photoURL || null }); } catch(e) {}
                 }
 
+                pendingPhotoFile = null;
                 window.renderProfile(); window.closeAllModals(); window.showToast('บันทึกโปรไฟล์เรียบร้อย'); hapticSuccess();
             } catch (e) {
-                console.error(e); window.showToast('บันทึกไม่สำเร็จ: ' + (e.message || ''), true);
+                console.error(e);
+                if (e.message === 'TIMEOUT' || timedOut) {
+                    window.showToast('อัปโหลดรูปใช้เวลานานเกินไป กรุณาลองใหม่หรือใช้รูปที่เล็กกว่า (สูงสุด 2MB)', true);
+                } else {
+                    window.showToast('บันทึกไม่สำเร็จ: ' + (e.message || ''), true);
+                }
             } finally {
+                clearTimeout(timeoutId);
                 btn.disabled = false; btn.innerHTML = 'บันทึกโปรไฟล์';
             }
         };
