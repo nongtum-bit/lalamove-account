@@ -6,8 +6,8 @@
     <meta name="theme-color" content="#09090b">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="LalaDaily">
-    <title>LalaDaily Ultimate - Cloud</title>
+    <meta name="apple-mobile-web-app-title" content="Daily Ultimate">
+    <title>Daily Ultimate</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -63,7 +63,25 @@
         .auth-panel.active { display: block; }
         .avatar-img { object-fit: cover; }
         .nav-btn.active { color: #34d399 !important; }
-        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 0px); }
+        /* ===== Safe Area Support (iOS) ===== */
+        .pt-safe { padding-top: max(1.5rem, env(safe-area-inset-top, 0px)); }
+        .pb-safe { padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px)); }
+        .pb-safe-lg { padding-bottom: max(2rem, calc(1.5rem + env(safe-area-inset-bottom, 0px))); }
+
+        /* FAB position with safe area */
+        #fab-container {
+            bottom: calc(85px + env(safe-area-inset-bottom, 0px)) !important;
+        }
+
+        /* Toast with safe area */
+        #toast-container {
+            top: max(1rem, calc(0.5rem + env(safe-area-inset-top, 0px))) !important;
+        }
+
+        /* Main content bottom padding */
+        #main-content {
+            padding-bottom: calc(140px + env(safe-area-inset-bottom, 0px)) !important;
+        }
     </style>
 </head>
 <body class="antialiased font-sans">
@@ -78,7 +96,7 @@
         <div class="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mb-5 shadow-[0_0_40px_rgba(16,185,129,0.15)] border border-emerald-500/20">
             <i class="fas fa-car text-4xl text-emerald-400"></i>
         </div>
-        <h1 class="text-2xl font-bold text-white mb-1 tracking-tight">LalaDaily <span class="text-emerald-400">Cloud</span></h1>
+        <h1 class="text-2xl font-bold text-white mb-1 tracking-tight">Daily Ultimate</h1>
         <p class="text-app-text text-xs mb-8">ระบบบัญชีคนขับ • ซิงค์ข้อมูลออนไลน์</p>
 
         <div class="w-full max-w-sm bg-[#121214] rounded-3xl border border-app-border shadow-xl overflow-hidden">
@@ -145,7 +163,7 @@
         </div>
 
         <div id="fatal-error-box" class="hidden w-full max-w-sm mt-4 bg-red-950/60 border border-red-700 rounded-2xl p-4 text-left"></div>
-        <p class="text-[10px] text-app-text/50 mt-6">LalaDaily Cloud • สำหรับคนขับ Lalamove</p>
+        <p class="text-[10px] text-app-text/50 mt-6">Daily Ultimate • สำหรับคนขับ Lalamove</p>
     </div>
 
     <!-- ============================================================ -->
@@ -163,9 +181,9 @@
         </div>
 
         <!-- Header -->
-        <header class="glass-header sticky top-0 z-40 px-5 pt-6 pb-4 border-b border-app-border flex justify-between items-end shrink-0">
+        <header class="glass-header sticky top-0 z-40 px-5 pt-safe pb-4 border-b border-app-border flex justify-between items-end shrink-0">
             <div>
-                <h1 id="header-title" class="text-2xl font-bold text-emerald-400 tracking-tight transition-colors">LalaDaily</h1>
+                <h1 id="header-title" class="text-2xl font-bold text-emerald-400 tracking-tight transition-colors">Daily Ultimate</h1>
                 <div class="flex items-center gap-2 mt-0.5">
                     <p id="header-date" class="text-sm text-app-text"></p>
                     <span id="sync-badge" class="text-[10px] bg-gray-900/50 text-gray-400 border border-gray-800 px-2 py-0.5 rounded-full flex items-center gap-1 font-medium shadow-sm transition-all">
@@ -491,7 +509,7 @@
         </div>
 
         <!-- PROFILE EDIT MODAL -->
-        <div id="profile-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[80] px-6 pt-3 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+        <div id="profile-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[80] px-6 pt-3 pb-safe-lg shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
             <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-4"></div>
             <div class="flex justify-between items-center mb-5">
                 <h3 class="text-xl font-bold text-emerald-400 tracking-tight">แก้ไขโปรไฟล์</h3>
@@ -532,7 +550,7 @@
         </div>
 
         <!-- Other modals -->
-        <div id="adjust-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[80] px-6 pt-3 pb-8 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
+        <div id="adjust-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[80] px-6 pt-3 pb-safe-lg shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
             <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-4"></div>
             <div class="flex justify-between items-center mb-5">
                 <h3 class="text-xl font-bold text-emerald-400 tracking-tight">ปรับปรุงยอดเงินให้ตรงจริง</h3>
@@ -553,7 +571,7 @@
             </div>
         </div>
 
-        <div id="detail-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[60] px-6 pt-3 pb-8">
+        <div id="detail-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[60] px-6 pt-3 pb-safe-lg">
             <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-5"></div>
             <div class="flex justify-between items-center mb-5">
                 <h3 class="text-xl font-bold text-white">รายละเอียดบิล</h3>
@@ -566,7 +584,7 @@
             </div>
         </div>
 
-        <div id="entry-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[70] px-6 pt-3 pb-8">
+        <div id="entry-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[70] px-6 pt-3 pb-safe-lg">
             <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-4"></div>
             <div class="flex justify-between items-center mb-4">
                 <h3 id="modal-title" class="text-xl font-bold text-white">บันทึก</h3>
@@ -1849,7 +1867,7 @@
                 const payMethod = r.paymentMethod === 'cash' ? 'เงินสด' : (r.paymentMethod === 'credit' ? 'เข้าแอป' : '-');
                 csv += `${r.date},${r.time},${m},${t},${r.category},${payMethod},${r.amount},${r.tip||0},${r.gp||0},${tollStr},${r.tripFuelCost||0},${r.netAmount},${r.km||0},${r.dashRate||0},${r.fuelPrice||0},${r.fuelLiters||0},${r.costPerKm||0},"${r.note||''}"\n`;
             });
-            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = `LalaDaily_Export_${getToday()}.csv`; link.click();
+            const link = document.createElement("a"); link.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' })); link.download = `DailyUltimate_Export_${getToday()}.csv`; link.click();
         };
     </script>
 </body>
