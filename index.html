@@ -68,8 +68,7 @@
             transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1);
             transform: translateY(100%);
             /* ป้องกันไม่ให้ชนกับ status bar / Dynamic Island */
-            max-height: calc(100dvh - env(safe-area-inset-top, 20px) - 8px);
-            max-height: calc(100svh - env(safe-area-inset-top, 20px) - 8px);
+            max-height: calc(var(--app-height) - var(--safe-top) - 12px);
         }
         .bottom-sheet.open { transform: translateY(0); }
         .btn-press { transition: transform 0.1s; }
@@ -636,13 +635,13 @@
             </div>
         </div>
 
-        <div id="entry-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[70] px-6 pt-3 pb-safe-lg">
-            <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-4"></div>
-            <div class="flex justify-between items-center mb-4">
+        <div id="entry-modal" class="bottom-sheet fixed bottom-0 left-0 right-0 max-w-[480px] mx-auto bg-app-card border-t border-app-border rounded-t-[2rem] z-[70] px-6 pt-3 pb-safe-lg flex flex-col">
+            <div class="w-12 h-1 bg-app-border rounded-full mx-auto mb-4 shrink-0"></div>
+            <div class="flex justify-between items-center mb-4 shrink-0">
                 <h3 id="modal-title" class="text-xl font-bold text-white">บันทึก</h3>
                 <button onclick="window.closeEntryModal()" class="w-8 h-8 flex items-center justify-center bg-app-border text-app-text rounded-full"><i class="fas fa-times text-sm"></i></button>
             </div>
-            <div class="space-y-4 max-h-[min(68vh,calc(100dvh-220px))] overflow-y-auto pb-4">
+            <div class="space-y-4 overflow-y-auto flex-1 min-h-0 pb-2">
                 <div id="field-lala-income-type" class="hidden flex gap-2.5 mb-2">
                     <button id="btn-lala-type-trip" onclick="window.setLalaIncomeType('trip')" class="flex-1 py-3 bg-emerald-600 text-white rounded-2xl shadow-lg shadow-emerald-900/40 font-bold flex justify-center items-center gap-2 text-sm border border-emerald-500/30 transition-all duration-300">
                         <i class="fas fa-car-side"></i> วิ่งงานปกติ
@@ -698,7 +697,7 @@
                 </div>
                 <div><label class="block text-xs text-app-text mb-1">หมายเหตุ</label><input type="text" id="input-note" placeholder="รายละเอียด..." class="w-full bg-[#121214] border border-app-border rounded-xl px-4 py-3 text-sm text-white outline-none"></div>
             </div>
-            <div class="mt-2 pt-4 border-t border-app-border flex gap-3">
+            <div class="mt-2 pt-4 border-t border-app-border flex gap-3 shrink-0">
                 <button onclick="window.saveRecord()" id="btn-save" class="btn-press flex-1 w-full py-4 rounded-2xl font-bold text-white text-base bg-emerald-600">บันทึกข้อมูล</button>
             </div>
         </div>
@@ -852,7 +851,7 @@
         // ============================================================
         // VERSION CONTROL & FORCE UPDATE
         // ============================================================
-        const APP_VERSION = '1.3.3';   // ← เปลี่ยนเลขนี้ทุกครั้งที่มีการอัปเดตสำคัญ
+        const APP_VERSION = '1.3.4';   // ← เปลี่ยนเลขนี้ทุกครั้งที่มีการอัปเดตสำคัญ
         // ============================================================
         // REAL VIEWPORT HEIGHT (แก้ปัญหาหน้าจอไม่เต็มบน iOS/Android)
         // ============================================================
